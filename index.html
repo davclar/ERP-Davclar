@@ -2913,6 +2913,39 @@
                     }
                 });
             });
+
+            // ✅ LISTENER KONEKSI FIREBASE (penting untuk iOS)
+            // .info/connected adalah node khusus Firebase yang bernilai true/false
+            // sesuai status koneksi WebSocket yang SESUNGGUHNYA (bukan navigator.onLine).
+            window.firebaseDB.ref('.info/connected').on('value', function(snap) {
+                if (snap.val() === true) {
+                    console.log('🔥 Firebase WebSocket TERHUBUNG — iOS aman menulis data.');
+                    // Flush semua key yang tertunda (gagal terkirim saat offline)
+                    try {
+                        let pending = JSON.parse(localStorage.getItem('davclar_unsynced_keys') || '[]');
+                        if (Array.isArray(pending) && pending.length > 0) {
+                            console.log('🔄 Mengirim ulang data tertunda:', pending);
+                            pending.forEach(function(k) {
+                                const raw = localStorage.getItem(k);
+                                if (raw) {
+                                    let val;
+                                    try { val = JSON.parse(raw); } catch(e) { val = raw; }
+                                    window.firebaseDB.ref(k).set(val)
+                                        .then(function() {
+                                            let p = JSON.parse(localStorage.getItem('davclar_unsynced_keys') || '[]');
+                                            p = p.filter(function(x) { return x !== k; });
+                                            window.originalSetItem.call(localStorage, 'davclar_unsynced_keys', JSON.stringify(p));
+                                            console.log('✅ Data tertunda berhasil dikirim:', k);
+                                        })
+                                        .catch(function(e) { console.warn('Gagal kirim ulang:', k, e); });
+                                }
+                            });
+                        }
+                    } catch(e) {}
+                } else {
+                    console.log('📵 Firebase WebSocket TERPUTUS — data akan diantri.');
+                }
+            });
         }
 
         var soCurrentPage = 1, 
@@ -3180,16 +3213,17 @@
             }
         }
 
-        // 1. Deteksi saat aplikasi dibuka kembali dari background (Bangunkan Firebase saja, JANGAN pindah tab)
+        // 1. Deteksi saat aplikasi dibuka kembali dari background
         document.addEventListener("visibilitychange", function() {
             if (document.visibilityState === "visible") {
-                // ✅ FIX BUG #1 (Bonus): Hanya reset koneksi jika sudah login
-                // Delay diperpanjang ke 1500ms agar jaringan iOS sempat stabil
-                // sebelum Firebase listener aktif dan menarik data terbaru dari server.
+                // ✅ ROOT CAUSE FIX: JANGAN panggil goOffline() di sini!
+                // goOffline() menyebabkan Firebase putus saat user mau input data.
+                // iOS Safari men-throttle setTimeout, sehingga goOnline() kadang
+                // tidak pernah jalan → data yang disimpan tidak pernah terkirim ke server.
+                // Cukup panggil goOnline() untuk memastikan koneksi tetap aktif.
                 if (typeof firebase !== 'undefined' && localStorage.getItem('davclar_isLoggedIn') === 'true') {
-                    console.log("📱 Aplikasi disorot kembali, mereset koneksi Firebase...");
-                    firebase.database().goOffline();
-                    setTimeout(() => firebase.database().goOnline(), 1500);
+                    console.log("📱 Aplikasi disorot kembali, memastikan Firebase tetap online...");
+                    firebase.database().goOnline();
                 }
             }
         });
@@ -3197,10 +3231,10 @@
         // 2. Pengaman tambahan untuk iOS Safari (BFCache)
         window.addEventListener("pageshow", function(event) {
             if (event.persisted) {
+                // ✅ ROOT CAUSE FIX: Sama — hanya goOnline(), TIDAK goOffline().
                 if (typeof firebase !== 'undefined' && localStorage.getItem('davclar_isLoggedIn') === 'true') {
-                    console.log("📱 [BFCache] Halaman dipulihkan dari cache iOS, mereset koneksi Firebase...");
-                    firebase.database().goOffline();
-                    setTimeout(() => firebase.database().goOnline(), 1500);
+                    console.log("📱 [BFCache] Halaman dipulihkan, memastikan Firebase online...");
+                    firebase.database().goOnline();
                 }
             }
         });
