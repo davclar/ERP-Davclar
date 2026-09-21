@@ -2842,43 +2842,56 @@
         // =================================================================
         // 🔥 JURUS BAJAK LOCALSTORAGE & AUTO-SYNC FIREBASE (ANTI BOCOR V3) 🔥
         // =================================================================
+        // 🔥 JURUS BAJAK LOCALSTORAGE & AUTO-SYNC FIREBASE (iOS COMPATIBLE) 🔥
+        // =================================================================
 
-        // 1. Simpan fungsi asli LocalStorage
-        window.originalSetItem = localStorage.setItem;
+        // 1. Simpan fungsi ASLI dari PROTOTYPE (bukan dari instance)
+        //    Ini penting agar iOS Safari tidak memblokir.
+        window.originalSetItem = Storage.prototype.setItem;
 
-        // 2. Timpa setItem dengan pengaman parameter lengkap
-        localStorage.setItem = function(key, value) {
+        // 2. Override via PROTOTYPE — cara yang benar untuk iOS Safari.
+        //    Direct assignment (localStorage.setItem = func) DIAM-DIAM GAGAL di iOS
+        //    karena property ini non-writable di WebKit/iOS Safari.
+        Storage.prototype.setItem = function(key, value) {
+            // Tulis ke storage asli PERTAMA (panggil implementasi asli)
+            window.originalSetItem.call(this, key, value);
+
+            // Hanya proses localStorage, bukan sessionStorage
+            if (this !== window.localStorage) return;
+
             const ignoredKeys = ['davclar_activeTab', 'davclar_user', 'davclar_role', 'davclar_isLoggedIn', 'davclar_unsynced_keys'];
-            
+
             if (key.startsWith('davclar_') && window.firebaseDB && !ignoredKeys.includes(key)) {
+                // Tambahkan ke daftar pending (belum tersync)
                 try {
-                    let pending = JSON.parse(localStorage.getItem('davclar_unsynced_keys') || '[]');
+                    let pending = JSON.parse(window.localStorage.getItem('davclar_unsynced_keys') || '[]');
                     if (!Array.isArray(pending)) pending = [];
                     if (!pending.includes(key)) {
                         pending.push(key);
-                        window.originalSetItem.call(localStorage, 'davclar_unsynced_keys', JSON.stringify(pending));
+                        window.originalSetItem.call(window.localStorage, 'davclar_unsynced_keys', JSON.stringify(pending));
                     }
                 } catch(e) {}
-            }
 
-            // Eksekusi penyimpanan asli dengan 2 argumen aman
-            window.originalSetItem.apply(this, arguments);
-
-            if (key.startsWith('davclar_') && window.firebaseDB && !ignoredKeys.includes(key)) {
+                // Kirim ke Firebase
                 let valToSet;
                 try { valToSet = JSON.parse(value); } catch(e) { valToSet = value; }
 
                 window.firebaseDB.ref(key).set(valToSet).then(() => {
-                    setTimeout(() => {
-                        try {
-                            let pending = JSON.parse(localStorage.getItem('davclar_unsynced_keys') || '[]');
-                            if (Array.isArray(pending)) {
-                                pending = pending.filter(k => k !== key);
-                                window.originalSetItem.call(localStorage, 'davclar_unsynced_keys', JSON.stringify(pending));
-                            }
-                        } catch(e) {}
-                    }, 500);
-                }).catch(err => console.warn("Sync tertunda:", err));
+                    // Hapus dari daftar pending setelah berhasil
+                    try {
+                        let pending = JSON.parse(window.localStorage.getItem('davclar_unsynced_keys') || '[]');
+                        if (Array.isArray(pending)) {
+                            pending = pending.filter(k => k !== key);
+                            window.originalSetItem.call(window.localStorage, 'davclar_unsynced_keys', JSON.stringify(pending));
+                        }
+                    } catch(e) {}
+                }).catch(err => {
+                    // Tampilkan error yang VISIBLE (bukan cuma console) agar bisa dideteksi di iOS
+                    console.error('❌ Firebase write GAGAL:', key, err);
+                    if (typeof showToast === 'function') {
+                        showToast('⚠️ Gagal sync ke server: ' + (err.message || err), 'error');
+                    }
+                });
             }
         };
 
@@ -2890,10 +2903,10 @@
                 window.firebaseDB.ref(key).on('value', (snapshot) => {
                     let pending = [];
                     try {
-                        pending = JSON.parse(localStorage.getItem('davclar_unsynced_keys') || '[]');
+                        pending = JSON.parse(window.localStorage.getItem('davclar_unsynced_keys') || '[]');
                     } catch(e) {}
 
-                    // Jika HP sedang melakukan edit/save, abaikan tarikan server
+                    // Jika device sedang melakukan edit/save, abaikan tarikan server
                     if (Array.isArray(pending) && pending.includes(key)) return;
 
                     const data = snapshot.val();
@@ -2909,7 +2922,8 @@
                         if(key === 'davclar_kasbon') db_kasbon = data;
                         if(key === 'davclar_users') db_users = data;
                         
-                        window.originalSetItem.call(localStorage, key, JSON.stringify(data));
+                        // Tulis ke localStorage TANPA memicu Firebase sync (pakai originalSetItem)
+                        window.originalSetItem.call(window.localStorage, key, JSON.stringify(data));
                     }
                 });
             });
@@ -2922,19 +2936,19 @@
                     console.log('🔥 Firebase WebSocket TERHUBUNG — iOS aman menulis data.');
                     // Flush semua key yang tertunda (gagal terkirim saat offline)
                     try {
-                        let pending = JSON.parse(localStorage.getItem('davclar_unsynced_keys') || '[]');
+                        let pending = JSON.parse(window.localStorage.getItem('davclar_unsynced_keys') || '[]');
                         if (Array.isArray(pending) && pending.length > 0) {
                             console.log('🔄 Mengirim ulang data tertunda:', pending);
                             pending.forEach(function(k) {
-                                const raw = localStorage.getItem(k);
+                                const raw = window.localStorage.getItem(k);
                                 if (raw) {
                                     let val;
                                     try { val = JSON.parse(raw); } catch(e) { val = raw; }
                                     window.firebaseDB.ref(k).set(val)
                                         .then(function() {
-                                            let p = JSON.parse(localStorage.getItem('davclar_unsynced_keys') || '[]');
+                                            let p = JSON.parse(window.localStorage.getItem('davclar_unsynced_keys') || '[]');
                                             p = p.filter(function(x) { return x !== k; });
-                                            window.originalSetItem.call(localStorage, 'davclar_unsynced_keys', JSON.stringify(p));
+                                            window.originalSetItem.call(window.localStorage, 'davclar_unsynced_keys', JSON.stringify(p));
                                             console.log('✅ Data tertunda berhasil dikirim:', k);
                                         })
                                         .catch(function(e) { console.warn('Gagal kirim ulang:', k, e); });
