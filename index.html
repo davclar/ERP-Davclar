@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -2886,21 +2886,48 @@
         };
 
         // --- STRATEGI 2: Fungsi firebaseWrite() global ---
-        // Dipanggil LANGSUNG dari setiap fungsi save sebagai backup untuk iOS.
-        // iOS Safari kadang memblokir prototype override, jadi kita panggil Firebase
-        // secara eksplisit tanpa bergantung pada interceptor.
+        // --- STRATEGI 2: Fungsi firebaseWrite() global (dengan DIAGNOSTIC MODE) ---
+        window._diagMode = true; // ← SET false SETELAH SELESAI DIAGNOSA
         window.firebaseWrite = function(key, data) {
-            if (!window.firebaseDB) return;
+            // DIAGNOSTIC: tampilkan alert agar terlihat di iOS
+            if (window._diagMode && key === 'davclar_so') {
+                var dbStatus = window.firebaseDB ? 'ADA ✅' : 'NULL ❌';
+                var connStatus = 'unknown';
+                try {
+                    connStatus = navigator.onLine ? 'Online' : 'Offline';
+                } catch(e) {}
+                alert(
+                    '🔬 DIAGNOSA iOS\n\n' +
+                    'firebaseWrite() DIPANGGIL!\n' +
+                    'Key: ' + key + '\n' +
+                    'firebaseDB: ' + dbStatus + '\n' +
+                    'Network: ' + connStatus + '\n\n' +
+                    'Tekan OK lalu tunggu 3 detik.\n' +
+                    'Cek apakah muncul pesan lagi.'
+                );
+            }
+
+            if (!window.firebaseDB) {
+                alert('❌ DIAGNOSA: firebaseDB NULL! Firebase tidak terinisialisasi di iOS.');
+                return;
+            }
+
             const ignoredKeys = ['davclar_activeTab', 'davclar_user', 'davclar_role', 'davclar_isLoggedIn', 'davclar_unsynced_keys'];
             if (ignoredKeys.includes(key)) return;
-            
+
             let valToSet;
             try { valToSet = (typeof data === 'string') ? JSON.parse(data) : data; } catch(e) { valToSet = data; }
-            
+
             window.firebaseDB.ref(key).set(valToSet)
-                .then(() => { console.log('✅ Firebase direct write OK:', key); })
+                .then(() => {
+                    console.log('✅ Firebase direct write OK:', key);
+                    if (window._diagMode && key === 'davclar_so') {
+                        alert('✅ DIAGNOSA: Firebase write BERHASIL!\nKey: ' + key + '\nCek Firebase Console apakah data muncul.');
+                    }
+                })
                 .catch(err => {
                     console.error('❌ Firebase direct write GAGAL:', key, err);
+                    alert('❌ DIAGNOSA: Firebase write GAGAL!\nKey: ' + key + '\nError: ' + (err.message || err));
                     if (typeof showToast === 'function') showToast('⚠️ Gagal sync ke server!', 'error');
                 });
         };
