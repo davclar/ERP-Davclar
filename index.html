@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -2840,29 +2840,24 @@
         }
 
         // =================================================================
-        // 🔥 JURUS BAJAK LOCALSTORAGE & AUTO-SYNC FIREBASE (ANTI BOCOR V3) 🔥
-        // =================================================================
-        // 🔥 JURUS BAJAK LOCALSTORAGE & AUTO-SYNC FIREBASE (iOS COMPATIBLE) 🔥
+        // 🔥 FIREBASE SYNC ENGINE - DUAL STRATEGY (iOS COMPATIBLE) 🔥
         // =================================================================
 
-        // 1. Simpan fungsi ASLI dari PROTOTYPE (bukan dari instance)
-        //    Ini penting agar iOS Safari tidak memblokir.
+        // --- STRATEGI 1: Interceptor localStorage (untuk semua browser) ---
+        // Simpan fungsi asli dari prototype SEBELUM di-override
         window.originalSetItem = Storage.prototype.setItem;
 
-        // 2. Override via PROTOTYPE — cara yang benar untuk iOS Safari.
-        //    Direct assignment (localStorage.setItem = func) DIAM-DIAM GAGAL di iOS
-        //    karena property ini non-writable di WebKit/iOS Safari.
+        // Override via prototype (lebih reliable dari direct assignment di iOS)
         Storage.prototype.setItem = function(key, value) {
-            // Tulis ke storage asli PERTAMA (panggil implementasi asli)
+            // Tulis ke storage asli PERTAMA
             window.originalSetItem.call(this, key, value);
 
             // Hanya proses localStorage, bukan sessionStorage
             if (this !== window.localStorage) return;
 
             const ignoredKeys = ['davclar_activeTab', 'davclar_user', 'davclar_role', 'davclar_isLoggedIn', 'davclar_unsynced_keys'];
-
             if (key.startsWith('davclar_') && window.firebaseDB && !ignoredKeys.includes(key)) {
-                // Tambahkan ke daftar pending (belum tersync)
+                // Tandai sebagai pending
                 try {
                     let pending = JSON.parse(window.localStorage.getItem('davclar_unsynced_keys') || '[]');
                     if (!Array.isArray(pending)) pending = [];
@@ -2875,9 +2870,7 @@
                 // Kirim ke Firebase
                 let valToSet;
                 try { valToSet = JSON.parse(value); } catch(e) { valToSet = value; }
-
                 window.firebaseDB.ref(key).set(valToSet).then(() => {
-                    // Hapus dari daftar pending setelah berhasil
                     try {
                         let pending = JSON.parse(window.localStorage.getItem('davclar_unsynced_keys') || '[]');
                         if (Array.isArray(pending)) {
@@ -2886,13 +2879,30 @@
                         }
                     } catch(e) {}
                 }).catch(err => {
-                    // Tampilkan error yang VISIBLE (bukan cuma console) agar bisa dideteksi di iOS
                     console.error('❌ Firebase write GAGAL:', key, err);
-                    if (typeof showToast === 'function') {
-                        showToast('⚠️ Gagal sync ke server: ' + (err.message || err), 'error');
-                    }
+                    if (typeof showToast === 'function') showToast('⚠️ Gagal sync: ' + (err.message || err), 'error');
                 });
             }
+        };
+
+        // --- STRATEGI 2: Fungsi firebaseWrite() global ---
+        // Dipanggil LANGSUNG dari setiap fungsi save sebagai backup untuk iOS.
+        // iOS Safari kadang memblokir prototype override, jadi kita panggil Firebase
+        // secara eksplisit tanpa bergantung pada interceptor.
+        window.firebaseWrite = function(key, data) {
+            if (!window.firebaseDB) return;
+            const ignoredKeys = ['davclar_activeTab', 'davclar_user', 'davclar_role', 'davclar_isLoggedIn', 'davclar_unsynced_keys'];
+            if (ignoredKeys.includes(key)) return;
+            
+            let valToSet;
+            try { valToSet = (typeof data === 'string') ? JSON.parse(data) : data; } catch(e) { valToSet = data; }
+            
+            window.firebaseDB.ref(key).set(valToSet)
+                .then(() => { console.log('✅ Firebase direct write OK:', key); })
+                .catch(err => {
+                    console.error('❌ Firebase direct write GAGAL:', key, err);
+                    if (typeof showToast === 'function') showToast('⚠️ Gagal sync ke server!', 'error');
+                });
         };
 
         // 3. Definisikan dbKeys & Listener Firebase
@@ -4078,6 +4088,7 @@
             }
             
             localStorage.setItem('davclar_barang', JSON.stringify(db_databarang));
+            window.firebaseWrite('davclar_barang', db_databarang);
             
             // Bersihkan form manual (karena tag <form> sudah dihapus)
             document.getElementById('itemProdId').value = '';
@@ -4103,6 +4114,7 @@
             if (isConfirmed) {
                 db_databarang = db_databarang.filter(item => item.prodId !== prodId);
                 localStorage.setItem('davclar_barang', JSON.stringify(db_databarang));
+            window.firebaseWrite('davclar_barang', db_databarang);
                 renderItemTable();
                 showToast("Data barang berhasil dihapus!", "success");
             }
@@ -4235,6 +4247,7 @@
 
                 // Simpan ke LocalStorage dan Render
                 localStorage.setItem('davclar_barang', JSON.stringify(db_databarang));
+            window.firebaseWrite('davclar_barang', db_databarang);
                 itemCurrentPage = 1;
                 renderItemTable();
                 
@@ -4983,6 +4996,7 @@
             }
             
             localStorage.setItem('davclar_po', JSON.stringify(db_po));
+            window.firebaseWrite('davclar_po', db_po);
             
             closePOForm();
             renderPOList();
@@ -4998,6 +5012,7 @@
             if (isConfirmed) {
                 db_po = db_po.filter(p => p.id !== id);
                 localStorage.setItem('davclar_po', JSON.stringify(db_po));
+            window.firebaseWrite('davclar_po', db_po);
                 renderPOList();
                 showToast("Purchase Order berhasil dihapus!", "success");
             }
@@ -5054,6 +5069,7 @@
                 
                 db_po[poIndex].spkPrintedAt = timeStr;
                 localStorage.setItem('davclar_po', JSON.stringify(db_po));
+            window.firebaseWrite('davclar_po', db_po);
                 
                 if(typeof renderPOList === 'function') renderPOList();
                 if(typeof showToast === "function") showToast(`SPK Tercetak! (${timeStr})`, "success");
@@ -5425,8 +5441,10 @@
                 db_so.unshift(newSO); 
             }
             
-            // Simpan standar, biarkan mesin global yang nembak ke server secara otomatis
+            // Simpan ke localStorage (interceptor akan coba sync ke Firebase)
             localStorage.setItem('davclar_so', JSON.stringify(db_so));
+            // Backup langsung untuk iOS Safari yang tidak support interceptor
+            window.firebaseWrite('davclar_so', db_so);
 
             showToast('Sales Order Berhasil Disimpan!'); 
             closeSOForm(); 
@@ -5550,6 +5568,7 @@
             else db_invoice.unshift(newInvoice);
             
             localStorage.setItem('davclar_invoice', JSON.stringify(db_invoice));
+            window.firebaseWrite('davclar_invoice', db_invoice);
 
             // Pecah SO pakai koma dan update statusnya satu per satu
             if(soId && soId !== "MANUAL" && soId !== "-") {
@@ -5592,6 +5611,7 @@
             if (isConfirmed) {
                 db_invoice = db_invoice.filter(i => i.id !== id);
                 localStorage.setItem('davclar_invoice', JSON.stringify(db_invoice));
+            window.firebaseWrite('davclar_invoice', db_invoice);
                 
                 // [UPDATE] Kembalikan status SO (Bisa multi SO)
                 if(inv.soId && inv.soId !== "MANUAL" && inv.soId !== "-") {
@@ -5923,6 +5943,7 @@
             if (isConfirmed) {
                 db_so = db_so.filter(s => s.id !== id);
                 localStorage.setItem('davclar_so', JSON.stringify(db_so));
+            window.firebaseWrite('davclar_so', db_so);
                 renderSOList();
                 showToast("Sales Order berhasil dihapus!", "success");
             }
@@ -6542,6 +6563,7 @@
             // Simpan hasil "Kawin Paksa" ke Database
             if (invoiceBerubah) {
                 localStorage.setItem('davclar_invoice', JSON.stringify(db_invoice));
+            window.firebaseWrite('davclar_invoice', db_invoice);
             }
 
             // PENGAMBILAN KEPUTUSAN STATUS
@@ -6551,6 +6573,7 @@
             
             db_so[soIndex] = soData;
             localStorage.setItem('davclar_so', JSON.stringify(db_so));
+            window.firebaseWrite('davclar_so', db_so);
         }
 
         // FUNGSI SAPU JAGAT UNTUK MEMAKSA UPDATE SEMUA STATUS SO SEKALIGUS
@@ -6615,6 +6638,7 @@
         if (!db_customer) {
             db_customer = [];
             localStorage.setItem('davclar_customer', JSON.stringify(db_customer));
+            window.firebaseWrite('davclar_customer', db_customer);
         }
 
         function renderCustomerList() {
@@ -6860,6 +6884,7 @@
             }
 
             localStorage.setItem('davclar_customer', JSON.stringify(db_customer));
+            window.firebaseWrite('davclar_customer', db_customer);
             renderCustomerList();
             closeCustomerModal(); // Langsung tutup modal setelah simpan
         }
@@ -6874,6 +6899,7 @@
             if (isConfirmed) {
                 db_customer = db_customer.filter(c => c.id !== id);
                 localStorage.setItem('davclar_customer', JSON.stringify(db_customer));
+            window.firebaseWrite('davclar_customer', db_customer);
                 renderCustomerList();
                 showToast("Toko berhasil dihapus!", "success");
             }
@@ -6987,6 +7013,7 @@
 
                 if(countBaru > 0 || countUpdate > 0) {
                     localStorage.setItem('davclar_customer', JSON.stringify(db_customer));
+            window.firebaseWrite('davclar_customer', db_customer);
                     
                     // Panggil fungsi render list customer punya Bosku
                     if(typeof renderCustomerList === 'function') renderCustomerList();
@@ -7846,6 +7873,7 @@
             }
 
             localStorage.setItem('davclar_payment', JSON.stringify(db_payment));
+            window.firebaseWrite('davclar_payment', db_payment);
             if(typeof renderDashboard === 'function') renderDashboard(); 
             renderInvoiceList(); renderPaymentList(); closePaymentModal();
         }
@@ -7950,6 +7978,7 @@
             if (isConfirmed) {
                 db_payment = db_payment.filter(p => p.id !== payId);
                 localStorage.setItem('davclar_payment', JSON.stringify(db_payment));
+            window.firebaseWrite('davclar_payment', db_payment);
                 showToast("Mutasi kas berhasil dihapus!", "success");
                 
                 renderInvoiceList();
@@ -7993,6 +8022,7 @@
             let adminAcc = {}; appMenus.forEach(m => adminAcc[m.id] = 'FULL');
             db_users.push({ username: 'ADMIN', password: '1234', access: adminAcc });
             //localStorage.setItem('davclar_users', JSON.stringify(db_users));
+            window.firebaseWrite('davclar_users', db_users);
         } else {
             let diubah = false;
             db_users.forEach(u => {
@@ -8003,6 +8033,7 @@
                 }
             });
             if(diubah) localStorage.setItem('davclar_users', JSON.stringify(db_users));
+            window.firebaseWrite('davclar_users', db_users);
         }
 
         // --- SENTRALISASI NAMA SALES (GLOBAL OPTIONS) ---
@@ -8156,6 +8187,7 @@
             }
 
             localStorage.setItem('davclar_users', JSON.stringify(db_users));
+            window.firebaseWrite('davclar_users', db_users);
             renderUserTable(); updateGlobalDropdowns(); closeUserModal();
         }
 
@@ -8169,6 +8201,7 @@
             if (isConfirmed) {
                 db_users = db_users.filter(u => u.username !== username);
                 localStorage.setItem('davclar_users', JSON.stringify(db_users));
+            window.firebaseWrite('davclar_users', db_users);
                 renderUserTable(); updateGlobalDropdowns();
                 showToast(`Akun ${username} dihapus!`, "success");
             }
@@ -8434,15 +8467,25 @@
                         
                         // Timpa seluruh LocalStorage
                         if(data.davclar_barang) localStorage.setItem('davclar_barang', JSON.stringify(data.davclar_barang));
+            window.firebaseWrite('davclar_barang', data.davclar_barang);
                         if(data.davclar_customer) localStorage.setItem('davclar_customer', JSON.stringify(data.davclar_customer));
+            window.firebaseWrite('davclar_customer', data.davclar_customer);
                         if(data.davclar_po) localStorage.setItem('davclar_po', JSON.stringify(data.davclar_po));
+            window.firebaseWrite('davclar_po', data.davclar_po);
                         if(data.davclar_so) localStorage.setItem('davclar_so', JSON.stringify(data.davclar_so));
+            window.firebaseWrite('davclar_so', data.davclar_so);
                         if(data.davclar_invoice) localStorage.setItem('davclar_invoice', JSON.stringify(data.davclar_invoice));
+            window.firebaseWrite('davclar_invoice', data.davclar_invoice);
                         if(data.davclar_payment) localStorage.setItem('davclar_payment', JSON.stringify(data.davclar_payment));
+            window.firebaseWrite('davclar_payment', data.davclar_payment);
                         if(data.davclar_kontrabon) localStorage.setItem('davclar_kontrabon', JSON.stringify(data.davclar_kontrabon));
+            window.firebaseWrite('davclar_kontrabon', data.davclar_kontrabon);
                         if(data.davclar_sales_cp) localStorage.setItem('davclar_sales_cp', JSON.stringify(data.davclar_sales_cp));
+            window.firebaseWrite('davclar_sales_cp', data.davclar_sales_cp);
                         if(data.davclar_kasbon) localStorage.setItem('davclar_kasbon', JSON.stringify(data.davclar_kasbon));
+            window.firebaseWrite('davclar_kasbon', data.davclar_kasbon);
                         if(data.davclar_users) localStorage.setItem('davclar_users', JSON.stringify(data.davclar_users));
+            window.firebaseWrite('davclar_users', data.davclar_users);
 
                         if(typeof showToast === "function") showToast("Restore Berhasil! Memuat ulang sistem...", "success");
                         
@@ -8828,6 +8871,7 @@
 
                 if(countBaru > 0 || countUpdate > 0) {
                     localStorage.setItem('davclar_so', JSON.stringify(db_so));
+            window.firebaseWrite('davclar_so', db_so);
                     
                     // Render list SO (Sesuaikan dengan nama fungsi render SO Bosku)
                     if(typeof renderSOList === 'function') renderSOList(); 
@@ -8951,6 +8995,7 @@
 
                 if(countBaru > 0 || countUpdate > 0) {
                     localStorage.setItem('davclar_po', JSON.stringify(db_po));
+            window.firebaseWrite('davclar_po', db_po);
                     if(typeof renderPOList === 'function') renderPOList(); 
                     if(typeof showToast === 'function') showToast(`✅ Import PO Selesai! \n${countBaru} Baru, ${countUpdate} Diupdate.`, "success");
                 }
@@ -9140,6 +9185,7 @@
 
                 if(countBaru > 0 || countUpdate > 0) {
                     localStorage.setItem('davclar_invoice', JSON.stringify(db_invoice));
+            window.firebaseWrite('davclar_invoice', db_invoice);
                     
                     affectedSOs.forEach(soId => {
                         if(typeof recalculateSOStatus === 'function') recalculateSOStatus(soId);
@@ -9311,6 +9357,7 @@
 
                 if(countBaru > 0 || countUpdate > 0) {
                     localStorage.setItem('davclar_payment', JSON.stringify(db_payment));
+            window.firebaseWrite('davclar_payment', db_payment);
                     if(typeof renderPaymentList === 'function') renderPaymentList();
                     if(typeof renderDashboard === 'function') renderDashboard(); 
                     showToast(`✅ Import Berhasil! \n${countBaru} Baru, ${countUpdate} Update.`, "success");
@@ -9405,6 +9452,7 @@
 
                 // Simpan ke Brankas dan Render Ulang Layar
                 localStorage.setItem('davclar_kasbon', JSON.stringify(db_kasbon));
+            window.firebaseWrite('davclar_kasbon', db_kasbon);
                 if(typeof renderSalesLedger === 'function') renderSalesLedger(); // Refresh layar
                 
                 showToast(`✅ Import Kasbon Selesai!\n- ${countBaru} Kasbon Baru\n- ${countUpdate} Data Diperbarui`, 'success');
@@ -9927,6 +9975,7 @@
                     note: `Cair Otomatis (${checkedBoxes.length} Nota)` 
                 });
                 localStorage.setItem('davclar_sales_cp', JSON.stringify(db_sales_cp));
+            window.firebaseWrite('davclar_sales_cp', db_sales_cp);
 
                 // 2. STEMPEL TRANSAKSI (db_payment)
                 db_payment.forEach(p => {
@@ -9936,6 +9985,7 @@
                     }
                 });
                 localStorage.setItem('davclar_payment', JSON.stringify(db_payment));
+            window.firebaseWrite('davclar_payment', db_payment);
 
                 renderKomisi();
                 if(typeof renderSalesLedger === 'function') renderSalesLedger(); // Update Klasemen
@@ -10271,6 +10321,7 @@
                 // 1. Hapus dari riwayat CP
                 db_sales_cp = db_sales_cp.filter(c => c.id !== id);
                 localStorage.setItem('davclar_sales_cp', JSON.stringify(db_sales_cp));
+            window.firebaseWrite('davclar_sales_cp', db_sales_cp);
 
                 // 2. [FIX] RESET STATUS DI BUKU KAS (KEMBALI MENGENDAP)
                 let paymentChanged = false;
@@ -10285,6 +10336,7 @@
                 // 3. Simpan perubahan buku kas ke LocalStorage
                 if (paymentChanged) {
                     localStorage.setItem('davclar_payment', JSON.stringify(db_payment));
+            window.firebaseWrite('davclar_payment', db_payment);
                 }
 
                 // 4. Render ulang layar agar langsung update
@@ -10405,6 +10457,7 @@
 
             db_kasbon.push({ id: ksbNo, tanggal: tgl, sales: sales, nominal: nominal, tipe: tipe });
             localStorage.setItem('davclar_kasbon', JSON.stringify(db_kasbon));
+            window.firebaseWrite('davclar_kasbon', db_kasbon);
             
             if(typeof showToast === "function") showToast("Kasbon berhasil dicatat!", "success");
             closeModalKasbon();
@@ -10426,6 +10479,7 @@
             if (isConfirmed) {
                 db_kasbon = db_kasbon.filter(k => k.id !== id);
                 localStorage.setItem('davclar_kasbon', JSON.stringify(db_kasbon));
+            window.firebaseWrite('davclar_kasbon', db_kasbon);
                 renderSalesLedger();
                 if(typeof showToast === "function") showToast("Data Kasbon berhasil dihapus!", "success");
             }
@@ -10811,6 +10865,7 @@
                 total: grandTotalSisa
             });
             localStorage.setItem('davclar_kontrabon', JSON.stringify(db_kontrabon));
+            window.firebaseWrite('davclar_kontrabon', db_kontrabon);
             
             showToast("Kontra Bon berhasil disimpan!", "success");
 
@@ -10841,6 +10896,7 @@
             if(isConfirmed) {
                 db_kontrabon = db_kontrabon.filter(k => k.id !== id);
                 localStorage.setItem('davclar_kontrabon', JSON.stringify(db_kontrabon));
+            window.firebaseWrite('davclar_kontrabon', db_kontrabon);
                 renderRiwayatKB();
                 if(typeof showToast === "function") showToast("Riwayat Kontra Bon berhasil dihapus!", "success");
             }
@@ -11524,6 +11580,7 @@
             po.statusBarcode = `Luar:${luarPart} Dalam:${dalamPart}`;
             
             localStorage.setItem('davclar_po', JSON.stringify(db_po));
+            window.firebaseWrite('davclar_po', db_po);
             
             if (typeof renderPOList === 'function') renderPOList();
             populateDropdownPOBarcode();
