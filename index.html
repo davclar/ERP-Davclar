@@ -5945,8 +5945,8 @@
                 div.onclick = () => {
                     document.getElementById('soInpToko').value = c.nama; 
                     document.getElementById('soInpAlamat').value = c.alamat; 
-                    document.getElementById('soInpType').value = c.type; 
-                    document.getElementById('soInpDisc').value = c.disc; 
+                    document.getElementById('soInpType').value = c.tipe; 
+                    document.getElementById('soInpDisc').value = c.disc1; 
                     document.getElementById('soInpDisc2').value = c.disc2 || 0; 
                     dropdown.classList.add('hidden');
                 };
@@ -7136,8 +7136,8 @@
                 div.onclick = () => {
                     document.getElementById('invCustomer').value = c.nama; 
                     document.getElementById('invAlamat').innerText = c.alamat; 
-                    document.getElementById('invType').innerText = c.type; 
-                    document.getElementById('invDisc1').innerText = c.disc; 
+                    document.getElementById('invType').innerText = c.tipe; 
+                    document.getElementById('invDisc1').innerText = c.disc1; 
                     document.getElementById('invDisc2').innerText = c.disc2 || 0; 
                     dropdown.classList.add('hidden');
                     renderInvTempItems(); // Kalkulasi ulang diskon jika ada barang
@@ -10768,7 +10768,7 @@
                 updatePaginationUI('kb', startIndex + 1, endIndex, totalItems, kbCurrentPage, totalPages);
             }
         }
-        
+
         // --- PENCARIAN TOKO OTOMATIS (SUGGESTION) ---
         function searchCustForKB() {
             const query = (document.getElementById('kbSearchCust').value || '').toLowerCase().trim();
