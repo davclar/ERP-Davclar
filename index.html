@@ -2927,9 +2927,8 @@
                     if (typeof renderInvoiceList === 'function') renderInvoiceList();
                     if (typeof renderCustomerList === 'function') renderCustomerList();
                     if (typeof renderPaymentList === 'function') renderPaymentList();
-                    if (typeof renderKasbonList === 'function') renderKasbonList();
-                    if (typeof renderKontrabonList === 'function') renderKontrabonList();
-                    if (typeof renderSalesCPList === 'function') renderSalesCPList();
+                    if (typeof renderRiwayatKB === 'function') renderRiwayatKB();
+                    if (typeof renderSalesLedger === 'function') renderSalesLedger();
                     if (typeof renderDashboard === 'function') renderDashboard();
                 }, 500);
             }
@@ -10632,10 +10631,14 @@
             if(!tbody) return;
             tbody.innerHTML = '';
             
-            // --- CEK HAK AKSES ADMIN ---
-            const uRole = (localStorage.getItem('davclar_role') || 'SALES').toUpperCase().trim();
-            const isAdmin = (uRole === 'ADMIN');
+            // --- 1. AMBIL IDENTITAS & HAK AKSES (KACAMATA KUDA) ---
+            const role = (localStorage.getItem('davclar_role') || 'SALES').toUpperCase().trim();
+            const loggedInUser = (localStorage.getItem('davclar_user') || "").toUpperCase().trim();
+            
+            const isSales = (role === 'SALES');
+            const isAdmin = (role === 'ADMIN' || role === 'MANAGER'); // Admin / Manager bebas lihat semua
 
+            // Sembunyikan kolom dan tombol aksi jika bukan Admin
             const thAksiKB = document.getElementById('th-aksi-kb');
             if (thAksiKB) thAksiKB.style.display = isAdmin ? '' : 'none';
 
@@ -10644,16 +10647,24 @@
 
             // Ambil nilai input pencarian (jika ada)
             const searchInput = document.getElementById('searchKB');
-            const search = searchInput ? searchInput.value.toLowerCase() : '';
+            const search = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
+            // --- 2. FILTERING DATA KACAMATA KUDA ---
             let filtered = db_kontrabon.filter(kb => {
-                // Sensor multi-user (Sales hanya melihat kontrabon miliknya jika diperlukan, atau filter global)
-                const role = localStorage.getItem('davclar_role');
-                const loggedInUser = localStorage.getItem('davclar_user');
-                if(role === 'SALES' && kb.sales && kb.sales !== loggedInUser) return false;
+                let namaToko = (kb.toko || "").toUpperCase().trim();
+                
+                // Cari data toko ini di database customer untuk memastikan siapa salesnya
+                let cust = db_customer.find(c => (c.nama || "").toUpperCase().trim() === namaToko);
+                let salesToko = cust ? (cust.sales || "").toUpperCase().trim() : (kb.sales || "").toUpperCase().trim();
 
+                // [KUNCI KACAMATA KUDA]: Jika yang login SALES, dan sales toko bukan miliknya, SEMBUNYIKAN!
+                if (isSales && salesToko !== loggedInUser) {
+                    return false;
+                }
+
+                // Filter Pencarian Text
                 if(search) {
-                    const gabungan = `${kb.id || ''} ${kb.tanggal || ''} ${kb.toko || ''} ${kb.total || ''} ${kb.sales || ''}`.toLowerCase();
+                    const gabungan = `${kb.id || ''} ${kb.tanggal || ''} ${kb.toko || ''} ${kb.total || ''} ${salesToko}`.toLowerCase();
                     if(!gabungan.includes(search)) return false;
                 }
                 return true;
@@ -10661,7 +10672,7 @@
 
             filtered.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal));
 
-            // PAGINATION LOGIC
+            // --- 3. PAGINATION LOGIC ---
             const totalItems = filtered.length;
             const totalPages = Math.ceil(totalItems / pageItemsLimit) || 1;
             if (kbCurrentPage > totalPages) kbCurrentPage = totalPages;
@@ -10680,6 +10691,7 @@
                 return;
             }
 
+            // --- 4. RENDER TABEL ---
             paginatedData.forEach(kb => {
                 let aksiHTML = '';
                 if (isAdmin) {
@@ -10746,7 +10758,6 @@
                     </td>
                     
                     <!-- AKSI (PC ONLY) -->
-                    <!-- Tambahkan class hidden md:table-cell pada td pembungkus aksi agar tidak dobel di HP -->
                     ${aksiHTML.replace('class="', 'class="hidden md:table-cell ')}
                 `;
                 tbody.appendChild(tr);
@@ -10757,7 +10768,7 @@
                 updatePaginationUI('kb', startIndex + 1, endIndex, totalItems, kbCurrentPage, totalPages);
             }
         }
-
+        
         // --- PENCARIAN TOKO OTOMATIS (SUGGESTION) ---
         function searchCustForKB() {
             const query = (document.getElementById('kbSearchCust').value || '').toLowerCase().trim();
