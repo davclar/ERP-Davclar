@@ -2913,6 +2913,24 @@
         const dbKeys = ['davclar_barang', 'davclar_customer', 'davclar_po', 'davclar_so', 'davclar_invoice', 'davclar_payment', 'davclar_kontrabon', 'davclar_sales_cp', 'davclar_kasbon', 'davclar_users'];
 
         if (window.firebaseDB) {
+            // Debounce render — UI auto-refresh 1x setelah semua key Firebase selesai diupdate
+            let _fbRenderTimer = null;
+            function _scheduleRender() {
+                clearTimeout(_fbRenderTimer);
+                _fbRenderTimer = setTimeout(function() {
+                    if (typeof renderItemTable === 'function') renderItemTable();
+                    if (typeof renderPOList === 'function') renderPOList();
+                    if (typeof renderSOList === 'function') renderSOList();
+                    if (typeof renderInvoiceList === 'function') renderInvoiceList();
+                    if (typeof renderCustomerList === 'function') renderCustomerList();
+                    if (typeof renderPaymentList === 'function') renderPaymentList();
+                    if (typeof renderKasbonList === 'function') renderKasbonList();
+                    if (typeof renderKontrabonList === 'function') renderKontrabonList();
+                    if (typeof renderSalesCPList === 'function') renderSalesCPList();
+                    if (typeof renderDashboard === 'function') renderDashboard();
+                }, 500);
+            }
+
             dbKeys.forEach(key => {
                 window.firebaseDB.ref(key).on('value', (snapshot) => {
                     let pending = [];
@@ -2938,9 +2956,13 @@
                         
                         // Tulis ke localStorage TANPA memicu Firebase sync (pakai originalSetItem)
                         window.originalSetItem.call(window.localStorage, key, JSON.stringify(data));
+
+                        // Jadwalkan render ulang UI (debounced — 1x setelah semua key selesai)
+                        _scheduleRender();
                     }
                 });
             });
+
 
             // ✅ LISTENER KONEKSI FIREBASE (penting untuk iOS)
             // .info/connected adalah node khusus Firebase yang bernilai true/false
@@ -6564,35 +6586,36 @@
                 }
             });
 
-            // Simpan hasil "Kawin Paksa" ke Database
-            if (invoiceBerubah) {
-                localStorage.setItem('davclar_invoice', JSON.stringify(db_invoice));
-            window.firebaseWrite('davclar_invoice', db_invoice);
-            }
-
             // PENGAMBILAN KEPUTUSAN STATUS
             if (totalSentQty <= 0) soData.status = "BELUM DIKIRIM";
             else if (totalSentQty < totalOrderQty) soData.status = "PARSIAL";
             else soData.status = "SUDAH DIKIRIM";
             
             db_so[soIndex] = soData;
-            localStorage.setItem('davclar_so', JSON.stringify(db_so));
-            window.firebaseWrite('davclar_so', db_so);
+            // Hanya update in-memory. Write ke Firebase dilakukan 1x oleh sinkronisasiMassalSO.
+            return invoiceBerubah;
         }
 
-        // FUNGSI SAPU JAGAT UNTUK MEMAKSA UPDATE SEMUA STATUS SO SEKALIGUS
         function sinkronisasiMassalSO() {
             if(!db_so || db_so.length === 0) {
                 showToast("Tidak ada data SO untuk disinkronisasi.", "warning");
                 return;
             }
             
-            // Looping ke semua SO dan paksa hitung ulang
+            // Loop in-memory saja — TIDAK write Firebase per-item (mencegah hang)
+            let _invBerubah = false;
             db_so.forEach(so => {
-                recalculateSOStatus(so.id);
+                if (recalculateSOStatus(so.id)) _invBerubah = true;
             });
             
-            // Render ulang tabelnya
+            // Satu kali write ke Firebase setelah semua kalkulasi selesai
+            localStorage.setItem('davclar_so', JSON.stringify(db_so));
+            window.firebaseWrite('davclar_so', db_so);
+            if (_invBerubah) {
+                localStorage.setItem('davclar_invoice', JSON.stringify(db_invoice));
+                window.firebaseWrite('davclar_invoice', db_invoice);
+            }
+            
             renderSOList();
             showToast("✅ Sinkronisasi Massal Selesai! Semua status SO telah diperbarui sesuai Invoice.", "success");
         }
