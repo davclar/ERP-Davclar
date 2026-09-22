@@ -2885,49 +2885,26 @@
             }
         };
 
-        // --- STRATEGI 2: Fungsi firebaseWrite() global ---
-        // --- STRATEGI 2: Fungsi firebaseWrite() global (dengan DIAGNOSTIC MODE) ---
-        window._diagMode = true; // ← SET false SETELAH SELESAI DIAGNOSA
+        // Fungsi firebaseWrite() global (iOS + Android Compatible)
+        // Dipanggil langsung dari setiap fungsi save untuk menjamin data terkirim ke Firebase.
         window.firebaseWrite = function(key, data) {
-            // DIAGNOSTIC: tampilkan alert agar terlihat di iOS
-            if (window._diagMode && key === 'davclar_so') {
-                var dbStatus = window.firebaseDB ? 'ADA ✅' : 'NULL ❌';
-                var connStatus = 'unknown';
-                try {
-                    connStatus = navigator.onLine ? 'Online' : 'Offline';
-                } catch(e) {}
-                alert(
-                    '🔬 DIAGNOSA iOS\n\n' +
-                    'firebaseWrite() DIPANGGIL!\n' +
-                    'Key: ' + key + '\n' +
-                    'firebaseDB: ' + dbStatus + '\n' +
-                    'Network: ' + connStatus + '\n\n' +
-                    'Tekan OK lalu tunggu 3 detik.\n' +
-                    'Cek apakah muncul pesan lagi.'
-                );
-            }
 
-            if (!window.firebaseDB) {
-                alert('❌ DIAGNOSA: firebaseDB NULL! Firebase tidak terinisialisasi di iOS.');
-                return;
-            }
+            if (!window.firebaseDB) return;
 
             const ignoredKeys = ['davclar_activeTab', 'davclar_user', 'davclar_role', 'davclar_isLoggedIn', 'davclar_unsynced_keys'];
             if (ignoredKeys.includes(key)) return;
+
+            // Guard: jangan kirim array kosong ke Firebase (cegah data terhapus)
+            if (Array.isArray(data) && data.length === 0) return;
+            if (data === null || data === undefined) return;
 
             let valToSet;
             try { valToSet = (typeof data === 'string') ? JSON.parse(data) : data; } catch(e) { valToSet = data; }
 
             window.firebaseDB.ref(key).set(valToSet)
-                .then(() => {
-                    console.log('✅ Firebase direct write OK:', key);
-                    if (window._diagMode && key === 'davclar_so') {
-                        alert('✅ DIAGNOSA: Firebase write BERHASIL!\nKey: ' + key + '\nCek Firebase Console apakah data muncul.');
-                    }
-                })
+                .then(() => { console.log('✅ Firebase write OK:', key); })
                 .catch(err => {
-                    console.error('❌ Firebase direct write GAGAL:', key, err);
-                    alert('❌ DIAGNOSA: Firebase write GAGAL!\nKey: ' + key + '\nError: ' + (err.message || err));
+                    console.error('❌ Firebase write GAGAL:', key, err);
                     if (typeof showToast === 'function') showToast('⚠️ Gagal sync ke server!', 'error');
                 });
         };
