@@ -4,11 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Davclar Mini ERP</title>
-    <link rel="icon" type="image/png" href="logo.png">
-    <link rel="favicon" type="image/png" href="logo.png">
     <link rel="icon" type="image/png" sizes="32x32" href="logo.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="logo.png"> 
+    <link rel="icon" type="image/png" sizes="16x16" href="logo.png">
+    <link rel="shortcut icon" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="logo.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="logo.png">
     <link rel="apple-touch-icon" sizes="180x180" href="logo.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Davclar ERP">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="manifest" href="manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -8046,10 +8053,15 @@
 
         // Format ulang db_users agar mendukung object 'access'
         if(db_users.length === 0) {
+            // db_users kosong bisa karena:
+            // a) Device baru - belum dapat data dari Firebase listener (yang async)
+            // b) Memang belum ada user sama sekali
+            // JANGAN write ke Firebase di sini! Firebase listener akan load data yang benar.
+            // Set default hanya di localStorage sebagai fallback sementara.
             let adminAcc = {}; appMenus.forEach(m => adminAcc[m.id] = 'FULL');
             db_users.push({ username: 'ADMIN', password: '1234', access: adminAcc });
-            //localStorage.setItem('davclar_users', JSON.stringify(db_users));
-            window.firebaseWrite('davclar_users', db_users);
+            // Simpan ke localStorage saja (TIDAK ke Firebase - cegah overwrite data asli)
+            window.originalSetItem.call(window.localStorage, 'davclar_users', JSON.stringify(db_users));
         } else {
             let diubah = false;
             db_users.forEach(u => {
@@ -8059,8 +8071,10 @@
                     diubah = true;
                 }
             });
-            if(diubah) localStorage.setItem('davclar_users', JSON.stringify(db_users));
-            window.firebaseWrite('davclar_users', db_users);
+            if(diubah) {
+                localStorage.setItem('davclar_users', JSON.stringify(db_users));
+                window.firebaseWrite('davclar_users', db_users);
+            }
         }
 
         // --- SENTRALISASI NAMA SALES (GLOBAL OPTIONS) ---
