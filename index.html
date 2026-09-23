@@ -6527,6 +6527,12 @@
 
         function editInvoice(id) {
             const inv = db_invoice.find(i => i.id === id);
+
+            const cust = db_customer.find(c => c.nama === inv.toko) || {};
+            
+            // Format Alamat
+            let alamatToko = [cust.alamat].filter(Boolean).join(' - ') || '-';
+
             if(!inv) return;
 
             invSource = 'invoice_list'; 
@@ -6554,7 +6560,7 @@
             document.getElementById('invType').innerText = inv.type || "-";
             document.getElementById('invDisc1').innerText = inv.disc1 || 0;
             document.getElementById('invDisc2').innerText = inv.disc2 || 0;
-            document.getElementById('invAlamat').innerText = inv.alamat || "-";
+            document.getElementById('invAlamat').innerText = alamatToko || "-";
             if(document.getElementById('invInpPenyesuaian')) {
                 document.getElementById('invInpPenyesuaian').value = inv.penyesuaian || 0;
             }
