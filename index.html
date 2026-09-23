@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -6322,43 +6322,93 @@
             const totalAkhirBulat = Math.round(inv.totalAkhir);
 
             // ==========================================
-            // LOGIKA PAGINATION ANTI-KEPOTONG (SMART CHUNKING)
+            // LOGIKA PAGINATION CUSTOM DAVCLAR (A5 LANSKAP)
+            // - <= 15 item: 1 Halaman Lengkap (Kop + Footer)
+            // - Multi-page:
+            //   * Page Awal (Kop saja, tanpa Footer): max 20 item
+            //   * Page Tengah (Tanpa Kop & Tanpa Footer): max 25 item
+            //   * Page Akhir (Footer saja, tanpa Kop): max 20 item
             // ==========================================
-            let itemsCopy = [...inv.items];
+            let rawItems = [...(inv.items || [])];
             let pages = [];
-            let isFirstPage = true;
+            const N = rawItems.length;
 
-            const PAGE1_MAX_WITH_FOOTER = 10;
-            const PAGE1_MAX_NO_FOOTER = 12;
-            const NEXT_PAGE_MAX_WITH_FOOTER = 13;
-            const NEXT_PAGE_MAX_NO_FOOTER = 15;
-
-            while (itemsCopy.length > 0) {
-                let limitWithFooter = isFirstPage ? PAGE1_MAX_WITH_FOOTER : NEXT_PAGE_MAX_WITH_FOOTER;
-                let limitNoFooter   = isFirstPage ? PAGE1_MAX_NO_FOOTER : NEXT_PAGE_MAX_NO_FOOTER;
-
-                if (itemsCopy.length <= limitWithFooter) {
-                    pages.push(itemsCopy.splice(0, itemsCopy.length));
-                } else {
-                    let take = limitNoFooter;
-                    if (itemsCopy.length > limitWithFooter && itemsCopy.length <= limitNoFooter) {
-                        take = limitWithFooter; 
-                    }
-                    pages.push(itemsCopy.splice(0, take));
+            if (N <= 15) {
+                // <= 15 item: 1 Halaman Lengkap (Kop + Footer)
+                pages.push({
+                    items: rawItems,
+                    hasHeader: true,
+                    hasFooter: true
+                });
+            } else {
+                // Hitung total halaman yang dibutuhkan:
+                // Page 1: max 20, Page Akhir: max 20 (total 40)
+                // Setiap page tengah menambah kapasitas 25
+                let P = 2;
+                if (N > 40) {
+                    P = 2 + Math.ceil((N - 40) / 25);
                 }
-                isFirstPage = false;
+
+                // Tentukan kuota item tiap halaman
+                let counts = new Array(P).fill(0);
+                let remaining = N;
+
+                for (let i = 0; i < P; i++) {
+                    const isFirst = (i === 0);
+                    const isLast = (i === P - 1);
+                    const maxCapacity = isFirst ? 20 : (isLast ? 20 : 25);
+                    const pagesAfter = P - 1 - i;
+
+                    let maxCapacityRemaining = 0;
+                    for (let j = i + 1; j < P; j++) {
+                        maxCapacityRemaining += (j === P - 1 ? 20 : 25);
+                    }
+
+                    let minTake = Math.max(1, remaining - maxCapacityRemaining);
+                    let maxTake = Math.min(maxCapacity, remaining - pagesAfter);
+
+                    let take = maxTake;
+                    counts[i] = take;
+                    remaining -= take;
+                }
+
+                // Penyeimbang halaman terakhir agar tidak hanya 1-2 baris jika halaman sebelumnya masih lega
+                if (P >= 2 && counts[P - 1] < 4) {
+                    const needed = 4 - counts[P - 1];
+                    const prevCapMin = (P - 1 === 1) ? 10 : 12;
+                    const canShift = Math.max(0, counts[P - 2] - prevCapMin);
+                    const shift = Math.min(needed, canShift);
+                    if (shift > 0) {
+                        counts[P - 2] -= shift;
+                        counts[P - 1] += shift;
+                    }
+                }
+
+                // Pecah items ke dalam pages
+                let offset = 0;
+                for (let i = 0; i < P; i++) {
+                    pages.push({
+                        items: rawItems.slice(offset, offset + counts[i]),
+                        hasHeader: (i === 0),
+                        hasFooter: (i === P - 1)
+                    });
+                    offset += counts[i];
+                }
             }
-            
-            if (pages.length === 0) pages.push([]);
+
+            if (pages.length === 0) {
+                pages.push({ items: [], hasHeader: true, hasFooter: true });
+            }
 
             // ==========================================
             // RENDER HTML PER HALAMAN (UKURAN A5 LANSKAP)
             // ==========================================
             let allPagesHTML = '';
             
-            pages.forEach((pageItems, index) => {
-                const isPage1 = index === 0;
-                const isLastPage = index === pages.length - 1;
+            pages.forEach((pageObj, index) => {
+                const pageItems = pageObj.items;
+                const isPage1 = pageObj.hasHeader;
+                const isLastPage = pageObj.hasFooter;
                 const pageNumber = index + 1;
 
                 let headerHTML = '';
@@ -6379,6 +6429,14 @@
                                     <tr><td class="align-top">Alamat</td><td class="align-top whitespace-normal break-words">: ${alamatToko}</td></tr>
                                 </table>
                             </div>
+                        </div>
+                    `;
+                } else {
+                    // Header mini tanpa kop untuk halaman sambungan agar hemat tempat
+                    headerHTML = `
+                        <div class="flex justify-between items-center mb-1 text-[9px] font-bold text-black border-b border-black pb-0.5">
+                            <span>FAKTUR: ${inv.id} - ${inv.toko}</span>
+                            <span>Halaman ${pageNumber} dari ${pages.length}</span>
                         </div>
                     `;
                 }
