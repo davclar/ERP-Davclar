@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -116,8 +116,8 @@
         <!-- [BARU] OVERLAY GELAP UNTUK MOBILE (Muncul kalau menu dibuka) -->
         <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden" onclick="toggleSidebar()"></div>
 
-        <!-- SIDEBAR (Diberi id="sidebar" dan efek geser khusus mobile) -->
-        <aside id="sidebar" class="w-64 bg-gray-900 text-white flex flex-col transition-transform duration-300 fixed inset-y-0 left-0 z-50 transform -translate-x-full md:relative md:translate-x-0 h-full">
+        <!-- SIDEBAR (Diberi id="sidebar" dan efek geser mobile & PC) -->
+        <aside id="sidebar" class="w-64 bg-gray-900 text-white flex flex-col transition-all duration-300 fixed inset-y-0 left-0 z-50 transform -translate-x-full md:relative md:translate-x-0 h-full shrink-0 overflow-x-hidden">
             <div class="p-6 flex items-center space-x-3 border-b border-gray-800 shrink-0">
                 <i class="fa-solid fa-chart-line text-2xl text-blue-400"></i>
                 <span class="text-xl font-bold tracking-wider">Davclar ERP</span>
@@ -231,13 +231,13 @@
             <header class="bg-white shadow-sm px-4 md:px-8 py-3 md:py-4 flex justify-between items-center shrink-0 z-10 relative">
                 
                 <!-- BAGIAN KIRI: Hamburger & Judul Halaman -->
-                <div class="flex items-center gap-3">
-                    <button onclick="toggleSidebar()" class="md:hidden text-gray-600 hover:text-blue-600 transition">
-                        <i class="fa-solid fa-bars text-2xl"></i>
+                <div class="flex items-center gap-2 md:gap-3">
+                    <button onclick="toggleSidebar()" class="text-gray-600 hover:text-blue-600 transition p-1.5 rounded-lg hover:bg-gray-100 flex items-center justify-center" title="Sembunyikan/Tampilkan Navigasi">
+                        <i class="fa-solid fa-bars text-xl md:text-2xl"></i>
                     </button>
                     <h2 id="pageTitle" class="text-lg md:text-xl font-bold text-gray-800">Dashboard</h2>
-                    <button onclick="location.reload()" class="md:hidden text-gray-400 hover:text-blue-600 transition ml-1" title="Refresh Aplikasi">
-                        <i class="fa-solid fa-rotate-right text-lg"></i>
+                    <button onclick="location.reload()" class="text-gray-400 hover:text-blue-600 transition ml-0.5 p-1.5 rounded-lg hover:bg-gray-100 flex items-center justify-center" title="Refresh Aplikasi">
+                        <i class="fa-solid fa-rotate-right text-base md:text-lg"></i>
                     </button>
                 </div>
                 
@@ -2825,20 +2825,37 @@
         let db_users      = getSafeArray('davclar_users');
 
         // ==========================================
-        // FITUR MOBILE RESPONSIVE (SIDEBAR TOGGLE)
+        // FITUR RESPONSIVE (SIDEBAR TOGGLE MOBILE & PC)
         // ==========================================
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebarOverlay');
-            
-            if (sidebar.classList.contains('-translate-x-full')) {
-                // Buka Sidebar
-                sidebar.classList.remove('-translate-x-full');
-                overlay.classList.remove('hidden');
+            if (!sidebar) return;
+
+            const isDesktop = window.innerWidth >= 768;
+
+            if (isDesktop) {
+                // Di mode PC / Layar Besar: toggle sembunyikan / tampilkan sidebar
+                const isCollapsed = sidebar.classList.toggle('md:-ml-64');
+                localStorage.setItem('davclar_sidebar_collapsed', isCollapsed ? '1' : '0');
             } else {
-                // Tutup Sidebar
-                sidebar.classList.add('-translate-x-full');
-                overlay.classList.add('hidden');
+                // Di mode Mobile: toggle drawer overlay
+                if (sidebar.classList.contains('-translate-x-full')) {
+                    // Buka Sidebar
+                    sidebar.classList.remove('-translate-x-full');
+                    if (overlay) overlay.classList.remove('hidden');
+                } else {
+                    // Tutup Sidebar
+                    sidebar.classList.add('-translate-x-full');
+                    if (overlay) overlay.classList.add('hidden');
+                }
+            }
+        }
+
+        function restoreSidebarState() {
+            if (window.innerWidth >= 768 && localStorage.getItem('davclar_sidebar_collapsed') === '1') {
+                const sidebar = document.getElementById('sidebar');
+                if (sidebar) sidebar.classList.add('md:-ml-64');
             }
         }
 
@@ -2858,7 +2875,7 @@
             // Hanya proses localStorage, bukan sessionStorage
             if (this !== window.localStorage) return;
 
-            const ignoredKeys = ['davclar_activeTab', 'davclar_user', 'davclar_role', 'davclar_isLoggedIn', 'davclar_unsynced_keys'];
+            const ignoredKeys = ['davclar_activeTab', 'davclar_user', 'davclar_role', 'davclar_isLoggedIn', 'davclar_unsynced_keys', 'davclar_sidebar_collapsed'];
             if (key.startsWith('davclar_') && window.firebaseDB && !ignoredKeys.includes(key)) {
                 // Tandai sebagai pending
                 try {
@@ -2894,7 +2911,7 @@
 
             if (!window.firebaseDB) return;
 
-            const ignoredKeys = ['davclar_activeTab', 'davclar_user', 'davclar_role', 'davclar_isLoggedIn', 'davclar_unsynced_keys'];
+            const ignoredKeys = ['davclar_activeTab', 'davclar_user', 'davclar_role', 'davclar_isLoggedIn', 'davclar_unsynced_keys', 'davclar_sidebar_collapsed'];
             if (ignoredKeys.includes(key)) return;
 
             // Guard: jangan kirim array kosong ke Firebase (cegah data terhapus)
@@ -3025,6 +3042,7 @@
                 if (document.getElementById('appContainer')) document.getElementById('appContainer').classList.remove('hidden');
                 
                 applyRoleAccess(); // <-- Terapkan Gembok Menu
+                restoreSidebarState(); // <-- Pulihkan status sidebar (collapse/expand) di mode PC
                 
                 let lastTab = localStorage.getItem('davclar_activeTab') || 'tab-dashboard';
                 if (document.getElementById(lastTab)) openTab(lastTab);
@@ -3153,6 +3171,7 @@
                 document.getElementById('loginPage').style.display = 'none';
                 document.getElementById('appContainer').classList.remove('hidden');
                 applyRoleAccess();
+                restoreSidebarState();
                 openTab('tab-dashboard');
             } else {
                 if(typeof showToast === "function") showToast('Username atau Password salah!', 'error');
