@@ -2949,8 +2949,8 @@
             const ignoredKeys = ['davclar_activeTab', 'davclar_user', 'davclar_role', 'davclar_isLoggedIn', 'davclar_unsynced_keys', 'davclar_sidebar_collapsed'];
             if (ignoredKeys.includes(key)) return;
 
-            // Guard: jangan kirim array kosong ke Firebase (cegah data terhapus)
-            if (Array.isArray(data) && data.length === 0) return;
+            // Guard khusus davclar_users: jangan kirim array kosong ke Firebase (cegah akun admin/user terhapus saat inisialisasi)
+            if (key === 'davclar_users' && Array.isArray(data) && data.length === 0) return;
             if (data === null || data === undefined) return;
 
             let valToSet;
@@ -2995,25 +2995,49 @@
                     // Jika device sedang melakukan edit/save, abaikan tarikan server
                     if (Array.isArray(pending) && pending.includes(key)) return;
 
-                    const data = snapshot.val();
-                    if (data) {
-                        if(key === 'davclar_barang') db_databarang = data;
-                        if(key === 'davclar_customer') db_customer = data;
-                        if(key === 'davclar_po') db_po = data;
-                        if(key === 'davclar_so') db_so = data;
-                        if(key === 'davclar_invoice') db_invoice = data;
-                        if(key === 'davclar_payment') db_payment = data;
-                        if(key === 'davclar_kontrabon') db_kontrabon = data;
-                        if(key === 'davclar_sales_cp') db_sales_cp = data;
-                        if(key === 'davclar_kasbon') db_kasbon = data;
-                        if(key === 'davclar_users') db_users = data;
-                        
-                        // Tulis ke localStorage TANPA memicu Firebase sync (pakai originalSetItem)
-                        window.originalSetItem.call(window.localStorage, key, JSON.stringify(data));
-
-                        // Jadwalkan render ulang UI (debounced — 1x setelah semua key selesai)
-                        _scheduleRender();
+                    const rawData = snapshot.val();
+                    
+                    // Helper normalisasi: jika server mengirim null/kosong, ubah jadi array kosong []
+                    // Jika server mengirim object (akibat hapus sebagian key di Firebase RTDB), ubah jadi array
+                    function toCleanArray(val) {
+                        if (!val) return [];
+                        if (Array.isArray(val)) return val.filter(item => item && typeof item === 'object');
+                        if (typeof val === 'object') return Object.values(val).filter(item => item && typeof item === 'object');
+                        return [];
                     }
+
+                    // Penanganan khusus davclar_users: jangan kosongkan akun admin jika server kosong/belum siap
+                    if (key === 'davclar_users') {
+                        if (rawData) {
+                            const cleanUsers = toCleanArray(rawData);
+                            if (cleanUsers.length > 0) {
+                                db_users = cleanUsers;
+                                window.originalSetItem.call(window.localStorage, key, JSON.stringify(db_users));
+                                _scheduleRender();
+                            }
+                        }
+                        return;
+                    }
+
+                    // Untuk seluruh data operasional (kontrabon, invoice, barang, customer, po, so, payment, sales_cp, kasbon):
+                    // Jika di server null (karena sudah dihapus), cleanData = [] sehingga data lama di localStorage TERHAPUS!
+                    const cleanData = toCleanArray(rawData);
+
+                    if(key === 'davclar_barang') db_databarang = cleanData;
+                    if(key === 'davclar_customer') db_customer = cleanData;
+                    if(key === 'davclar_po') db_po = cleanData;
+                    if(key === 'davclar_so') db_so = cleanData;
+                    if(key === 'davclar_invoice') db_invoice = cleanData;
+                    if(key === 'davclar_payment') db_payment = cleanData;
+                    if(key === 'davclar_kontrabon') db_kontrabon = cleanData;
+                    if(key === 'davclar_sales_cp') db_sales_cp = cleanData;
+                    if(key === 'davclar_kasbon') db_kasbon = cleanData;
+                    
+                    // Tulis ke localStorage TANPA memicu Firebase sync (pakai originalSetItem)
+                    window.originalSetItem.call(window.localStorage, key, JSON.stringify(cleanData));
+
+                    // Jadwalkan render ulang UI (debounced — 1x setelah semua key selesai)
+                    _scheduleRender();
                 });
             });
 
