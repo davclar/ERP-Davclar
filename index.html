@@ -5576,14 +5576,16 @@
                 grandTotal += item.subtotal; 
                 grandQty += totalQty; 
 
-                // --- [FIX] GABUNGKAN NAMA & WARNA DENGAN AMAN ---
+                // --- AMBIL NAMA BARANG SAMA PERSIS DENGAN FORMAT SO/PO (ANTI DOBEL WARNA) ---
                 let namaTampil = item.namaBarang || item.artikel || 'Tanpa Nama';
-                let warnaTampil = (item.warna && item.warna !== '-') ? `- ${item.warna}` : '';
+                if (item.warna && item.warna !== '-' && !namaTampil.toUpperCase().includes(item.warna.toUpperCase())) {
+                    namaTampil = `${namaTampil} ${item.warna}`.trim();
+                }
 
                 tbody.innerHTML += `
                     <tr class="border-b border-gray-100 hover:bg-gray-50 transition">
                         <td class="py-2 px-2 text-[10px] text-gray-500 font-bold uppercase w-24 truncate">${item.merk||'-'}</td>
-                        <td class="py-2 px-2 font-bold text-[11px] truncate">${namaTampil} ${warnaTampil}</td>
+                        <td class="py-2 px-2 font-medium text-[11px] truncate">${namaTampil}</td>
                         <td class="py-2 px-1 text-right">
                             <input type="number" onchange="updateInvVal(${index}, 'harga', this.value)" value="${item.harga}" class="w-24 px-1 py-1 border border-gray-300 rounded text-right text-xs focus:ring-1 focus:ring-blue-500">
                         </td>
