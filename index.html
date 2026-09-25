@@ -11872,33 +11872,44 @@
                     let fontWeightMerk = merkAsli === 'CLARIFELA' ? 'normal' : 'bold';
 
                     htmlOutput += `
-                    <div class="stiker-page" style="display: flex; flex-direction: column; font-family: ${fontWadah}; color: #000; background: white; box-sizing: border-box; overflow: hidden; margin: 0; padding: 0;">
+                    <div style="width: 59mm; height: 39mm; display: flex; flex-direction: column; box-sizing: border-box; background: white; margin: 0 auto; overflow: hidden; font-family: ${fontWadah}; color: #000; page-break-inside: avoid; ${pageBreakStyle}">
+                        
                         <!-- SETENGAH ATAS -->
-                        <div style="display: flex; height: 55%; border-bottom: 2px solid #000; box-sizing: border-box; overflow: hidden;">
+                        <div style="display: flex; height: 55%; border-bottom: 2px solid #000; box-sizing: border-box;">
+                            
+                            <!-- Kiri: Artikel, Warna, & Teks Vertical -->
                             <div style="width: 65%; border-right: 2px solid #000; display: flex; box-sizing: border-box;">
                                 <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding-left: 2mm;">
                                     <div style="font-size: 10px; font-weight: bold; margin-bottom: 1px;">Artikel :</div>
-                                    <div style="font-size: 15px; font-weight: 900; line-height: 1; text-align: center; text-transform: uppercase;">${item.artikel}</div>
+                                    <div style="font-size: 16px; font-weight: 900; line-height: 1; text-align: center; text-transform: uppercase;">${item.artikel}</div>
                                     <div style="font-size: 10px; font-weight: bold; margin-top: 3px; margin-bottom: 1px;">Warna :</div>
-                                    <div style="font-size: 15px; font-weight: 900; line-height: 1; text-align: center; text-transform: uppercase;">${item.warna}</div>
+                                    <div style="font-size: 16px; font-weight: 900; line-height: 1; text-align: center; text-transform: uppercase;">${item.warna}</div>
                                 </div>
-                                <div class="v-text" style="font-size: 8px; font-weight: bold; letter-spacing: 0.2px; margin-bottom: 4px;">MADE IN INDONESIA</div>
+                                <div class="v-text" style="font-family: Calibri, sans-serif; font-size: 8px; font-weight: bold; letter-spacing: 0.2px; margin-bottom: 4px;">MADE IN INDONESIA</div>
                             </div>
+                            
+                            <!-- Kanan: Ukuran -->
                             <div style="width: 35%; display: flex; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box;">
                                 <div style="font-size: 10px; font-weight: bold;">Ukuran :</div>
-                                <div style="font-size: 42px; font-weight: 900; line-height: 0.85;">${item.size}</div>
+                                <div style="font-size: 48px; font-weight: 900; line-height: 0.85;">${item.size}</div>
                             </div>
                         </div>
+
                         <!-- SETENGAH BAWAH -->
-                        <div style="display: flex; height: 45%; align-items: center; justify-content: space-between; padding: 1mm; box-sizing: border-box; overflow: hidden;">
+                        <div style="display: flex; height: 45%; align-items: center; justify-content: space-between; padding: 1mm; box-sizing: border-box;">
+                            
+                            <!-- Kiri: Barcode 1D -->
                             <div style="width: 65%; height: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden;">
-                                <svg class="barcode-1d" jsbarcode-value="${item.prodId}" jsbarcode-height="45" jsbarcode-width="2.3" jsbarcode-fontSize="12" jsbarcode-margin="0" jsbarcode-textmargin="2"></svg>
+                                <svg class="barcode-1d" jsbarcode-value="${item.prodId}" jsbarcode-height="60" jsbarcode-width="2.3" jsbarcode-fontSize="12" jsbarcode-margin="0" jsbarcode-textmargin="2"></svg>
                             </div>
+                            
+                            <!-- Kanan: MERK & QR Code -->
                             <div style="width: 35%; display: flex; justify-content: center; align-items: center;">
-                                <div class="v-text" style="font-size: 9px; font-weight: ${fontWeightMerk}; letter-spacing: 0.5px; font-style: italic;">${teksMerk}</div>
-                                <div class="qr-code-box" data-val="${item.artikel} ${item.warna} ${item.size}" data-size="55"></div>
+                                <div class="v-text" style="font-family: Calibri, sans-serif; font-size: 9px; font-weight: ${fontWeightMerk}; letter-spacing: 0.5px; font-style: italic;">${teksMerk}</div>
+                                <div class="qr-code-box" data-val="${item.artikel} ${item.warna} ${item.size}" data-size="60"></div>
                             </div>
                         </div>
+
                     </div>`;
                 });
             }
@@ -12045,17 +12056,18 @@
             let fontStyleMerk = merkAsli === 'CLARIFELA' ? 'italic' : 'italic';
 
             return `
-            <div style="width: 100%; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1mm; font-family: ${fontWadah}; color: #000; overflow: hidden;">
-                <div style="font-family: Calibri, sans-serif; font-size: 7px; font-weight: bold; margin-bottom: 2px; letter-spacing: 0.5px; text-align: center;">MADE IN INDONESIA</div>
+            <div style="flex: 1; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0; padding: 0; overflow: hidden; font-family: ${fontWadah}; color: #000;">
                 
-                <div class="qr-code-box" data-val="${item.artikel} ${item.warna}" data-size="75"></div>
-                
-                <div style="width: 95%; border-bottom: 1.5px solid #000; text-align: center; margin-top: 3px; margin-bottom: 3px; padding-bottom: 2px;">
-                    <div style="font-size: 11px; font-weight: ${fontWeightMerk}; font-style: ${fontStyleMerk}; letter-spacing: 0.5px;">${teksMerk}</div>
+                <div style="font-family: Calibri, sans-serif; font-size: 16px; font-weight: bold; margin-bottom: 10px; letter-spacing: 0.5px;">MADE IN INDONESIA</div>
+
+                <div class="qr-code-box" data-val="${item.artikel} ${item.warna}" data-size="110"></div>
+
+                <div style="width: 85%; border-bottom: 2px solid #000; text-align: center; margin-bottom: 5px; margin-top: 10px; padding-bottom: 1px;">
+                    <div style="font-family: ${fontWadah}; font-size: 16px; font-weight: ${fontWeightMerk}; font-style: ${fontStyleMerk}; letter-spacing: 0.5px;">${teksMerk}</div>
                 </div>
-                
-                <div style="font-size: 12px; font-weight: 900; line-height: 1.1; text-align: center; text-transform: uppercase; width: 100%; word-wrap: break-word;">${item.artikel}</div>
-                <div style="font-size: 11px; font-weight: bold; line-height: 1.1; text-align: center; text-transform: uppercase; width: 100%; word-wrap: break-word; margin-top: 2px;">${item.warna}</div>
+
+                <div style="font-size: 21px; font-weight: 900; line-height: 1.1; text-align: center; text-transform: uppercase; margin-top: 5px;">${item.artikel}</div>
+                <div style="font-size: 21px; font-weight: bold; line-height: 1.1; text-align: center; text-transform: uppercase;">${item.warna}</div>
             </div>`;
         }
 
@@ -12067,21 +12079,22 @@
             let fontWadah = merkAsli === 'CLARIFELA' ? "'Arial Light', Arial, sans-serif" : "Calibri, sans-serif";
 
             return `
-            <div style="width: 100%; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; text-align: center; font-family: ${fontWadah}; color: #000; padding: 1mm; overflow: hidden;">
+            <div style="flex: 1; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; text-align: center; margin: 0; padding: 0; overflow: hidden; font-family: ${fontWadah}; color: #000;">
                 
-                <div style="flex: 1; border-bottom: 1.5px solid #000; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden;">
-                    <div style="font-size: 8px; font-weight: bold; margin-bottom: 1px;">Article</div>
-                    <div style="font-size: 12px; font-weight: 900; text-transform: uppercase; line-height: 1; word-wrap: break-word; width: 100%;">${item.artikel}</div>
+                <div style="flex: 1; border-bottom: 2px solid #000; display: flex; flex-direction: column; justify-content: center; padding: 5px;">
+                    <div style="font-size: 14px; font-weight: bold; margin-bottom: 2px;">Article</div>
+                    <div style="font-size: 22px; font-weight: 900; text-transform: uppercase;">${item.artikel}</div>
                 </div>
                 
-                <div style="flex: 1; border-bottom: 1.5px solid #000; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden;">
-                    <div style="font-size: 8px; font-weight: bold; margin-bottom: 1px;">Color</div>
-                    <div style="font-size: 11px; font-weight: 900; text-transform: uppercase; line-height: 1; word-wrap: break-word; width: 100%;">${item.warna}</div>
+                <div style="flex: 1; border-bottom: 2px solid #000; display: flex; flex-direction: column; justify-content: center; padding: 5px;">
+                    <div style="font-size: 14px; font-weight: bold; margin-bottom: 2px;">Color</div>
+                    <!-- Font sedikit dikecilkan ke 18px jaga-jaga kalau warnanya panjang (CREAM-BISCUIT-BLACK) -->
+                    <div style="font-size: 18px; font-weight: 900; text-transform: uppercase;">${item.warna}</div>
                 </div>
-                
-                <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden;">
-                    <div style="font-size: 8px; font-weight: bold; margin-bottom: 1px;">Price</div>
-                    <div style="font-size: 12px; font-weight: 900; line-height: 1;">Rp ${(parseInt(item.harga) || 0).toLocaleString('id-ID')}</div>
+
+                <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 5px;">
+                    <div style="font-size: 14px; font-weight: bold; margin-bottom: 2px;">Price</div>
+                    <div style="font-size: 24px; font-weight: 900;">Rp ${(parseInt(item.harga) || 0).toLocaleString('id-ID')}</div>
                 </div>
                 
             </div>`;
