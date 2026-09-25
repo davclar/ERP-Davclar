@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -5650,6 +5650,7 @@
         function exportToPDF() {
             // Ambil elemen area kertas yang mau dijadikan PDF
             const element = document.getElementById('print-area');
+            if(!element) return;
             
             // Ambil nomor PO dan nama Makloon dari tampilan
             const noPO = document.getElementById('detNoPO').innerText || 'BARU';
@@ -5681,22 +5682,57 @@
             // Susun nama file: NOPO_ARTIKEL_MAKLOON.pdf
             const namaFile = `${noPO}_${artikelUtama}_${makloon}.pdf`;
 
+            // Simpan status class dan style asli
+            const hadBorder = element.classList.contains('border');
+            const hadBorderGray = element.classList.contains('border-gray-300');
+            const hadShadow = element.classList.contains('shadow-2xl');
+            const origBorder = element.style.border;
+            const origBoxShadow = element.style.boxShadow;
+            const origWidth = element.style.width;
+
+            // Hilangkan garis border abu-abu & bayangan modal agar hasil PDF bersih tanpa garis pinggir
+            element.classList.remove('border', 'border-gray-300', 'shadow-2xl');
+            element.style.border = 'none';
+            element.style.boxShadow = 'none';
+            element.style.width = '210mm';
+
             // Pengaturan Kualitas dan Margin PDF
+            // margin: 0 agar pas 100% ukuran kertas A4 (padding p-8 pada #print-area sudah memberi jarak tepi 32px / ~8.5mm secara alami)
             const opt = {
-                margin:       [0.5, 0.5, 0.5, 0.5], // Margin Atas, Kiri, Bawah, Kanan (dalam Inci)
+                margin:       0,
                 filename:     namaFile,
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, letterRendering: true }, // scale: 2 agar gambarnya tajam (HD)
-                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+                html2canvas:  { 
+                    scale: 2, 
+                    useCORS: true, 
+                    letterRendering: true,
+                    scrollX: 0,
+                    scrollY: 0
+                },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
-            // Copot sementara class 'overflow' agar semua konten memanjang ke bawah ikut ter-capture
-            element.classList.remove('overflow-y-auto', 'flex-1');
+            if(typeof showToast === 'function') showToast("Sedang membuat file PDF...", "info");
 
             // Proses pembuatan PDF
             html2pdf().set(opt).from(element).save().then(() => {
-                // Pasang lagi class-nya setelah PDF selesai diunduh
-                element.classList.add('overflow-y-auto', 'flex-1');
+                // Pulihkan kembali class & style asli setelah PDF selesai dibuat
+                if(hadBorder) element.classList.add('border');
+                if(hadBorderGray) element.classList.add('border-gray-300');
+                if(hadShadow) element.classList.add('shadow-2xl');
+                element.style.border = origBorder;
+                element.style.boxShadow = origBoxShadow;
+                element.style.width = origWidth;
+                if(typeof showToast === 'function') showToast("PDF PO berhasil diunduh!", "success");
+            }).catch(err => {
+                console.error("Gagal export PDF:", err);
+                if(hadBorder) element.classList.add('border');
+                if(hadBorderGray) element.classList.add('border-gray-300');
+                if(hadShadow) element.classList.add('shadow-2xl');
+                element.style.border = origBorder;
+                element.style.boxShadow = origBoxShadow;
+                element.style.width = origWidth;
+                if(typeof showToast === 'function') showToast("Gagal membuat PDF", "error");
             });
         }
 
