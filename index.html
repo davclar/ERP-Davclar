@@ -21,8 +21,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;500;600;700;800&family=Roboto+Condensed:wght@400;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .spk-font { font-family: 'Arial Narrow', 'Barlow Condensed', 'Roboto Condensed', sans-serif !important; }
         .hidden-tab { display: none; }
 
         /* ==========================================
@@ -1181,7 +1182,7 @@
                                         color: #000000 !important;
                                         -webkit-print-color-adjust: exact !important;
                                         print-color-adjust: exact !important;
-                                        font-family: Arial, Helvetica, sans-serif !important;
+                                        font-family: 'Arial Narrow', 'Barlow Condensed', 'Roboto Condensed', sans-serif !important;
                                     }
                                     #print-spk-area { 
                                         position: absolute !important; 
@@ -1204,10 +1205,11 @@
                                         max-height: 297mm !important;
                                         box-sizing: border-box !important;
                                         margin: 0 !important;
-                                        padding: 8mm 10mm !important;
+                                        padding: 6mm 10mm !important;
                                         overflow: hidden !important;
                                         border: none !important;
                                         box-shadow: none !important;
+                                        font-family: 'Arial Narrow', 'Barlow Condensed', 'Roboto Condensed', sans-serif !important;
                                     }
                                 }
                             </style>
@@ -5184,9 +5186,10 @@
             }
 
             const activeCount = activeSizes.length;
-            // 1 Seri biasanya 10 pcs (untuk 5 size @ 2 pcs) atau 12 pcs (untuk 6 size @ 2 pcs)
-            // 1 Kupon SPK = 2 Seri (20 pcs untuk 5 size, 24 pcs untuk 6 size)
-            const kuponCapacity = activeCount * 4;
+            // 1 Seri = 10 pcs (untuk 5 size @ 2 pcs) atau 12 pcs (untuk 6 size @ 2 pcs)
+            // 1 Kupon SPK Standar = 2 Seri (20 pcs untuk 5 size @ 4 pcs, 24 pcs untuk 6 size @ 4 pcs)
+            const fullQtyPerSize = 4;
+            const kuponCapacity = activeCount * fullQtyPerSize;
 
             // 2. Generate Daftar Kupon SPK dari po.items
             let spkList = [];
@@ -5194,41 +5197,69 @@
             let totalAllPcs = 0;
 
             (po.items || []).forEach(item => {
-                let itemTotal = parseInt(item.total) || 0;
+                let remSizes = {};
+                activeSizes.forEach(s => {
+                    remSizes[s.index] = parseInt(item[`s${s.index}`]) || 0;
+                });
+
+                let itemTotal = activeSizes.reduce((sum, s) => sum + (remSizes[s.index] || 0), 0);
                 if (itemTotal <= 0) {
-                    itemTotal = activeSizes.reduce((sum, s) => sum + (parseInt(item[`s${s.index}`]) || 0), 0);
+                    itemTotal = parseInt(item.total) || 0;
+                }
+                // Jika input size kosong tapi total ada, bagi rata ke size
+                if (activeSizes.reduce((sum, s) => sum + (remSizes[s.index] || 0), 0) === 0 && itemTotal > 0) {
+                    let base = Math.floor(itemTotal / activeSizes.length);
+                    let rem = itemTotal % activeSizes.length;
+                    activeSizes.forEach((s, idx) => {
+                        remSizes[s.index] = base + (idx < rem ? 1 : 0);
+                    });
                 }
                 totalAllPcs += itemTotal;
 
-                let numKupon = Math.ceil(itemTotal / kuponCapacity);
-                if (numKupon <= 0) numKupon = 1;
+                // Loop pembagian kupon: jika sisa > kuponCapacity (misal > 20), buat kupon penuh 4 per size (20pcs).
+                // Jika sisa <= kuponCapacity (misal 10pcs), buat 1 kupon sisa (minimum 10pcs).
+                let loopSafety = 0;
+                while (loopSafety++ < 1000) {
+                    let currentRemTotal = activeSizes.reduce((sum, s) => sum + (remSizes[s.index] || 0), 0);
+                    if (currentRemTotal <= 0) break;
 
-                // Distribusi Qty per Size ke Kupon
-                let sizeQtyDist = {};
-                activeSizes.forEach(s => {
-                    let totalSize = parseInt(item[`s${s.index}`]) || 0;
-                    let base = Math.floor(totalSize / numKupon);
-                    let rem = totalSize % numKupon;
-                    sizeQtyDist[s.index] = [];
-                    for (let k = 0; k < numKupon; k++) {
-                        sizeQtyDist[s.index].push(base + (k < rem ? 1 : 0));
-                    }
-                });
-
-                for (let k = 0; k < numKupon; k++) {
                     let kSizes = {};
                     let kTotal = 0;
-                    activeSizes.forEach(s => {
-                        let q = sizeQtyDist[s.index][k] || 0;
-                        kSizes[`s${s.index}`] = q;
-                        kTotal += q;
-                    });
+
+                    if (currentRemTotal > kuponCapacity) {
+                        activeSizes.forEach(s => {
+                            let take = Math.min(remSizes[s.index] || 0, fullQtyPerSize);
+                            kSizes[`s${s.index}`] = take;
+                            remSizes[s.index] -= take;
+                            kTotal += take;
+                        });
+                        if (kTotal === 0) {
+                            activeSizes.forEach(s => {
+                                let take = remSizes[s.index] || 0;
+                                kSizes[`s${s.index}`] = take;
+                                remSizes[s.index] = 0;
+                                kTotal += take;
+                            });
+                        }
+                    } else {
+                        // Kupon sisa terakhir (misal 10 pcs @ 2 per size, atau <= 20 pcs)
+                        activeSizes.forEach(s => {
+                            let take = remSizes[s.index] || 0;
+                            kSizes[`s${s.index}`] = take;
+                            remSizes[s.index] = 0;
+                            kTotal += take;
+                        });
+                    }
+
+                    if (kTotal <= 0) break;
 
                     spkList.push({
                         no: globalNo++,
                         merk: item.merk || po.makloon || '-',
                         artikel: item.artikel || item.namaBarang || '-',
                         warna: item.warna || '-',
+                        sole: item.sole || '',
+                        insole: item.insole || '',
                         poId: po.id,
                         sizes: kSizes,
                         total: kTotal
@@ -5244,7 +5275,7 @@
             // ==========================================
             // BAGIAN 1: RENDER SPK CONTROL (HALAMAN 1 DST)
             // ==========================================
-            const MAX_ROWS_CONTROL = 60; // 1 Halaman A4 muat hingga 60 baris compact
+            const MAX_ROWS_CONTROL = 55; // 1 Halaman A4 muat hingga 55 baris compact
             let controlPagesCount = Math.ceil(spkList.length / MAX_ROWS_CONTROL) || 1;
 
             let sizeThControl = activeSizes.map(s => `<th class="border border-black py-0.5 px-0.5 text-center font-bold" style="width: 5%;">${s.label}</th>`).join('');
@@ -5254,12 +5285,12 @@
                 let isLastControl = (cp === controlPagesCount - 1);
 
                 let rowsHtml = pageRows.map(spk => {
-                    let sizeTds = activeSizes.map(s => `<td class="border border-black py-0.5 px-0.5 text-center">${spk.sizes[`s${s.index}`] || ''}</td>`).join('');
+                    let sizeTds = activeSizes.map(s => `<td class="border border-black py-0.5 px-0.5 text-center font-bold">${spk.sizes[`s${s.index}`] || ''}</td>`).join('');
                     return `
-                        <tr class="hover:bg-gray-50 h-[3.8mm]">
-                            <td class="border border-black py-0.5 px-0.5 text-center font-semibold">${spk.no}</td>
-                            <td class="border border-black py-0.5 px-1 truncate uppercase font-medium">${spk.artikel}</td>
-                            <td class="border border-black py-0.5 px-1 truncate uppercase font-medium">${spk.warna}</td>
+                        <tr class="h-[4.2mm]">
+                            <td class="border border-black py-0.5 px-0.5 text-center font-bold">${spk.no}</td>
+                            <td class="border border-black py-0.5 px-1 truncate uppercase font-bold text-left">${spk.artikel}</td>
+                            <td class="border border-black py-0.5 px-1 truncate uppercase font-bold text-left">${spk.warna}</td>
                             ${sizeTds}
                             <td class="border border-black py-0.5 px-0.5"></td>
                             <td class="border border-black py-0.5 px-0.5"></td>
@@ -5271,7 +5302,7 @@
                 let totalRowHtml = '';
                 if (isLastControl) {
                     totalRowHtml = `
-                        <tr class="font-bold border-t-2 border-black bg-white h-[4.5mm]">
+                        <tr class="font-bold border-t-2 border-black bg-white h-[4.8mm]">
                             <td colspan="3" class="border border-black py-0.5 px-2 text-center font-bold">Total</td>
                             <td colspan="${activeSizes.length}" class="border border-black py-0.5 px-0.5 text-center font-bold">${totalAllPcs}</td>
                             <td colspan="3" class="border border-black py-0.5 px-0.5"></td>
@@ -5280,22 +5311,22 @@
                 }
 
                 allHtml += `
-                    <div class="spk-page-a4 bg-white mx-auto shadow-md mb-6 print:mb-0 print:shadow-none box-border flex flex-col justify-start" style="width: 210mm; min-height: 297mm; max-height: 297mm; padding: 8mm 10mm; box-sizing: border-box; overflow: hidden;">
-                        <div class="text-center font-bold text-base mb-1 tracking-wider text-black">SPK CONTROL</div>
-                        <div class="flex justify-between items-center text-xs font-bold mb-1.5 text-black px-1">
+                    <div class="spk-page-a4 bg-white mx-auto shadow-md mb-6 print:mb-0 print:shadow-none box-border flex flex-col justify-start" style="width: 210mm; min-height: 297mm; max-height: 297mm; padding: 6mm 10mm; box-sizing: border-box; overflow: hidden; font-family: 'Arial Narrow', 'Barlow Condensed', 'Roboto Condensed', sans-serif;">
+                        <div class="text-center font-bold text-lg mb-1 tracking-wider text-black">SPK CONTROL</div>
+                        <div class="flex justify-between items-center text-sm font-bold mb-2 text-black px-1">
                             <span>${po.id}</span>
                             <span>Merk : ${merkUtama}</span>
                         </div>
-                        <table class="w-full border-collapse border border-black text-[9px] text-black leading-tight" style="table-layout: fixed;">
+                        <table class="w-full border-collapse border border-black text-[10px] text-black leading-tight" style="table-layout: fixed; border: 1.5px solid #000;">
                             <thead>
-                                <tr class="bg-gray-100 font-bold text-center">
+                                <tr class="bg-white font-bold text-center">
                                     <th class="border border-black py-0.5 px-0.5 w-[5%]">No.</th>
-                                    <th class="border border-black py-0.5 px-1 w-[25%]">Artikel</th>
-                                    <th class="border border-black py-0.5 px-1 w-[18%]">Warna</th>
+                                    <th class="border border-black py-0.5 px-1 w-[26%] text-left">Artikel</th>
+                                    <th class="border border-black py-0.5 px-1 w-[18%] text-left">Warna</th>
                                     ${sizeThControl}
-                                    <th class="border border-black py-0.5 px-0.5 w-[9%]">T.Muka</th>
-                                    <th class="border border-black py-0.5 px-0.5 w-[9%]">Tgl.Mtg</th>
-                                    <th class="border border-black py-0.5 px-0.5 w-[9%]">Tgl.Setor</th>
+                                    <th class="border border-black py-0.5 px-0.5 w-[8%]">T.Muka</th>
+                                    <th class="border border-black py-0.5 px-0.5 w-[8%]">Tgl.Mtg</th>
+                                    <th class="border border-black py-0.5 px-0.5 w-[8%]">Tgl.Setor</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -5316,85 +5347,111 @@
             for (let kp = 0; kp < kuponPagesCount; kp++) {
                 let kuponBatch = spkList.slice(kp * KUPONS_PER_PAGE, (kp + 1) * KUPONS_PER_PAGE);
 
-                let kuponCardsHtml = kuponBatch.map(kupon => {
-                    // Header sizes untuk kupon (max 6 kolom)
-                    let sizeThKupon = activeSizes.map(s => `<td class="border border-black py-0.5 text-center font-bold" style="width: 7%;">${s.label}</td>`).join('');
-                    let emptyThKupon = '';
-                    for (let e = activeSizes.length; e < 6; e++) {
-                        emptyThKupon += `<td class="border border-black py-0.5" style="width: 7%;"></td>`;
+                let kuponCardsHtml = kuponBatch.map((kupon, idx) => {
+                    // 7 slot kolom size (Col 1 s/d Col 7)
+                    let sizeHeadersHtml = '';
+                    let sizeValuesHtml = '';
+                    for (let c = 0; c < 7; c++) {
+                        if (c < activeSizes.length) {
+                            let s = activeSizes[c];
+                            let q = kupon.sizes[`s${s.index}`];
+                            sizeHeadersHtml += `<td class="border border-black align-middle text-center">${s.label}</td>`;
+                            sizeValuesHtml += `<td class="border border-black align-middle text-center">${q > 0 ? q : ''}</td>`;
+                        } else {
+                            sizeHeadersHtml += `<td class="border border-black align-middle"></td>`;
+                            sizeValuesHtml += `<td class="border border-black align-middle"></td>`;
+                        }
                     }
 
-                    // Value sizes untuk kupon
-                    let sizeTdKupon = activeSizes.map(s => `<td class="border border-black py-0.5 text-center font-bold">${kupon.sizes[`s${s.index}`] || ''}</td>`).join('');
-                    let emptyTdKupon = '';
-                    for (let e = activeSizes.length; e < 6; e++) {
-                        emptyTdKupon += `<td class="border border-black py-0.5"></td>`;
-                    }
+                    let isLastInBatch = (idx === kuponBatch.length - 1);
+                    let mbStyle = isLastInBatch ? 'margin-bottom: 0;' : 'margin-bottom: 3.5mm;';
 
                     return `
-                        <div class="spk-kupon-card border border-black mb-[3.5mm] box-border" style="page-break-inside: avoid; break-inside: avoid;">
-                            <table class="w-full border-collapse border border-black text-[9.5px] text-black font-semibold" style="table-layout: fixed;">
-                                <tr>
-                                    <td class="border border-black px-1.5 py-0.5 font-bold w-[12%] bg-gray-50">MERK</td>
-                                    <td class="border border-black px-1.5 py-0.5 font-bold uppercase w-[38%] truncate">${kupon.merk}</td>
-                                    <td class="border border-black px-1.5 py-0.5 font-bold w-[14%] bg-gray-50">WARNA</td>
-                                    <td class="border border-black px-1.5 py-0.5 font-bold uppercase w-[36%] truncate">${kupon.warna}</td>
-                                </tr>
-                                <tr>
-                                    <td class="border border-black px-1.5 py-0.5 font-bold bg-gray-50">ART</td>
-                                    <td class="border border-black px-1.5 py-0.5 font-bold uppercase truncate">${kupon.artikel}</td>
-                                    <td class="border border-black px-1.5 py-0.5 font-bold bg-gray-50">SOLE</td>
-                                    <td class="border border-black px-1.5 py-0.5"></td>
-                                </tr>
-                                <tr>
-                                    <td class="border border-black px-1.5 py-0.5 font-bold bg-gray-50 leading-tight">TOKO/PO</td>
-                                    <td class="border border-black px-1.5 py-0.5 font-bold uppercase truncate">${kupon.poId}</td>
-                                    <td class="border border-black px-1.5 py-0.5 font-bold bg-gray-50">INSOLE</td>
-                                    <td class="border border-black px-1.5 py-0.5"></td>
-                                </tr>
-                            </table>
-
-                            <table class="w-full border-collapse border-l border-r border-b border-black text-[9.5px] text-black text-center" style="table-layout: fixed;">
-                                <tr>
-                                    <td class="border-r border-b border-black py-0.5 w-[12%] font-bold bg-gray-50">SIZE</td>
-                                    ${sizeThKupon}
-                                    ${emptyThKupon}
-                                    <td class="border-b border-black py-0.5" style="width: ${46 - (6 * 7)}%;"></td>
-                                </tr>
-                                <tr class="font-bold">
-                                    <td class="border-r border-b border-black py-0.5 bg-gray-50"></td>
-                                    ${sizeTdKupon}
-                                    ${emptyTdKupon}
-                                    <td class="border-b border-black py-0.5"></td>
-                                </tr>
-                            </table>
-
-                            <table class="w-full border-collapse border-l border-r border-b border-black text-[8.5px] text-black text-center font-bold" style="table-layout: fixed;">
-                                <tr class="bg-gray-50">
-                                    <td class="border-r border-b border-black py-0.5 w-[25%]">GURAT</td>
-                                    <td class="border-r border-b border-black py-0.5 w-[25%]">MUKA</td>
-                                    <td class="border-r border-b border-black py-0.5 w-[25%]">SOLE</td>
-                                    <td class="border-b border-black py-0.5 w-[25%]">INSOLE</td>
-                                </tr>
-                                <tr>
-                                    <td class="border-r border-b border-black py-0.5 text-gray-500 font-normal">TGL MTG</td>
-                                    <td class="border-r border-b border-black py-0.5 text-gray-500 font-normal">TGL MTG</td>
-                                    <td class="border-r border-b border-black py-0.5 text-gray-500 font-normal">TGL MTG</td>
-                                    <td class="border-b border-black py-0.5 text-gray-500 font-normal">TGL MTG</td>
-                                </tr>
-                                <tr>
-                                    <td class="border-r border-black py-0.5 text-gray-500 font-normal">TGL SETOR</td>
-                                    <td class="border-r border-black py-0.5 text-gray-500 font-normal">TGL SETOR</td>
-                                    <td class="border-r border-black py-0.5 text-gray-500 font-normal">TGL SETOR</td>
-                                    <td class="text-gray-500 font-normal py-0.5">TGL SETOR</td>
-                                </tr>
+                        <div class="spk-kupon-card box-border" style="page-break-inside: avoid; break-inside: avoid; height: 44mm; ${mbStyle}">
+                            <table class="w-full border-collapse border border-black text-[11.5px] text-black font-bold uppercase" style="table-layout: fixed; width: 100%; height: 100%; border: 1.5px solid #000; font-family: 'Arial Narrow', 'Barlow Condensed', 'Roboto Condensed', sans-serif;">
+                                <colgroup>
+                                    <col style="width: 12.5%;">
+                                    <col style="width: 12.5%;">
+                                    <col style="width: 12.5%;">
+                                    <col style="width: 12.5%;">
+                                    <col style="width: 12.5%;">
+                                    <col style="width: 12.5%;">
+                                    <col style="width: 12.5%;">
+                                    <col style="width: 12.5%;">
+                                </colgroup>
+                                <tbody>
+                                    <!-- Row 1: MERK / WARNA -->
+                                    <tr style="height: 5.5mm;">
+                                        <td class="border border-black px-1.5 align-middle">MERK</td>
+                                        <td colspan="3" class="border border-black px-1.5 align-middle truncate">${kupon.merk}</td>
+                                        <td class="border border-black px-1.5 align-middle">WARNA</td>
+                                        <td colspan="3" class="border border-black px-1.5 align-middle truncate">${kupon.warna}</td>
+                                    </tr>
+                                    <!-- Row 2: ART / SOLE -->
+                                    <tr style="height: 5.5mm;">
+                                        <td class="border border-black px-1.5 align-middle">ART</td>
+                                        <td colspan="3" class="border border-black px-1.5 align-middle truncate">${kupon.artikel}</td>
+                                        <td class="border border-black px-1.5 align-middle">SOLE</td>
+                                        <td colspan="3" class="border border-black px-1.5 align-middle truncate">${kupon.sole || ''}</td>
+                                    </tr>
+                                    <!-- Row 3: TOKO/PO / INSOLE -->
+                                    <tr style="height: 5.5mm;">
+                                        <td class="border border-black px-1.5 align-middle">TOKO/PO</td>
+                                        <td colspan="3" class="border border-black px-1.5 align-middle truncate">${kupon.poId}</td>
+                                        <td class="border border-black px-1.5 align-middle">INSOLE</td>
+                                        <td colspan="3" class="border border-black px-1.5 align-middle truncate">${kupon.insole || ''}</td>
+                                    </tr>
+                                    <!-- Row 4: SIZE -->
+                                    <tr style="height: 5.5mm;">
+                                        <td class="border border-black px-1.5 align-middle">SIZE</td>
+                                        ${sizeHeadersHtml}
+                                    </tr>
+                                    <!-- Row 5: QTY -->
+                                    <tr style="height: 5.5mm;">
+                                        <td class="border border-black px-1.5 align-middle text-center"></td>
+                                        ${sizeValuesHtml}
+                                    </tr>
+                                    <!-- Row 6: GURAT / MUKA / SOLE / INSOLE -->
+                                    <tr style="height: 5.5mm;">
+                                        <td class="border border-black px-1.5 align-middle">GURAT</td>
+                                        <td class="border border-black align-middle"></td>
+                                        <td class="border border-black px-1.5 align-middle">MUKA</td>
+                                        <td class="border border-black align-middle"></td>
+                                        <td class="border border-black px-1.5 align-middle">SOLE</td>
+                                        <td class="border border-black align-middle"></td>
+                                        <td class="border border-black px-1.5 align-middle">INSOLE</td>
+                                        <td class="border border-black align-middle"></td>
+                                    </tr>
+                                    <!-- Row 7: TGL MTG -->
+                                    <tr style="height: 5.5mm;">
+                                        <td class="border border-black px-1 text-[10.5px] align-middle whitespace-nowrap">TGL MTG</td>
+                                        <td class="border border-black align-middle"></td>
+                                        <td class="border border-black px-1 text-[10.5px] align-middle whitespace-nowrap">TGL MTG</td>
+                                        <td class="border border-black align-middle"></td>
+                                        <td class="border border-black px-1 text-[10.5px] align-middle whitespace-nowrap">TGL MTG</td>
+                                        <td class="border border-black align-middle"></td>
+                                        <td class="border border-black px-1 text-[10.5px] align-middle whitespace-nowrap">TGL MTG</td>
+                                        <td class="border border-black align-middle"></td>
+                                    </tr>
+                                    <!-- Row 8: TGL SETOR -->
+                                    <tr style="height: 5.5mm;">
+                                        <td class="border border-black px-1 text-[10px] align-middle whitespace-nowrap">TGL SETOR</td>
+                                        <td class="border border-black align-middle"></td>
+                                        <td class="border border-black px-1 text-[10px] align-middle whitespace-nowrap">TGL SETOR</td>
+                                        <td class="border border-black align-middle"></td>
+                                        <td class="border border-black px-1 text-[10px] align-middle whitespace-nowrap">TGL SETOR</td>
+                                        <td class="border border-black align-middle"></td>
+                                        <td class="border border-black px-1 text-[10px] align-middle whitespace-nowrap">TGL SETOR</td>
+                                        <td class="border border-black align-middle"></td>
+                                    </tr>
+                                </tbody>
                             </table>
                         </div>
                     `;
                 }).join('');
 
                 allHtml += `
-                    <div class="spk-page-a4 bg-white mx-auto shadow-md mb-6 print:mb-0 print:shadow-none box-border flex flex-col justify-start" style="width: 210mm; min-height: 297mm; max-height: 297mm; padding: 8mm 10mm; box-sizing: border-box; overflow: hidden;">
+                    <div class="spk-page-a4 bg-white mx-auto shadow-md mb-6 print:mb-0 print:shadow-none box-border flex flex-col justify-start" style="width: 210mm; min-height: 297mm; max-height: 297mm; padding: 6mm 10mm; box-sizing: border-box; overflow: hidden; font-family: 'Arial Narrow', 'Barlow Condensed', 'Roboto Condensed', sans-serif;">
                         ${kuponCardsHtml}
                     </div>
                 `;
