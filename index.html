@@ -1025,7 +1025,7 @@
                                 <button class="bg-red-600 hover:bg-red-700 text-white px-3.5 py-1.5 rounded-lg shadow-sm text-xs md:text-sm font-bold transition flex items-center" onclick="exportToPDF()">
                                     <i class="fa-solid fa-file-pdf mr-1.5"></i> Export PDF
                                 </button>
-                                <button class="bg-gray-800 hover:bg-gray-900 text-white px-3.5 py-1.5 rounded-lg shadow-sm text-xs md:text-sm font-bold transition flex items-center" onclick="window.print()">
+                                <button class="bg-gray-800 hover:bg-gray-900 text-white px-3.5 py-1.5 rounded-lg shadow-sm text-xs md:text-sm font-bold transition flex items-center" onclick="printPOAction()">
                                     <i class="fa-solid fa-print mr-1.5"></i> Cetak PO
                                 </button>
                             </div>
@@ -5686,15 +5686,18 @@
             const hadBorder = element.classList.contains('border');
             const hadBorderGray = element.classList.contains('border-gray-300');
             const hadShadow = element.classList.contains('shadow-2xl');
+            const hadMinH = element.classList.contains('min-h-[297mm]');
             const origBorder = element.style.border;
             const origBoxShadow = element.style.boxShadow;
             const origWidth = element.style.width;
+            const origMinHeight = element.style.minHeight;
 
-            // Hilangkan garis border abu-abu & bayangan modal agar hasil PDF bersih tanpa garis pinggir
-            element.classList.remove('border', 'border-gray-300', 'shadow-2xl');
+            // Hilangkan border abu-abu, bayangan modal, serta min-height agar hasil PDF bersih dan PAS 1 halaman tanpa halaman kosong ke-2
+            element.classList.remove('border', 'border-gray-300', 'shadow-2xl', 'min-h-[297mm]');
             element.style.border = 'none';
             element.style.boxShadow = 'none';
             element.style.width = '210mm';
+            element.style.minHeight = 'auto';
 
             // Pengaturan Kualitas dan Margin PDF
             // margin: 0 agar pas 100% ukuran kertas A4 (padding p-8 pada #print-area sudah memberi jarak tepi 32px / ~8.5mm secara alami)
@@ -5709,7 +5712,8 @@
                     scrollX: 0,
                     scrollY: 0
                 },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak:    { mode: 'avoid-all' }
             };
 
             if(typeof showToast === 'function') showToast("Sedang membuat file PDF...", "info");
@@ -5720,20 +5724,111 @@
                 if(hadBorder) element.classList.add('border');
                 if(hadBorderGray) element.classList.add('border-gray-300');
                 if(hadShadow) element.classList.add('shadow-2xl');
+                if(hadMinH) element.classList.add('min-h-[297mm]');
                 element.style.border = origBorder;
                 element.style.boxShadow = origBoxShadow;
                 element.style.width = origWidth;
+                element.style.minHeight = origMinHeight;
                 if(typeof showToast === 'function') showToast("PDF PO berhasil diunduh!", "success");
             }).catch(err => {
                 console.error("Gagal export PDF:", err);
                 if(hadBorder) element.classList.add('border');
                 if(hadBorderGray) element.classList.add('border-gray-300');
                 if(hadShadow) element.classList.add('shadow-2xl');
+                if(hadMinH) element.classList.add('min-h-[297mm]');
                 element.style.border = origBorder;
                 element.style.boxShadow = origBoxShadow;
                 element.style.width = origWidth;
+                element.style.minHeight = origMinHeight;
                 if(typeof showToast === 'function') showToast("Gagal membuat PDF", "error");
             });
+        }
+
+        // ==========================================
+        // FITUR CETAK PO VIA IFRAME TERISOLASI (BEBAS GLITCH & PAS A4)
+        // ==========================================
+        function printPOAction() {
+            const printArea = document.getElementById('print-area');
+            if(!printArea) return;
+
+            let oldFrame = document.getElementById('po-print-iframe');
+            if(oldFrame) oldFrame.remove();
+
+            // Ambil semua tag stylesheet dan style aktif dari dokumen induk
+            let headStyles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
+                .map(el => el.outerHTML)
+                .join('\n');
+            headStyles = headStyles.replace(/visibility\s*:\s*hidden/gi, 'visibility: visible');
+
+            // Buat iframe baru tersembunyi
+            const printFrame = document.createElement('iframe');
+            printFrame.id = 'po-print-iframe';
+            printFrame.style.position = 'fixed';
+            printFrame.style.bottom = '0';
+            printFrame.style.right = '0';
+            printFrame.style.width = '0';
+            printFrame.style.height = '0';
+            printFrame.style.border = '0';
+            document.body.appendChild(printFrame);
+
+            const noPO = document.getElementById('detNoPO') ? document.getElementById('detNoPO').innerText : 'CETAK';
+
+            const frameDoc = printFrame.contentWindow.document;
+            frameDoc.open();
+            frameDoc.write(`<!DOCTYPE html>
+<html>
+<head>
+    <title>PO - ${noPO}</title>
+    ${headStyles}
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 0;
+        }
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: white !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        body, body * {
+            visibility: visible !important;
+        }
+        .po-print-container {
+            width: 210mm !important;
+            min-height: 297mm !important;
+            box-sizing: border-box !important;
+            padding: 10mm 12mm !important;
+            margin: 0 auto !important;
+            background: white !important;
+        }
+        table {
+            border-collapse: collapse !important;
+            width: 100% !important;
+            table-layout: fixed !important;
+        }
+        td, th {
+            box-sizing: border-box !important;
+        }
+    </style>
+</head>
+<body class="bg-white text-gray-800">
+    <div class="po-print-container bg-white font-sans text-sm">
+        ${printArea.innerHTML}
+    </div>
+</body>
+</html>`);
+            frameDoc.close();
+
+            setTimeout(() => {
+                try {
+                    printFrame.contentWindow.focus();
+                    printFrame.contentWindow.print();
+                } catch(e) {
+                    console.error("Print PO error:", e);
+                }
+            }, 250);
         }
 
         // Pemicu Awal
