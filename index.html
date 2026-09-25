@@ -11795,7 +11795,7 @@
         }
 
         // ==========================================
-        // MESIN RAKIT HTML & PRINT (ANTI BLANK PAGE & 1 HALAMAN)
+        // MESIN RAKIT HTML & PRINT (ANTI BLANK PAGE & ROTASI)
         // ==========================================
         function printBarcodeAction() {
             if(barcodeQueue.length === 0) return showToast("Antrean kosong!", "warning");
@@ -11808,10 +11808,7 @@
             const format = document.getElementById('barcodeFormat').value;
             const wrapper = document.getElementById('print-barcode-wrapper');
             
-            // [KUNCI PERBAIKAN]: Lepas class 'hidden' Tailwind agar mesin QR Code tidak error!
             wrapper.classList.remove('hidden');
-            
-            // Siapkan wadah gaib di luar jangkauan mata pengguna (Off-screen)
             wrapper.innerHTML = '';
             wrapper.style.display = 'block';
             wrapper.style.position = 'absolute';
@@ -11865,7 +11862,7 @@
             let htmlOutput = '';
 
             // ===============================================
-            // GENERATOR: FORMAT LUAR (60x40) - 1 KERTAS 1 STIKER
+            // GENERATOR: FORMAT LUAR (60x40) - PORTRAIT
             // ===============================================
             if(format === 'LUAR') {
                 flatItems.forEach((item) => {
@@ -11875,9 +11872,9 @@
                     let fontWeightMerk = merkAsli === 'CLARIFELA' ? 'normal' : 'bold';
 
                     htmlOutput += `
-                    <div class="stiker-page" style="width: 60mm; height: 40mm; display: flex; flex-direction: column; font-family: ${fontWadah}; color: #000; background: white; box-sizing: border-box; page-break-after: always; overflow: hidden; margin: 0; padding: 0;">
+                    <div class="stiker-page" style="display: flex; flex-direction: column; font-family: ${fontWadah}; color: #000; background: white; box-sizing: border-box; overflow: hidden; margin: 0; padding: 0;">
                         <!-- SETENGAH ATAS -->
-                        <div style="display: flex; height: 55%; border-bottom: 2px solid #000; box-sizing: border-box;">
+                        <div style="display: flex; height: 55%; border-bottom: 2px solid #000; box-sizing: border-box; overflow: hidden;">
                             <div style="width: 65%; border-right: 2px solid #000; display: flex; box-sizing: border-box;">
                                 <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding-left: 2mm;">
                                     <div style="font-size: 10px; font-weight: bold; margin-bottom: 1px;">Artikel :</div>
@@ -11893,7 +11890,7 @@
                             </div>
                         </div>
                         <!-- SETENGAH BAWAH -->
-                        <div style="display: flex; height: 45%; align-items: center; justify-content: space-between; padding: 1mm; box-sizing: border-box;">
+                        <div style="display: flex; height: 45%; align-items: center; justify-content: space-between; padding: 1mm; box-sizing: border-box; overflow: hidden;">
                             <div style="width: 65%; height: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden;">
                                 <svg class="barcode-1d" jsbarcode-value="${item.prodId}" jsbarcode-height="45" jsbarcode-width="2.3" jsbarcode-fontSize="12" jsbarcode-margin="0" jsbarcode-textmargin="2"></svg>
                             </div>
@@ -11906,7 +11903,7 @@
                 });
             }
             // ===============================================
-            // GENERATOR: FORMAT DALAM & SAMPLE (103x30 - ISI 2 KOLOM)
+            // GENERATOR: FORMAT DALAM & SAMPLE (30x103 - PORTRAIT ATAS BAWAH)
             // ===============================================
             else {
                 for (let i = 0; i < flatItems.length; i += 2) {
@@ -11914,21 +11911,19 @@
                     let item2 = flatItems[i+1];
 
                     htmlOutput += `
-                    <div class="stiker-page" style="width: 103mm; height: 30mm; display: flex; flex-direction: row; justify-content: space-between; align-items: center; page-break-after: always; overflow: hidden; box-sizing: border-box; margin: 0; padding: 0;">
-                        
-                        <!-- STIKER KIRI (50mm) -->
-                        <div style="width: 50mm; height: 30mm; display: flex; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box; overflow: hidden;">
+                    <div class="stiker-page" style="display: flex; flex-direction: column; justify-content: space-between; align-items: center; overflow: hidden; box-sizing: border-box; margin: 0; padding: 0;">
+                        <!-- STIKER ATAS (30x50mm) -->
+                        <div style="width: 30mm; height: 50mm; box-sizing: border-box; overflow: hidden;">
                             ${format === 'DALAM' ? buildDalamHTML(item1) : buildSampleHTML(item1)}
                         </div>
                         
                         <!-- SPACE TENGAH (3mm) -->
-                        <div style="width: 3mm; height: 30mm;"></div>
+                        <div style="width: 30mm; height: 3mm; flex-shrink: 0;"></div>
                         
-                        <!-- STIKER KANAN (50mm) -->
-                        <div style="width: 50mm; height: 30mm; display: flex; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box; overflow: hidden;">
+                        <!-- STIKER BAWAH (30x50mm) -->
+                        <div style="width: 30mm; height: 50mm; box-sizing: border-box; overflow: hidden;">
                             ${item2 ? (format === 'DALAM' ? buildDalamHTML(item2) : buildSampleHTML(item2)) : ''}
                         </div>
-
                     </div>`;
                 }
             }
@@ -11963,7 +11958,7 @@
 
                     let finalHtml = wrapper.innerHTML;
 
-                    // BUAT IFRAME GAIB DENGAN CARA AMAN DARI BUG 1 HALAMAN CHROME
+                    // BUAT IFRAME GAIB
                     let iframe = document.getElementById('print-barcode-iframe');
                     if(!iframe) {
                         iframe = document.createElement('iframe');
@@ -11976,7 +11971,11 @@
                     }
 
                     let doc = iframe.contentWindow.document;
-                    let paperSize = format === 'LUAR' ? '60mm 40mm' : '103mm 30mm';
+                    
+                    // [KUNCI]: LUAR = 60x40. DALAM & SAMPLE = 30x103 (Portrait Kertas)
+                    let paperSize = format === 'LUAR' ? '60mm 40mm' : '30mm 103mm';
+                    let stikerWidth = format === 'LUAR' ? '60mm' : '30mm';
+                    let stikerHeight = format === 'LUAR' ? '40mm' : '103mm';
 
                     doc.open();
                     doc.write(`
@@ -11988,6 +11987,15 @@
                                 @page { size: ${paperSize}; margin: 0; }
                                 html, body { margin: 0 !important; padding: 0 !important; background: white !important; font-family: Arial, sans-serif; }
                                 * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                                .stiker-page {
+                                    width: ${stikerWidth};
+                                    height: ${stikerHeight};
+                                    max-height: ${stikerHeight};
+                                    page-break-after: always;
+                                    overflow: hidden;
+                                    box-sizing: border-box;
+                                    margin: 0 auto;
+                                }
                                 .v-text { writing-mode: vertical-rl; transform: rotate(180deg); }
                             </style>
                         </head>
@@ -12003,7 +12011,7 @@
                         iframe.contentWindow.print();
                         setTimeout(async () => {
                             wrapper.innerHTML = ''; 
-                            wrapper.classList.add('hidden'); // Sembunyikan lagi setelah beres
+                            wrapper.classList.add('hidden'); 
                             
                             const isClear = await showConfirm("Print Selesai", `Apakah Print Format ${format} berhasil? Klik 'Ya' untuk mengosongkan antrean.`, "warning");
                             if(isClear) {
@@ -12025,9 +12033,9 @@
                 }
             }, 300);
         }
-        
+
         // ===============================================
-        // FUNGSI RAKIT HTML DALAM (HANGTAG VERTIKAL)
+        // FUNGSI RAKIT HTML DALAM (PORTRAIT 30x50mm)
         // ===============================================
         function buildDalamHTML(item) {
             let merkAsli = (item.merk && item.merk.trim() !== '') ? item.merk.toUpperCase() : 'DAVCLAR';
@@ -12037,41 +12045,48 @@
             let fontStyleMerk = merkAsli === 'CLARIFELA' ? 'italic' : 'italic';
 
             return `
-            <div style="width: 100%; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2mm; overflow: hidden; font-family: ${fontWadah}; color: #000;">
-                <div style="font-family: Calibri, sans-serif; font-size: 8px; font-weight: bold; margin-bottom: 2px; letter-spacing: 0.5px;">MADE IN INDONESIA</div>
-                <div class="qr-code-box" data-val="${item.artikel} ${item.warna}" data-size="45"></div>
-                <div style="width: 90%; border-bottom: 1.5px solid #000; text-align: center; margin-bottom: 2px; margin-top: 2px; padding-bottom: 1px;">
-                    <div style="font-family: ${fontWadah}; font-size: 10px; font-weight: ${fontWeightMerk}; font-style: ${fontStyleMerk}; letter-spacing: 0.5px;">${teksMerk}</div>
+            <div style="width: 100%; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1mm; font-family: ${fontWadah}; color: #000; overflow: hidden;">
+                <div style="font-family: Calibri, sans-serif; font-size: 7px; font-weight: bold; margin-bottom: 2px; letter-spacing: 0.5px; text-align: center;">MADE IN INDONESIA</div>
+                
+                <div class="qr-code-box" data-val="${item.artikel} ${item.warna}" data-size="75"></div>
+                
+                <div style="width: 95%; border-bottom: 1.5px solid #000; text-align: center; margin-top: 3px; margin-bottom: 3px; padding-bottom: 2px;">
+                    <div style="font-size: 11px; font-weight: ${fontWeightMerk}; font-style: ${fontStyleMerk}; letter-spacing: 0.5px;">${teksMerk}</div>
                 </div>
-                <div style="font-size: 11px; font-weight: 900; line-height: 1.1; text-align: center; text-transform: uppercase;">${item.artikel}</div>
-                <div style="font-size: 11px; font-weight: bold; line-height: 1.1; text-align: center; text-transform: uppercase;">${item.warna}</div>
+                
+                <div style="font-size: 12px; font-weight: 900; line-height: 1.1; text-align: center; text-transform: uppercase; width: 100%; word-wrap: break-word;">${item.artikel}</div>
+                <div style="font-size: 11px; font-weight: bold; line-height: 1.1; text-align: center; text-transform: uppercase; width: 100%; word-wrap: break-word; margin-top: 2px;">${item.warna}</div>
             </div>`;
         }
 
         // ===============================================
-        // FUNGSI RAKIT HTML SAMPLE (TANPA BORDER LUAR)
+        // FUNGSI RAKIT HTML SAMPLE (PORTRAIT 30x50mm)
         // ===============================================
         function buildSampleHTML(item) {
             let merkAsli = (item.merk && item.merk.trim() !== '') ? item.merk.toUpperCase() : 'DAVCLAR';
             let fontWadah = merkAsli === 'CLARIFELA' ? "'Arial Light', Arial, sans-serif" : "Calibri, sans-serif";
 
             return `
-            <div style="width: 100%; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; text-align: center; overflow: hidden; font-family: ${fontWadah}; color: #000; padding: 2mm;">
-                <div style="flex: 1; border-bottom: 1.5px solid #000; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+            <div style="width: 100%; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; text-align: center; font-family: ${fontWadah}; color: #000; padding: 1mm; overflow: hidden;">
+                
+                <div style="flex: 1; border-bottom: 1.5px solid #000; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden;">
                     <div style="font-size: 8px; font-weight: bold; margin-bottom: 1px;">Article</div>
-                    <div style="font-size: 12px; font-weight: 900; text-transform: uppercase;">${item.artikel}</div>
+                    <div style="font-size: 12px; font-weight: 900; text-transform: uppercase; line-height: 1; word-wrap: break-word; width: 100%;">${item.artikel}</div>
                 </div>
-                <div style="flex: 1; border-bottom: 1.5px solid #000; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                
+                <div style="flex: 1; border-bottom: 1.5px solid #000; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden;">
                     <div style="font-size: 8px; font-weight: bold; margin-bottom: 1px;">Color</div>
-                    <div style="font-size: 11px; font-weight: 900; text-transform: uppercase;">${item.warna}</div>
+                    <div style="font-size: 11px; font-weight: 900; text-transform: uppercase; line-height: 1; word-wrap: break-word; width: 100%;">${item.warna}</div>
                 </div>
-                <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                
+                <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden;">
                     <div style="font-size: 8px; font-weight: bold; margin-bottom: 1px;">Price</div>
-                    <div style="font-size: 13px; font-weight: 900;">Rp ${(parseInt(item.harga) || 0).toLocaleString('id-ID')}</div>
+                    <div style="font-size: 12px; font-weight: 900; line-height: 1;">Rp ${(parseInt(item.harga) || 0).toLocaleString('id-ID')}</div>
                 </div>
+                
             </div>`;
         }
-
+        
         // ===============================================
         // INTEGRASI PO -> BARCODE & PENCATATAN WAKTU
         // ===============================================
