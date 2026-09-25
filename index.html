@@ -5474,7 +5474,6 @@
 <html>
 <head>
     <title>SPK - ${currentSPKId}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Roboto+Condensed:wght@400;700&display=swap');
         @page {
@@ -5520,12 +5519,49 @@
             box-sizing: border-box !important;
         }
         table {
-            border-collapse: collapse;
-            width: 100%;
+            border-collapse: collapse !important;
+            width: 100% !important;
         }
         td, th {
-            border: 1px solid #000;
+            border: 1px solid #000 !important;
+            box-sizing: border-box !important;
         }
+        .spk-kupon-card table {
+            font-size: 11.5px !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+        }
+        .spk-kupon-card td {
+            padding: 1px 4px !important;
+        }
+        .flex { display: flex !important; }
+        .flex-col { flex-direction: column !important; }
+        .justify-between { justify-content: space-between !important; }
+        .justify-start { justify-content: flex-start !important; }
+        .items-center { align-items: center !important; }
+        .grid { display: grid !important; }
+        .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+        .text-center { text-align: center !important; }
+        .text-left { text-align: left !important; }
+        .text-right { text-align: right !important; }
+        .font-bold { font-weight: 700 !important; }
+        .uppercase { text-transform: uppercase !important; }
+        .truncate { overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; }
+        .whitespace-nowrap { white-space: nowrap !important; }
+        .align-middle { vertical-align: middle !important; }
+        .border { border: 1px solid #000 !important; }
+        .border-2 { border: 2px solid #000 !important; }
+        .border-black { border-color: #000 !important; }
+        .border-t-2 { border-top: 2px solid #000 !important; }
+        .bg-white { background-color: #fff !important; }
+        .w-full { width: 100% !important; }
+        .text-lg { font-size: 16px !important; }
+        .text-sm { font-size: 13px !important; }
+        .text-xs { font-size: 11px !important; }
+        .tracking-wider { letter-spacing: 0.05em !important; }
+        .leading-tight { line-height: 1.25 !important; }
+        .mb-1 { margin-bottom: 4px !important; }
+        .mb-2 { margin-bottom: 8px !important; }
     </style>
 </head>
 <body style="font-family: 'Arial Narrow', 'Barlow Condensed', 'Roboto Condensed', sans-serif;">
@@ -5533,6 +5569,13 @@
 </body>
 </html>`);
             frameDoc.close();
+
+            // Inject Tailwind script secara aman lewat DOM API tanpa merusak parser HTML
+            try {
+                const twScript = frameDoc.createElement('script');
+                twScript.src = "https://cdn.tailwindcss.com";
+                frameDoc.head.appendChild(twScript);
+            } catch(e) {}
 
             // Beri jeda 300ms agar font & layout di-render sempurna di iframe
             setTimeout(() => {
@@ -11715,7 +11758,7 @@
             if(barcodeQueue.length === 0) return showToast("Antrean kosong!", "warning");
             
             if (typeof QRCode === 'undefined' || typeof JsBarcode === 'undefined') {
-                alert("Library Barcode/QR Code belum termuat! Pastikan 2 baris <script> CDN sudah terpasang di <head>.");
+                alert("Library Barcode/QR Code belum termuat! Pastikan 2 baris script CDN sudah terpasang di <head>.");
                 return;
             }
 
