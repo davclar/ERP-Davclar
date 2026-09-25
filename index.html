@@ -12400,46 +12400,46 @@
         }
 
         // ==========================================
-        // TEMPLATE STRUKTUR STIKER "CUSTOM" (Skala 50x30mm) - REVISI URUTAN VERTIKAL
+        // TEMPLATE STRUKTUR STIKER "CUSTOM" (Clean & All Black)
         // ==========================================
         function generateTemplateStikerCustom(artikel, warna, size, merkCustom) {
             let warnaUppercase = warna.toUpperCase();
 
             return `
             <div style="width: 50mm; height: 30mm; box-sizing: border-box; background: white; padding: 1mm;">
-                <div style="width: 100%; height: 100%; border: 1.5px solid black; display: flex; flex-direction: column; font-family: Arial, sans-serif; box-sizing: border-box;">
+                <div style="width: 100%; height: 100%; border: 1.5px solid black; display: flex; flex-direction: column; font-family: Arial, sans-serif; box-sizing: border-box; background: white; color: black;">
                     
-                    <!-- BARIS 1: BRAND FULL DI ATAS (TANPA LABEL) -->
-                    <div style="height: 28%; border-bottom: 1.5px solid black; display: flex; justify-content: center; align-items: center; box-sizing: border-box;">
-                        <span style="font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">${merkCustom}</span>
+                    <!-- BARIS 1: BRAND FULL DI ATAS -->
+                    <div style="height: 28%; border-bottom: 1.5px solid black; display: flex; justify-content: center; align-items: center; box-sizing: border-box; background: white;">
+                        <span style="font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; color: black;">${merkCustom}</span>
                     </div>
 
                     <!-- BARIS 2: ARTICLE -->
-                    <div style="height: 24%; border-bottom: 1.5px solid black; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; box-sizing: border-box;">
-                        <span style="position: absolute; top: 1px; left: 3px; font-size: 6.5px; font-weight: bold; color: #444;">ARTICLE</span>
-                        <span style="font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 1px;">${artikel}</span>
+                    <div style="height: 24%; border-bottom: 1.5px solid black; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; box-sizing: border-box; background: white;">
+                        <span style="position: absolute; top: 1px; left: 3px; font-size: 6.5px; font-weight: bold; color: black;">ARTICLE</span>
+                        <span style="font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 1px; color: black;">${artikel}</span>
                     </div>
 
                     <!-- BARIS 3: COLOR & SIZE (BERDAMPINGAN DI BAWAH) -->
-                    <div style="height: 48%; display: flex; flex-direction: row; box-sizing: border-box;">
+                    <div style="height: 48%; display: flex; flex-direction: row; box-sizing: border-box; background: white;">
                         
                         <!-- KIRI: COLOR -->
-                        <div style="flex: 1; border-right: 1.5px solid black; position: relative; display: flex; justify-content: center; align-items: center; text-align: center; box-sizing: border-box; padding: 0 1mm;">
-                            <span style="position: absolute; top: 1px; left: 3px; font-size: 6.5px; font-weight: bold; color: #444;">COLOR</span>
-                            <span style="font-size: 9.5px; font-weight: 900; line-height: 1.1; text-transform: uppercase; padding-top: 3px; word-break: break-word;">${warnaUppercase}</span>
+                        <div style="flex: 1; border-right: 1.5px solid black; position: relative; display: flex; justify-content: center; align-items: center; text-align: center; box-sizing: border-box; padding: 0 1mm; background: white;">
+                            <span style="position: absolute; top: 1px; left: 3px; font-size: 6.5px; font-weight: bold; color: black;">COLOR</span>
+                            <span style="font-size: 9.5px; font-weight: 900; line-height: 1.1; text-transform: uppercase; padding-top: 3px; word-break: break-word; color: black;">${warnaUppercase}</span>
                         </div>
 
                         <!-- KANAN: SIZE -->
-                        <div style="width: 18mm; position: relative; display: flex; justify-content: center; align-items: center; box-sizing: border-box;">
-                            <span style="position: absolute; top: 1px; left: 3px; font-size: 6.5px; font-weight: bold; color: #444;">SIZE</span>
-                            <span style="font-size: 18px; font-weight: 900; margin-top: 2px;">${size}</span>
+                        <div style="width: 18mm; position: relative; display: flex; justify-content: center; align-items: center; box-sizing: border-box; background: white;">
+                            <span style="position: absolute; top: 1px; left: 3px; font-size: 6.5px; font-weight: bold; color: black;">SIZE</span>
+                            <span style="font-size: 18px; font-weight: 900; margin-top: 2px; color: black;">${size}</span>
                         </div>
 
                     </div>
                 </div>
             </div>`;
         }
-
+        
         // ==========================================
         // FITUR AUTO SYNC & OFFLINE DETECTOR
         // ==========================================
