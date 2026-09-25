@@ -5278,7 +5278,7 @@
             const MAX_ROWS_CONTROL = 55; // 1 Halaman A4 muat hingga 55 baris compact
             let controlPagesCount = Math.ceil(spkList.length / MAX_ROWS_CONTROL) || 1;
 
-            let sizeThControl = activeSizes.map(s => `<th class="border border-black py-0.5 px-0.5 text-center font-bold" style="width: 5%;">${s.label}</th>`).join('');
+            let sizeThControl = activeSizes.map(s => `<th class="border border-black py-0.5 px-0.5 text-center font-bold" style="width: 5%; border-bottom: 3px double #000;">${s.label}</th>`).join('');
 
             for (let cp = 0; cp < controlPagesCount; cp++) {
                 let pageRows = spkList.slice(cp * MAX_ROWS_CONTROL, (cp + 1) * MAX_ROWS_CONTROL);
@@ -5320,13 +5320,13 @@
                         <table class="w-full border-collapse border border-black text-[10px] text-black leading-tight" style="table-layout: fixed; border: 1.5px solid #000;">
                             <thead>
                                 <tr class="bg-white font-bold text-center">
-                                    <th class="border border-black py-0.5 px-0.5 w-[5%]">No.</th>
-                                    <th class="border border-black py-0.5 px-1 w-[26%] text-left">Artikel</th>
-                                    <th class="border border-black py-0.5 px-1 w-[18%] text-left">Warna</th>
+                                    <th class="border border-black py-0.5 px-0.5 w-[5%]" style="border-bottom: 3px double #000;">No.</th>
+                                    <th class="border border-black py-0.5 px-1 w-[26%] text-left" style="border-bottom: 3px double #000;">Artikel</th>
+                                    <th class="border border-black py-0.5 px-1 w-[18%] text-left" style="border-bottom: 3px double #000;">Warna</th>
                                     ${sizeThControl}
-                                    <th class="border border-black py-0.5 px-0.5 w-[8%]">T.Muka</th>
-                                    <th class="border border-black py-0.5 px-0.5 w-[8%]">Tgl.Mtg</th>
-                                    <th class="border border-black py-0.5 px-0.5 w-[8%]">Tgl.Setor</th>
+                                    <th class="border border-black py-0.5 px-0.5 w-[8%]" style="border-bottom: 3px double #000;">T.Muka</th>
+                                    <th class="border border-black py-0.5 px-0.5 w-[8%]" style="border-bottom: 3px double #000;">Tgl.Mtg</th>
+                                    <th class="border border-black py-0.5 px-0.5 w-[8%]" style="border-bottom: 3px double #000;">Tgl.Setor</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -5424,24 +5424,24 @@
                                     </tr>
                                     <!-- Row 7: TGL MTG -->
                                     <tr style="height: 5.5mm;">
-                                        <td class="border border-black px-1 text-[10.5px] align-middle whitespace-nowrap">TGL MTG</td>
+                                        <td class="border border-black px-1.5 align-middle whitespace-nowrap">TGL MTG</td>
                                         <td class="border border-black align-middle"></td>
-                                        <td class="border border-black px-1 text-[10.5px] align-middle whitespace-nowrap">TGL MTG</td>
+                                        <td class="border border-black px-1.5 align-middle whitespace-nowrap">TGL MTG</td>
                                         <td class="border border-black align-middle"></td>
-                                        <td class="border border-black px-1 text-[10.5px] align-middle whitespace-nowrap">TGL MTG</td>
+                                        <td class="border border-black px-1.5 align-middle whitespace-nowrap">TGL MTG</td>
                                         <td class="border border-black align-middle"></td>
-                                        <td class="border border-black px-1 text-[10.5px] align-middle whitespace-nowrap">TGL MTG</td>
+                                        <td class="border border-black px-1.5 align-middle whitespace-nowrap">TGL MTG</td>
                                         <td class="border border-black align-middle"></td>
                                     </tr>
                                     <!-- Row 8: TGL SETOR -->
                                     <tr style="height: 5.5mm;">
-                                        <td class="border border-black px-1 text-[10px] align-middle whitespace-nowrap">TGL SETOR</td>
+                                        <td class="border border-black px-1.5 align-middle whitespace-nowrap">TGL SETOR</td>
                                         <td class="border border-black align-middle"></td>
-                                        <td class="border border-black px-1 text-[10px] align-middle whitespace-nowrap">TGL SETOR</td>
+                                        <td class="border border-black px-1.5 align-middle whitespace-nowrap">TGL SETOR</td>
                                         <td class="border border-black align-middle"></td>
-                                        <td class="border border-black px-1 text-[10px] align-middle whitespace-nowrap">TGL SETOR</td>
+                                        <td class="border border-black px-1.5 align-middle whitespace-nowrap">TGL SETOR</td>
                                         <td class="border border-black align-middle"></td>
-                                        <td class="border border-black px-1 text-[10px] align-middle whitespace-nowrap">TGL SETOR</td>
+                                        <td class="border border-black px-1.5 align-middle whitespace-nowrap">TGL SETOR</td>
                                         <td class="border border-black align-middle"></td>
                                     </tr>
                                 </tbody>
