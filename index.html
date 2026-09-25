@@ -11810,6 +11810,11 @@
             
             wrapper.classList.remove('hidden');
 
+            // 1. Tentukan Ukuran Kertas Berdasarkan Format
+            let paperSize = format === 'LUAR' ? '60mm 40mm' : '103mm 30mm';
+            let stikerWidth = format === 'LUAR' ? '59mm' : '102mm';
+            let stikerHeight = format === 'LUAR' ? '39mm' : '29mm';
+
             // CSS SAKTI ANTI BLANK PAGE & MENGEMBALIKAN MENU LAYOUT CHROME
             wrapper.innerHTML = `
                 <style>
@@ -11829,9 +11834,24 @@
                             background: white !important; 
                         }
                         
-                        @page { margin: 0; }
+                        /* KUNCI 1: Beri tahu Chrome ukuran asli kertas thermal */
+                        @page { 
+                            size: ${paperSize}; 
+                            margin: 0; 
+                        }
                     }
                     .v-text { writing-mode: vertical-rl; transform: rotate(180deg); }
+                    
+                    /* KUNCI 2: Paksa potong kertas setiap 1 stiker selesai */
+                    .stiker-page {
+                        width: ${stikerWidth};
+                        height: ${stikerHeight};
+                        page-break-after: always;
+                        overflow: hidden;
+                        box-sizing: border-box;
+                        background: white;
+                        margin: 0 auto;
+                    }
                 </style>
             `;
 
@@ -11846,31 +11866,21 @@
                     return;
                 }
 
-                // 1. Ambil artikel pertama di antrean sebagai pancingan
                 let pancinganFull = barcodeQueue[0].artikel.trim().toUpperCase();
-                
-                // 2. Ambil kata depannya aja (Misal "MIKA 3301" -> jadi "MIKA")
                 let kataKunci = pancinganFull.split(' ')[0]; 
-
-                // 3. Cari di database asli menggunakan db_databarang
                 let sumberData = typeof db_databarang !== 'undefined' ? db_databarang : barcodeQueue; 
-                
-                // Kumpulkan semua barang yang nama artikelnya berawalan kata kunci (contoh: awalan "MIKA")
                 let keluargaArtikel = sumberData.filter(b => b.artikel && b.artikel.trim().toUpperCase().startsWith(kataKunci));
 
-                // Kalau database bermasalah/kosong, fallback ke antrean
                 if(keluargaArtikel.length === 0) keluargaArtikel = barcodeQueue;
 
                 let groupedSample = {};
                 
-                // 4. Kelompokkan berdasarkan Artikel persisnya (MIKA 3301, MIKA 3302) & Gabung Warna
                 keluargaArtikel.forEach(item => {
                     let key = item.artikel.trim().toUpperCase();
                     if (!groupedSample[key]) {
                         groupedSample[key] = {
                             artikel: item.artikel,
                             warnaSet: new Set(),
-                            // Ambil dari hargaJual (dari DB) atau harga (dari antrean)
                             harga: item.hargaJual || item.harga || 0, 
                             merk: item.merk || 'DAVCLAR'
                         };
@@ -11880,11 +11890,10 @@
                     }
                 });
                 
-                // 5. Masukkan ke daftar cetak
                 Object.values(groupedSample).forEach(g => {
                     flatItems.push({
                         artikel: g.artikel,
-                        warna: Array.from(g.warnaSet).join('-'), // Hasilnya: CREAM-BISCUIT
+                        warna: Array.from(g.warnaSet).join('-'), 
                         harga: g.harga,
                         merk: g.merk
                     });
@@ -11923,22 +11932,15 @@
             // GENERATOR: FORMAT LUAR (60x40)
             // ===============================================
             if(format === 'LUAR') {
-                flatItems.forEach((item, index) => {
-                    let pageBreakStyle = (index === flatItems.length - 1) ? "" : "page-break-after: always;";
-                    
-                    // [LOGIKA MERK] Pengecekan merk 
+                flatItems.forEach((item) => {
                     let merkAsli = (item.merk && item.merk.trim() !== '') ? item.merk.toUpperCase() : 'DAVCLAR';
-                    
-                    // Teks yang tampil (Clarifela C-nya saja yang besar, Davclar tetap Uppercase)
                     let teksMerk = merkAsli === 'CLARIFELA' ? 'Clarifela' : merkAsli;
                     
-                    // [LOGIKA FONT & STYLE KHUSUS]
                     let fontWadah = merkAsli === 'CLARIFELA' ? "'Arial Light', Arial, sans-serif" : "Calibri, sans-serif";
                     let fontWeightMerk = merkAsli === 'CLARIFELA' ? 'normal' : 'bold';
 
-                    // Tinggi dan Lebar dikurangi 1mm biar gak luber ke halaman kosong
                     htmlOutput += `
-                    <div style="width: 59mm; height: 39mm; display: flex; flex-direction: column; box-sizing: border-box; background: white; margin: 0 auto; overflow: hidden; font-family: ${fontWadah}; color: #000; page-break-inside: avoid; ${pageBreakStyle}">
+                    <div class="stiker-page" style="display: flex; flex-direction: column; font-family: ${fontWadah}; color: #000; page-break-inside: avoid;">
                         
                         <!-- SETENGAH ATAS -->
                         <div style="display: flex; height: 55%; border-bottom: 2px solid #000; box-sizing: border-box;">
@@ -11981,28 +11983,15 @@
             }
             
             // ===============================================
-            // GENERATOR: FORMAT DALAM & SAMPLE (SUSUN VERTIKAL FULL KERTAS)
+            // GENERATOR: FORMAT DALAM & SAMPLE (1 STIKER PER HALAMAN)
             // ===============================================
             else {
-                for (let i = 0; i < flatItems.length; i += 2) {
-                    let isLastRow = (i + 2) >= flatItems.length;
-                    let pageBreakStyle = isLastRow ? "" : "page-break-after: always;";
-
-                    let item1 = flatItems[i];
-                    let item2 = flatItems[i+1];
-
-                    htmlOutput += `<div style="width: 100%; height: 100vh; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box; margin: 0; overflow: hidden; page-break-inside: avoid; ${pageBreakStyle}">`;
-                    
-                    if(item1) htmlOutput += format === 'DALAM' ? buildDalamHTML(item1) : buildSampleHTML(item1);
-                    if(item2) {
-                        htmlOutput += format === 'DALAM' ? buildDalamHTML(item2) : buildSampleHTML(item2);
-                    } else {
-                        // Ruang kosong untuk menyeimbangkan kalau stiker kedua gak ada
-                        htmlOutput += `<div style="flex: 1; width: 100%;"></div>`; 
-                    }
-                    
+                // BUG FIX: Tidak lagi di-loop i += 2. Semua stiker dirender 1 per 1 agar sesuai kertas thermal.
+                flatItems.forEach((item) => {
+                    htmlOutput += `<div class="stiker-page" style="display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 2mm;">`;
+                    htmlOutput += format === 'DALAM' ? buildDalamHTML(item) : buildSampleHTML(item);
                     htmlOutput += `</div>`;
-                }
+                });
             }
 
             wrapper.innerHTML += htmlOutput;
@@ -12040,16 +12029,15 @@
                             );
                             
                             if(isClear) {
-                                // CATAT WAKTU JIKA SEDANG NGEPRINT PO
                                 if (window.currentActivePO && (format === 'LUAR' || format === 'DALAM')) {
                                     updatePOBarcodeStatus(window.currentActivePO, format);
                                 }
 
                                 clearBarcodeQueue();
-                                window.currentActivePO = null; // Lepas kuncian PO
+                                window.currentActivePO = null; 
                                 
                                 let dropdown = document.getElementById('selectPOBarcode');
-                                if(dropdown) dropdown.value = ""; // Reset pilihan dropdown
+                                if(dropdown) dropdown.value = ""; 
                             }
                         }, 500);
                     }, 500);
@@ -12060,67 +12048,7 @@
                 }
             }, 100);
         }
-
-        // ===============================================
-        // FUNGSI RAKIT HTML DALAM (HANGTAG VERTIKAL) - REVISI ESTETIK
-        // ===============================================
-        function buildDalamHTML(item) {
-            let merkAsli = (item.merk && item.merk.trim() !== '') ? item.merk.toUpperCase() : 'DAVCLAR';
-            let teksMerk = merkAsli === 'CLARIFELA' ? 'Clarifela' : merkAsli;
-            
-            let fontWadah = merkAsli === 'CLARIFELA' ? "'Arial Light', Arial, sans-serif" : "Calibri, sans-serif";
-            let fontWeightMerk = merkAsli === 'CLARIFELA' ? 'bold' : 'bold';
-            let fontStyleMerk = merkAsli === 'CLARIFELA' ? 'italic' : 'italic';
-
-            return `
-            <div style="flex: 1; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0; padding: 0; overflow: hidden; font-family: ${fontWadah}; color: #000;">
-                
-                <div style="font-family: Calibri, sans-serif; font-size: 16px; font-weight: bold; margin-bottom: 10px; letter-spacing: 0.5px;">MADE IN INDONESIA</div>
-
-                <div class="qr-code-box" data-val="${item.artikel} ${item.warna}" data-size="110"></div>
-
-                <div style="width: 85%; border-bottom: 2px solid #000; text-align: center; margin-bottom: 5px; margin-top: 10px; padding-bottom: 1px;">
-                    <div style="font-family: ${fontWadah}; font-size: 16px; font-weight: ${fontWeightMerk}; font-style: ${fontStyleMerk}; letter-spacing: 0.5px;">${teksMerk}</div>
-                </div>
-
-                <div style="font-size: 21px; font-weight: 900; line-height: 1.1; text-align: center; text-transform: uppercase; margin-top: 5px;">${item.artikel}</div>
-                <div style="font-size: 21px; font-weight: bold; line-height: 1.1; text-align: center; text-transform: uppercase;">${item.warna}</div>
-            </div>`;
-        }
-
-        // ===============================================
-        // FUNGSI RAKIT HTML SAMPLE (TANPA BORDER LUAR)
-        // ===============================================
-        function buildSampleHTML(item) {
-            let merkAsli = (item.merk && item.merk.trim() !== '') ? item.merk.toUpperCase() : 'DAVCLAR';
-            let fontWadah = merkAsli === 'CLARIFELA' ? "'Arial Light', Arial, sans-serif" : "Calibri, sans-serif";
-
-            return `
-            <!-- BORDER LUAR DIHAPUS, Tampilan lebih clean -->
-            <div style="flex: 1; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; text-align: center; margin: 0; padding: 0; overflow: hidden; font-family: ${fontWadah}; color: #000;">
-                
-                <!-- Baris 1: Article (Ada garis pembatas bawah) -->
-                <div style="flex: 1; border-bottom: 2px solid #000; display: flex; flex-direction: column; justify-content: center; padding: 5px;">
-                    <div style="font-size: 14px; font-weight: bold; margin-bottom: 2px;">Article</div>
-                    <div style="font-size: 22px; font-weight: 900; text-transform: uppercase;">${item.artikel}</div>
-                </div>
-                
-                <!-- Baris 2: Color (Ada garis pembatas bawah) -->
-                <div style="flex: 1; border-bottom: 2px solid #000; display: flex; flex-direction: column; justify-content: center; padding: 5px;">
-                    <div style="font-size: 14px; font-weight: bold; margin-bottom: 2px;">Color</div>
-                    <!-- Font sedikit dikecilkan ke 18px jaga-jaga kalau warnanya panjang (CREAM-BISCUIT-BLACK) -->
-                    <div style="font-size: 18px; font-weight: 900; text-transform: uppercase;">${item.warna}</div>
-                </div>
-                
-                <!-- Baris 3: Price (Tanpa garis bawah) -->
-                <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 5px;">
-                    <div style="font-size: 14px; font-weight: bold; margin-bottom: 2px;">Price</div>
-                    <div style="font-size: 24px; font-weight: 900;">Rp ${(parseInt(item.harga) || 0).toLocaleString('id-ID')}</div>
-                </div>
-                
-            </div>`;
-        }
-
+        
         // ===============================================
         // INTEGRASI PO -> BARCODE & PENCATATAN WAKTU
         // ===============================================
