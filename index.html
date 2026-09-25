@@ -1167,32 +1167,54 @@
                             <style>
                                 @media print {
                                     body * { visibility: hidden; }
-                                    #print-spk-area, #print-spk-area * { visibility: visible; color: black !important; }
-                                    
-                                    /* Matikan efek modal saat diprint */
                                     #modal-spk-detail, #modal-spk-detail > div {
                                         position: static !important;
                                         transform: none !important;
                                         display: block !important;
+                                        background: transparent !important;
+                                        padding: 0 !important;
+                                        margin: 0 !important;
+                                        overflow: visible !important;
                                     }
-                                    
+                                    #print-spk-area, #print-spk-area * {
+                                        visibility: visible;
+                                        color: #000000 !important;
+                                        -webkit-print-color-adjust: exact !important;
+                                        print-color-adjust: exact !important;
+                                        font-family: Arial, Helvetica, sans-serif !important;
+                                    }
                                     #print-spk-area { 
                                         position: absolute !important; 
                                         left: 0 !important; top: 0 !important; 
                                         width: 100% !important; margin: 0 !important; 
+                                        padding: 0 !important;
                                         box-shadow: none !important; border: none !important;
+                                        background: white !important;
+                                    }
+                                    @page {
+                                        size: A4 portrait;
+                                        margin: 0;
+                                    }
+                                    .spk-page-a4 {
+                                        page-break-after: always !important;
+                                        break-after: page !important;
+                                        width: 210mm !important;
+                                        height: 297mm !important;
+                                        min-height: 297mm !important;
+                                        max-height: 297mm !important;
+                                        box-sizing: border-box !important;
+                                        margin: 0 !important;
+                                        padding: 8mm 10mm !important;
+                                        overflow: hidden !important;
+                                        border: none !important;
+                                        box-shadow: none !important;
                                     }
                                 }
                             </style>
 
-                            <!-- KERTAS A4 SPK BOSKU -->
-                            <div id="print-spk-area" class="bg-white mx-auto w-[210mm] min-h-[297mm] shadow-2xl p-8 relative font-sans text-sm box-border print:shadow-none print:m-0 print:p-0">
-                                
-                                <!-- PASTE FORMAT HTML SPK BUATAN BOSKU DI SINI -->
-                                <h1 class="text-2xl font-bold text-center mb-4">SURAT PERINTAH KERJA (SPK)</h1>
-                                <p>No PO: <span id="spk-no-po"></span></p>
-                                <!-- dst... -->
-                                
+                            <!-- CONTAINER MULTI HALAMAN A4 SPK -->
+                            <div id="print-spk-area" class="w-full flex flex-col items-center">
+                                <!-- Konten Halaman SPK CONTROL & Kupon di-generate otomatis oleh viewSPKDetail -->
                             </div>
                         </div>
                     </div>
@@ -5126,12 +5148,12 @@
 
         let currentSPKId = "";
 
-        // 1. Fungsi Buka Modal SPK
+        // 1. Fungsi Buka Modal SPK & Generate Lembar SPK Control + Kupon
         function viewSPKDetail(poId) {
             const po = db_po.find(p => p.id === poId);
             if(!po) return;
 
-            currentSPKId = poId; // Ingat PO mana yang lagi dibuka SPK-nya
+            currentSPKId = poId;
 
             // Buka Modal SPK
             const modal = document.getElementById('modal-spk-detail');
@@ -5140,12 +5162,245 @@
                 setTimeout(() => modal.classList.remove('opacity-0'), 10);
             }
 
-            // =======================================================
-            // TUGAS BOSKU: MAPPING DATA KE FORMAT SPK DI SINI
-            // Contoh:
-            // document.getElementById('spk-no-po').innerText = po.id;
-            // document.getElementById('spk-makloon').innerText = po.makloon;
-            // =======================================================
+            const printArea = document.getElementById('print-spk-area');
+            if(!printArea) return;
+
+            // 1. Identifikasi Label Size Aktif dari PO
+            let rawLabels = po.sizeLabels || [];
+            let activeSizes = [];
+            for (let i = 0; i < 6; i++) {
+                let lbl = rawLabels[i] ? String(rawLabels[i]).trim() : '';
+                let hasQty = (po.items || []).some(it => (parseInt(it[`s${i+1}`]) || 0) > 0);
+                if (lbl !== '' || hasQty) {
+                    activeSizes.push({ index: i + 1, label: lbl || `S${i+1}` });
+                }
+            }
+            if (activeSizes.length === 0) {
+                activeSizes = [
+                    { index: 1, label: '31' }, { index: 2, label: '32' },
+                    { index: 3, label: '33' }, { index: 4, label: '34' },
+                    { index: 5, label: '35' }
+                ];
+            }
+
+            const activeCount = activeSizes.length;
+            // 1 Seri biasanya 10 pcs (untuk 5 size @ 2 pcs) atau 12 pcs (untuk 6 size @ 2 pcs)
+            // 1 Kupon SPK = 2 Seri (20 pcs untuk 5 size, 24 pcs untuk 6 size)
+            const kuponCapacity = activeCount * 4;
+
+            // 2. Generate Daftar Kupon SPK dari po.items
+            let spkList = [];
+            let globalNo = 1;
+            let totalAllPcs = 0;
+
+            (po.items || []).forEach(item => {
+                let itemTotal = parseInt(item.total) || 0;
+                if (itemTotal <= 0) {
+                    itemTotal = activeSizes.reduce((sum, s) => sum + (parseInt(item[`s${s.index}`]) || 0), 0);
+                }
+                totalAllPcs += itemTotal;
+
+                let numKupon = Math.ceil(itemTotal / kuponCapacity);
+                if (numKupon <= 0) numKupon = 1;
+
+                // Distribusi Qty per Size ke Kupon
+                let sizeQtyDist = {};
+                activeSizes.forEach(s => {
+                    let totalSize = parseInt(item[`s${s.index}`]) || 0;
+                    let base = Math.floor(totalSize / numKupon);
+                    let rem = totalSize % numKupon;
+                    sizeQtyDist[s.index] = [];
+                    for (let k = 0; k < numKupon; k++) {
+                        sizeQtyDist[s.index].push(base + (k < rem ? 1 : 0));
+                    }
+                });
+
+                for (let k = 0; k < numKupon; k++) {
+                    let kSizes = {};
+                    let kTotal = 0;
+                    activeSizes.forEach(s => {
+                        let q = sizeQtyDist[s.index][k] || 0;
+                        kSizes[`s${s.index}`] = q;
+                        kTotal += q;
+                    });
+
+                    spkList.push({
+                        no: globalNo++,
+                        merk: item.merk || po.makloon || '-',
+                        artikel: item.artikel || item.namaBarang || '-',
+                        warna: item.warna || '-',
+                        poId: po.id,
+                        sizes: kSizes,
+                        total: kTotal
+                    });
+                }
+            });
+
+            // Ambil Merk Utama untuk Header
+            let merkUtama = (po.items && po.items.length > 0 && po.items[0].merk) ? po.items[0].merk : (po.makloon || '-');
+
+            let allHtml = '';
+
+            // ==========================================
+            // BAGIAN 1: RENDER SPK CONTROL (HALAMAN 1 DST)
+            // ==========================================
+            const MAX_ROWS_CONTROL = 60; // 1 Halaman A4 muat hingga 60 baris compact
+            let controlPagesCount = Math.ceil(spkList.length / MAX_ROWS_CONTROL) || 1;
+
+            let sizeThControl = activeSizes.map(s => `<th class="border border-black py-0.5 px-0.5 text-center font-bold" style="width: 5%;">${s.label}</th>`).join('');
+
+            for (let cp = 0; cp < controlPagesCount; cp++) {
+                let pageRows = spkList.slice(cp * MAX_ROWS_CONTROL, (cp + 1) * MAX_ROWS_CONTROL);
+                let isLastControl = (cp === controlPagesCount - 1);
+
+                let rowsHtml = pageRows.map(spk => {
+                    let sizeTds = activeSizes.map(s => `<td class="border border-black py-0.5 px-0.5 text-center">${spk.sizes[`s${s.index}`] || ''}</td>`).join('');
+                    return `
+                        <tr class="hover:bg-gray-50 h-[3.8mm]">
+                            <td class="border border-black py-0.5 px-0.5 text-center font-semibold">${spk.no}</td>
+                            <td class="border border-black py-0.5 px-1 truncate uppercase font-medium">${spk.artikel}</td>
+                            <td class="border border-black py-0.5 px-1 truncate uppercase font-medium">${spk.warna}</td>
+                            ${sizeTds}
+                            <td class="border border-black py-0.5 px-0.5"></td>
+                            <td class="border border-black py-0.5 px-0.5"></td>
+                            <td class="border border-black py-0.5 px-0.5"></td>
+                        </tr>
+                    `;
+                }).join('');
+
+                let totalRowHtml = '';
+                if (isLastControl) {
+                    totalRowHtml = `
+                        <tr class="font-bold border-t-2 border-black bg-white h-[4.5mm]">
+                            <td colspan="3" class="border border-black py-0.5 px-2 text-center font-bold">Total</td>
+                            <td colspan="${activeSizes.length}" class="border border-black py-0.5 px-0.5 text-center font-bold">${totalAllPcs}</td>
+                            <td colspan="3" class="border border-black py-0.5 px-0.5"></td>
+                        </tr>
+                    `;
+                }
+
+                allHtml += `
+                    <div class="spk-page-a4 bg-white mx-auto shadow-md mb-6 print:mb-0 print:shadow-none box-border flex flex-col justify-start" style="width: 210mm; min-height: 297mm; max-height: 297mm; padding: 8mm 10mm; box-sizing: border-box; overflow: hidden;">
+                        <div class="text-center font-bold text-base mb-1 tracking-wider text-black">SPK CONTROL</div>
+                        <div class="flex justify-between items-center text-xs font-bold mb-1.5 text-black px-1">
+                            <span>${po.id}</span>
+                            <span>Merk : ${merkUtama}</span>
+                        </div>
+                        <table class="w-full border-collapse border border-black text-[9px] text-black leading-tight" style="table-layout: fixed;">
+                            <thead>
+                                <tr class="bg-gray-100 font-bold text-center">
+                                    <th class="border border-black py-0.5 px-0.5 w-[5%]">No.</th>
+                                    <th class="border border-black py-0.5 px-1 w-[25%]">Artikel</th>
+                                    <th class="border border-black py-0.5 px-1 w-[18%]">Warna</th>
+                                    ${sizeThControl}
+                                    <th class="border border-black py-0.5 px-0.5 w-[9%]">T.Muka</th>
+                                    <th class="border border-black py-0.5 px-0.5 w-[9%]">Tgl.Mtg</th>
+                                    <th class="border border-black py-0.5 px-0.5 w-[9%]">Tgl.Setor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rowsHtml}
+                                ${totalRowHtml}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+
+            // ==========================================
+            // BAGIAN 2: RENDER KUPON SPK (6 KUPON PER LEMBAR A4)
+            // ==========================================
+            const KUPONS_PER_PAGE = 6;
+            let kuponPagesCount = Math.ceil(spkList.length / KUPONS_PER_PAGE);
+
+            for (let kp = 0; kp < kuponPagesCount; kp++) {
+                let kuponBatch = spkList.slice(kp * KUPONS_PER_PAGE, (kp + 1) * KUPONS_PER_PAGE);
+
+                let kuponCardsHtml = kuponBatch.map(kupon => {
+                    // Header sizes untuk kupon (max 6 kolom)
+                    let sizeThKupon = activeSizes.map(s => `<td class="border border-black py-0.5 text-center font-bold" style="width: 7%;">${s.label}</td>`).join('');
+                    let emptyThKupon = '';
+                    for (let e = activeSizes.length; e < 6; e++) {
+                        emptyThKupon += `<td class="border border-black py-0.5" style="width: 7%;"></td>`;
+                    }
+
+                    // Value sizes untuk kupon
+                    let sizeTdKupon = activeSizes.map(s => `<td class="border border-black py-0.5 text-center font-bold">${kupon.sizes[`s${s.index}`] || ''}</td>`).join('');
+                    let emptyTdKupon = '';
+                    for (let e = activeSizes.length; e < 6; e++) {
+                        emptyTdKupon += `<td class="border border-black py-0.5"></td>`;
+                    }
+
+                    return `
+                        <div class="spk-kupon-card border border-black mb-[3.5mm] box-border" style="page-break-inside: avoid; break-inside: avoid;">
+                            <table class="w-full border-collapse border border-black text-[9.5px] text-black font-semibold" style="table-layout: fixed;">
+                                <tr>
+                                    <td class="border border-black px-1.5 py-0.5 font-bold w-[12%] bg-gray-50">MERK</td>
+                                    <td class="border border-black px-1.5 py-0.5 font-bold uppercase w-[38%] truncate">${kupon.merk}</td>
+                                    <td class="border border-black px-1.5 py-0.5 font-bold w-[14%] bg-gray-50">WARNA</td>
+                                    <td class="border border-black px-1.5 py-0.5 font-bold uppercase w-[36%] truncate">${kupon.warna}</td>
+                                </tr>
+                                <tr>
+                                    <td class="border border-black px-1.5 py-0.5 font-bold bg-gray-50">ART</td>
+                                    <td class="border border-black px-1.5 py-0.5 font-bold uppercase truncate">${kupon.artikel}</td>
+                                    <td class="border border-black px-1.5 py-0.5 font-bold bg-gray-50">SOLE</td>
+                                    <td class="border border-black px-1.5 py-0.5"></td>
+                                </tr>
+                                <tr>
+                                    <td class="border border-black px-1.5 py-0.5 font-bold bg-gray-50 leading-tight">TOKO/PO</td>
+                                    <td class="border border-black px-1.5 py-0.5 font-bold uppercase truncate">${kupon.poId}</td>
+                                    <td class="border border-black px-1.5 py-0.5 font-bold bg-gray-50">INSOLE</td>
+                                    <td class="border border-black px-1.5 py-0.5"></td>
+                                </tr>
+                            </table>
+
+                            <table class="w-full border-collapse border-l border-r border-b border-black text-[9.5px] text-black text-center" style="table-layout: fixed;">
+                                <tr>
+                                    <td class="border-r border-b border-black py-0.5 w-[12%] font-bold bg-gray-50">SIZE</td>
+                                    ${sizeThKupon}
+                                    ${emptyThKupon}
+                                    <td class="border-b border-black py-0.5" style="width: ${46 - (6 * 7)}%;"></td>
+                                </tr>
+                                <tr class="font-bold">
+                                    <td class="border-r border-b border-black py-0.5 bg-gray-50"></td>
+                                    ${sizeTdKupon}
+                                    ${emptyTdKupon}
+                                    <td class="border-b border-black py-0.5"></td>
+                                </tr>
+                            </table>
+
+                            <table class="w-full border-collapse border-l border-r border-b border-black text-[8.5px] text-black text-center font-bold" style="table-layout: fixed;">
+                                <tr class="bg-gray-50">
+                                    <td class="border-r border-b border-black py-0.5 w-[25%]">GURAT</td>
+                                    <td class="border-r border-b border-black py-0.5 w-[25%]">MUKA</td>
+                                    <td class="border-r border-b border-black py-0.5 w-[25%]">SOLE</td>
+                                    <td class="border-b border-black py-0.5 w-[25%]">INSOLE</td>
+                                </tr>
+                                <tr>
+                                    <td class="border-r border-b border-black py-0.5 text-gray-500 font-normal">TGL MTG</td>
+                                    <td class="border-r border-b border-black py-0.5 text-gray-500 font-normal">TGL MTG</td>
+                                    <td class="border-r border-b border-black py-0.5 text-gray-500 font-normal">TGL MTG</td>
+                                    <td class="border-b border-black py-0.5 text-gray-500 font-normal">TGL MTG</td>
+                                </tr>
+                                <tr>
+                                    <td class="border-r border-black py-0.5 text-gray-500 font-normal">TGL SETOR</td>
+                                    <td class="border-r border-black py-0.5 text-gray-500 font-normal">TGL SETOR</td>
+                                    <td class="border-r border-black py-0.5 text-gray-500 font-normal">TGL SETOR</td>
+                                    <td class="text-gray-500 font-normal py-0.5">TGL SETOR</td>
+                                </tr>
+                            </table>
+                        </div>
+                    `;
+                }).join('');
+
+                allHtml += `
+                    <div class="spk-page-a4 bg-white mx-auto shadow-md mb-6 print:mb-0 print:shadow-none box-border flex flex-col justify-start" style="width: 210mm; min-height: 297mm; max-height: 297mm; padding: 8mm 10mm; box-sizing: border-box; overflow: hidden;">
+                        ${kuponCardsHtml}
+                    </div>
+                `;
+            }
+
+            printArea.innerHTML = allHtml;
         }
 
         // 2. Fungsi Tutup Modal SPK
