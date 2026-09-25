@@ -5241,7 +5241,20 @@
             const MAX_ROWS_CONTROL = 55; // 1 Halaman A4 muat hingga 55 baris compact
             let controlPagesCount = Math.ceil(spkList.length / MAX_ROWS_CONTROL) || 1;
 
-            let sizeThControl = activeSizes.map(s => `<th class="border border-black py-0.5 px-0.5 text-center font-bold" style="width: 5%; border-bottom: 3px double #000;">${s.label}</th>`).join('');
+            let sizeColPct = (26 / activeSizes.length).toFixed(2);
+            let sizeThControl = activeSizes.map(s => `<th class="border border-black py-0.5 px-0.5 text-center font-bold" style="width: ${sizeColPct}%; border-bottom: 3px double #000;">${s.label}</th>`).join('');
+
+            let controlColGroup = `
+                <colgroup>
+                    <col style="width: 5%;">
+                    <col style="width: 25%;">
+                    <col style="width: 20%;">
+                    ${activeSizes.map(() => `<col style="width: ${sizeColPct}%;">`).join('')}
+                    <col style="width: 8%;">
+                    <col style="width: 8%;">
+                    <col style="width: 8%;">
+                </colgroup>
+            `;
 
             for (let cp = 0; cp < controlPagesCount; cp++) {
                 let pageRows = spkList.slice(cp * MAX_ROWS_CONTROL, (cp + 1) * MAX_ROWS_CONTROL);
@@ -5280,16 +5293,17 @@
                             <span>${po.id}</span>
                             <span>Merk : ${merkUtama}</span>
                         </div>
-                        <table class="w-full border-collapse border border-black text-[10px] text-black leading-tight" style="table-layout: fixed; border: 1.5px solid #000;">
+                        <table class="w-full border-collapse border border-black text-[10px] text-black leading-tight" style="table-layout: fixed; width: 100%; border: 1.5px solid #000;">
+                            ${controlColGroup}
                             <thead>
                                 <tr class="bg-white font-bold text-center">
-                                    <th class="border border-black py-0.5 px-0.5 w-[5%]" style="border-bottom: 3px double #000;">No.</th>
-                                    <th class="border border-black py-0.5 px-1 w-[26%] text-left" style="border-bottom: 3px double #000;">Artikel</th>
-                                    <th class="border border-black py-0.5 px-1 w-[18%] text-left" style="border-bottom: 3px double #000;">Warna</th>
+                                    <th class="border border-black py-0.5 px-0.5 text-center font-bold" style="width: 5%; border-bottom: 3px double #000;">No.</th>
+                                    <th class="border border-black py-0.5 px-1 text-left font-bold" style="width: 25%; border-bottom: 3px double #000;">Artikel</th>
+                                    <th class="border border-black py-0.5 px-1 text-left font-bold" style="width: 20%; border-bottom: 3px double #000;">Warna</th>
                                     ${sizeThControl}
-                                    <th class="border border-black py-0.5 px-0.5 w-[8%]" style="border-bottom: 3px double #000;">T.Muka</th>
-                                    <th class="border border-black py-0.5 px-0.5 w-[8%]" style="border-bottom: 3px double #000;">Tgl.Mtg</th>
-                                    <th class="border border-black py-0.5 px-0.5 w-[8%]" style="border-bottom: 3px double #000;">Tgl.Setor</th>
+                                    <th class="border border-black py-0.5 px-0.5 text-center font-bold" style="width: 8%; border-bottom: 3px double #000;">T.Muka</th>
+                                    <th class="border border-black py-0.5 px-0.5 text-center font-bold" style="width: 8%; border-bottom: 3px double #000;">Tgl.Mtg</th>
+                                    <th class="border border-black py-0.5 px-0.5 text-center font-bold" style="width: 8%; border-bottom: 3px double #000;">Tgl.Setor</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -5460,6 +5474,7 @@
 <html>
 <head>
     <title>SPK - ${currentSPKId}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Roboto+Condensed:wght@400;700&display=swap');
         @page {
