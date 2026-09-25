@@ -11795,20 +11795,20 @@
         }
 
         // ==========================================
-        // MESIN RAKIT HTML & PRINT (ANTI BLANK PAGE & ROTASI)
+        // MESIN RAKIT HTML & PRINT (ANTI BLANK PAGE & 1 HALAMAN)
         // ==========================================
         function printBarcodeAction() {
             if(barcodeQueue.length === 0) return showToast("Antrean kosong!", "warning");
             
             if (typeof QRCode === 'undefined' || typeof JsBarcode === 'undefined') {
-                alert("Library Barcode/QR Code belum termuat! Pastikan 2 baris script CDN sudah terpasang di <head>.");
+                alert("Library Barcode/QR Code belum termuat!");
                 return;
             }
 
             const format = document.getElementById('barcodeFormat').value;
             const wrapper = document.getElementById('print-barcode-wrapper');
             
-            // Siapkan wadah gaib (Di luar jangkauan layar)
+            // Siapkan wadah gaib
             wrapper.innerHTML = '';
             wrapper.style.display = 'block';
             wrapper.style.position = 'absolute';
@@ -11816,15 +11816,8 @@
 
             let flatItems = [];
 
-            // ===============================================
-            // LOGIKA SAMPLE: OTOMATIS TARIK ARTIKEL SERUPA
-            // ===============================================
             if (format === 'SAMPLE') {
-                if (barcodeQueue.length === 0) {
-                    alert("Masukkan minimal 1 artikel ke antrean sebagai pancingan pencarian!");
-                    return;
-                }
-
+                if (barcodeQueue.length === 0) return alert("Masukkan minimal 1 artikel ke antrean!");
                 let pancinganFull = barcodeQueue[0].artikel.trim().toUpperCase();
                 let kataKunci = pancinganFull.split(' ')[0]; 
                 let sumberData = typeof db_databarang !== 'undefined' ? db_databarang : barcodeQueue; 
@@ -11833,59 +11826,38 @@
                 if(keluargaArtikel.length === 0) keluargaArtikel = barcodeQueue;
 
                 let groupedSample = {};
-                
                 keluargaArtikel.forEach(item => {
                     let key = item.artikel.trim().toUpperCase();
                     if (!groupedSample[key]) {
                         groupedSample[key] = {
-                            artikel: item.artikel,
-                            warnaSet: new Set(),
-                            harga: item.hargaJual || item.harga || 0, 
-                            merk: item.merk || 'DAVCLAR'
+                            artikel: item.artikel, warnaSet: new Set(),
+                            harga: item.hargaJual || item.harga || 0, merk: item.merk || 'DAVCLAR'
                         };
                     }
-                    if(item.warna) {
-                        groupedSample[key].warnaSet.add(item.warna.trim().toUpperCase());
-                    }
+                    if(item.warna) groupedSample[key].warnaSet.add(item.warna.trim().toUpperCase());
                 });
                 
                 Object.values(groupedSample).forEach(g => {
-                    flatItems.push({
-                        artikel: g.artikel,
-                        warna: Array.from(g.warnaSet).join('-'), 
-                        harga: g.harga,
-                        merk: g.merk
-                    });
+                    flatItems.push({ artikel: g.artikel, warna: Array.from(g.warnaSet).join('-'), harga: g.harga, merk: g.merk });
                 });
-
-            } 
-            // ===============================================
-            // LOGIKA NORMAL UNTUK LUAR & DALAM
-            // ===============================================
-            else {
+            } else {
                 barcodeQueue.forEach(item => {
                     for(let i=1; i<=6; i++) {
                         let qty = item[`s${i}`];
                         let sizeLabel = document.getElementById(`bcL${i}`).value || '-';
                         if(qty > 0) {
-                            for(let k=0; k<qty; k++) {
-                                flatItems.push({...item, size: sizeLabel});
-                            }
+                            for(let k=0; k<qty; k++) { flatItems.push({...item, size: sizeLabel}); }
                         }
                     }
                 });
             }
 
-            if(flatItems.length === 0) {
-                if(format === 'SAMPLE') alert("Gagal menarik data dari database barang!");
-                else alert("Jumlah Qty (S1-S6) masih 0. Isi minimal 1 pada ukuran yang mau dicetak.");
-                return;
-            }
+            if(flatItems.length === 0) return alert("Jumlah Qty (S1-S6) masih 0.");
 
             let htmlOutput = '';
 
             // ===============================================
-            // GENERATOR: FORMAT LUAR (60x40)
+            // GENERATOR: FORMAT LUAR (60x40) - 1 KERTAS 1 STIKER
             // ===============================================
             if(format === 'LUAR') {
                 flatItems.forEach((item) => {
@@ -11895,25 +11867,23 @@
                     let fontWeightMerk = merkAsli === 'CLARIFELA' ? 'normal' : 'bold';
 
                     htmlOutput += `
-                    <div class="stiker-page" style="display: flex; flex-direction: column; font-family: ${fontWadah}; color: #000; background: white; box-sizing: border-box;">
-                        
+                    <div class="stiker-page" style="width: 60mm; height: 40mm; display: flex; flex-direction: column; font-family: ${fontWadah}; color: #000; background: white; box-sizing: border-box; page-break-after: always; overflow: hidden; margin: 0; padding: 0;">
                         <!-- SETENGAH ATAS -->
                         <div style="display: flex; height: 55%; border-bottom: 2px solid #000; box-sizing: border-box;">
                             <div style="width: 65%; border-right: 2px solid #000; display: flex; box-sizing: border-box;">
                                 <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding-left: 2mm;">
                                     <div style="font-size: 10px; font-weight: bold; margin-bottom: 1px;">Artikel :</div>
-                                    <div style="font-size: 16px; font-weight: 900; line-height: 1; text-align: center; text-transform: uppercase;">${item.artikel}</div>
+                                    <div style="font-size: 15px; font-weight: 900; line-height: 1; text-align: center; text-transform: uppercase;">${item.artikel}</div>
                                     <div style="font-size: 10px; font-weight: bold; margin-top: 3px; margin-bottom: 1px;">Warna :</div>
-                                    <div style="font-size: 16px; font-weight: 900; line-height: 1; text-align: center; text-transform: uppercase;">${item.warna}</div>
+                                    <div style="font-size: 15px; font-weight: 900; line-height: 1; text-align: center; text-transform: uppercase;">${item.warna}</div>
                                 </div>
                                 <div class="v-text" style="font-size: 8px; font-weight: bold; letter-spacing: 0.2px; margin-bottom: 4px;">MADE IN INDONESIA</div>
                             </div>
                             <div style="width: 35%; display: flex; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box;">
                                 <div style="font-size: 10px; font-weight: bold;">Ukuran :</div>
-                                <div style="font-size: 48px; font-weight: 900; line-height: 0.85;">${item.size}</div>
+                                <div style="font-size: 42px; font-weight: 900; line-height: 0.85;">${item.size}</div>
                             </div>
                         </div>
-
                         <!-- SETENGAH BAWAH -->
                         <div style="display: flex; height: 45%; align-items: center; justify-content: space-between; padding: 1mm; box-sizing: border-box;">
                             <div style="width: 65%; height: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden;">
@@ -11924,19 +11894,35 @@
                                 <div class="qr-code-box" data-val="${item.artikel} ${item.warna} ${item.size}" data-size="55"></div>
                             </div>
                         </div>
-
                     </div>`;
                 });
             }
             // ===============================================
-            // GENERATOR: FORMAT DALAM & SAMPLE
+            // GENERATOR: FORMAT DALAM & SAMPLE (103x30 - ISI 2 KOLOM)
             // ===============================================
             else {
-                flatItems.forEach((item) => {
-                    htmlOutput += `<div class="stiker-page" style="display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 2mm; background: white; box-sizing: border-box;">`;
-                    htmlOutput += format === 'DALAM' ? buildDalamHTML(item) : buildSampleHTML(item);
-                    htmlOutput += `</div>`;
-                });
+                for (let i = 0; i < flatItems.length; i += 2) {
+                    let item1 = flatItems[i];
+                    let item2 = flatItems[i+1];
+
+                    htmlOutput += `
+                    <div class="stiker-page" style="width: 103mm; height: 30mm; display: flex; flex-direction: row; justify-content: space-between; align-items: center; page-break-after: always; overflow: hidden; box-sizing: border-box; margin: 0; padding: 0;">
+                        
+                        <!-- STIKER KIRI (50mm) -->
+                        <div style="width: 50mm; height: 30mm; display: flex; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box; overflow: hidden;">
+                            ${format === 'DALAM' ? buildDalamHTML(item1) : buildSampleHTML(item1)}
+                        </div>
+                        
+                        <!-- SPACE TENGAH (3mm) -->
+                        <div style="width: 3mm; height: 30mm;"></div>
+                        
+                        <!-- STIKER KANAN (50mm) -->
+                        <div style="width: 50mm; height: 30mm; display: flex; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box; overflow: hidden;">
+                            ${item2 ? (format === 'DALAM' ? buildDalamHTML(item2) : buildSampleHTML(item2)) : ''}
+                        </div>
+
+                    </div>`;
+                }
             }
 
             wrapper.innerHTML = htmlOutput;
@@ -11944,9 +11930,7 @@
             // Render Gambar QR Code & Barcode Garis di background
             setTimeout(() => {
                 try {
-                    if(format === 'LUAR') {
-                        JsBarcode(".barcode-1d").init();
-                    }
+                    if(format === 'LUAR') JsBarcode(".barcode-1d").init();
 
                     document.querySelectorAll('.qr-code-box').forEach(el => {
                         el.innerHTML = ''; 
@@ -11959,8 +11943,7 @@
                         });
                     });
 
-                    // [KUNCI SUPER PENTING]: Ubah elemen <canvas> QR Code jadi <img base64>
-                    // karena <canvas> tidak bisa ikut ter-copy ke dalam Iframe!
+                    // Convert Canvas ke Image Base64
                     let canvases = wrapper.querySelectorAll('canvas');
                     canvases.forEach(canvas => {
                         let img = document.createElement('img');
@@ -11970,24 +11953,22 @@
                         canvas.parentNode.replaceChild(img, canvas);
                     });
 
-                    // Tarik HTML yang sudah matang (beserta gambarnya)
                     let finalHtml = wrapper.innerHTML;
 
-                    // Buat / Ambil Iframe Gaib
+                    // BUAT IFRAME GAIB DENGAN CARA AMAN DARI BUG 1 HALAMAN CHROME
                     let iframe = document.getElementById('print-barcode-iframe');
                     if(!iframe) {
                         iframe = document.createElement('iframe');
                         iframe.id = 'print-barcode-iframe';
-                        iframe.style.display = 'none';
+                        iframe.style.position = 'absolute';
+                        iframe.style.width = '0px';
+                        iframe.style.height = '0px';
+                        iframe.style.border = 'none';
                         document.body.appendChild(iframe);
                     }
 
                     let doc = iframe.contentWindow.document;
-                    
-                    // Tentukan ukuran kertas Iframe berdasarkan format
                     let paperSize = format === 'LUAR' ? '60mm 40mm' : '103mm 30mm';
-                    let stikerWidth = format === 'LUAR' ? '59mm' : '102mm';
-                    let stikerHeight = format === 'LUAR' ? '39mm' : '29mm';
 
                     doc.open();
                     doc.write(`
@@ -11996,20 +11977,9 @@
                         <head>
                             <title>Print Barcode</title>
                             <style>
-                                /* Beritahu Chrome ukuran presisi fisik kertasnya */
                                 @page { size: ${paperSize}; margin: 0; }
-                                body { margin: 0; padding: 0; background: white; font-family: Arial, sans-serif; }
+                                html, body { margin: 0 !important; padding: 0 !important; background: white !important; font-family: Arial, sans-serif; }
                                 * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-                                
-                                /* Paksa potong halaman per 1 stiker (Anti Numpuk) */
-                                .stiker-page {
-                                    width: ${stikerWidth};
-                                    height: ${stikerHeight};
-                                    page-break-after: always;
-                                    overflow: hidden;
-                                    box-sizing: border-box;
-                                    margin: 0 auto;
-                                }
                                 .v-text { writing-mode: vertical-rl; transform: rotate(180deg); }
                             </style>
                         </head>
@@ -12020,27 +11990,18 @@
                     `);
                     doc.close();
 
-                    // Panggil Print KHUSUS MILIK IFRAME (Bukan milik Window Utama)
                     iframe.contentWindow.focus();
                     setTimeout(() => {
                         iframe.contentWindow.print();
-                        
                         setTimeout(async () => {
-                            wrapper.innerHTML = ''; // Bersihkan sampah DOM
-
-                            const isClear = await showConfirm(
-                                "Print Selesai", 
-                                `Apakah Print Format ${format} berhasil? Klik 'Ya' untuk mencatat status dan mengosongkan antrean.`, 
-                                "warning"
-                            );
-                            
+                            wrapper.innerHTML = ''; 
+                            const isClear = await showConfirm("Print Selesai", `Apakah Print Format ${format} berhasil? Klik 'Ya' untuk mengosongkan antrean.`, "warning");
                             if(isClear) {
                                 if (window.currentActivePO && (format === 'LUAR' || format === 'DALAM')) {
                                     updatePOBarcodeStatus(window.currentActivePO, format);
                                 }
                                 clearBarcodeQueue();
                                 window.currentActivePO = null; 
-                                
                                 let dropdown = document.getElementById('selectPOBarcode');
                                 if(dropdown) dropdown.value = ""; 
                             }
@@ -12051,9 +12012,55 @@
                     console.error("Error Render:", e);
                     alert("Terjadi kesalahan saat menggambar Barcode/QR Code.");
                 }
-            }, 300); // Jeda agar gambar kerender utuh dulu sebelum ditarik
+            }, 300);
         }
-        
+
+        // ===============================================
+        // FUNGSI RAKIT HTML DALAM (HANGTAG VERTIKAL)
+        // ===============================================
+        function buildDalamHTML(item) {
+            let merkAsli = (item.merk && item.merk.trim() !== '') ? item.merk.toUpperCase() : 'DAVCLAR';
+            let teksMerk = merkAsli === 'CLARIFELA' ? 'Clarifela' : merkAsli;
+            let fontWadah = merkAsli === 'CLARIFELA' ? "'Arial Light', Arial, sans-serif" : "Calibri, sans-serif";
+            let fontWeightMerk = merkAsli === 'CLARIFELA' ? 'bold' : 'bold';
+            let fontStyleMerk = merkAsli === 'CLARIFELA' ? 'italic' : 'italic';
+
+            return `
+            <div style="width: 100%; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2mm; overflow: hidden; font-family: ${fontWadah}; color: #000;">
+                <div style="font-family: Calibri, sans-serif; font-size: 8px; font-weight: bold; margin-bottom: 2px; letter-spacing: 0.5px;">MADE IN INDONESIA</div>
+                <div class="qr-code-box" data-val="${item.artikel} ${item.warna}" data-size="45"></div>
+                <div style="width: 90%; border-bottom: 1.5px solid #000; text-align: center; margin-bottom: 2px; margin-top: 2px; padding-bottom: 1px;">
+                    <div style="font-family: ${fontWadah}; font-size: 10px; font-weight: ${fontWeightMerk}; font-style: ${fontStyleMerk}; letter-spacing: 0.5px;">${teksMerk}</div>
+                </div>
+                <div style="font-size: 11px; font-weight: 900; line-height: 1.1; text-align: center; text-transform: uppercase;">${item.artikel}</div>
+                <div style="font-size: 11px; font-weight: bold; line-height: 1.1; text-align: center; text-transform: uppercase;">${item.warna}</div>
+            </div>`;
+        }
+
+        // ===============================================
+        // FUNGSI RAKIT HTML SAMPLE (TANPA BORDER LUAR)
+        // ===============================================
+        function buildSampleHTML(item) {
+            let merkAsli = (item.merk && item.merk.trim() !== '') ? item.merk.toUpperCase() : 'DAVCLAR';
+            let fontWadah = merkAsli === 'CLARIFELA' ? "'Arial Light', Arial, sans-serif" : "Calibri, sans-serif";
+
+            return `
+            <div style="width: 100%; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; text-align: center; overflow: hidden; font-family: ${fontWadah}; color: #000; padding: 2mm;">
+                <div style="flex: 1; border-bottom: 1.5px solid #000; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                    <div style="font-size: 8px; font-weight: bold; margin-bottom: 1px;">Article</div>
+                    <div style="font-size: 12px; font-weight: 900; text-transform: uppercase;">${item.artikel}</div>
+                </div>
+                <div style="flex: 1; border-bottom: 1.5px solid #000; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                    <div style="font-size: 8px; font-weight: bold; margin-bottom: 1px;">Color</div>
+                    <div style="font-size: 11px; font-weight: 900; text-transform: uppercase;">${item.warna}</div>
+                </div>
+                <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                    <div style="font-size: 8px; font-weight: bold; margin-bottom: 1px;">Price</div>
+                    <div style="font-size: 13px; font-weight: 900;">Rp ${(parseInt(item.harga) || 0).toLocaleString('id-ID')}</div>
+                </div>
+            </div>`;
+        }
+
         // ===============================================
         // INTEGRASI PO -> BARCODE & PENCATATAN WAKTU
         // ===============================================
@@ -12295,31 +12302,47 @@
             document.getElementById('cbGrandQty').innerText = grandQty.toLocaleString('id-ID') + " Pcs";
         }
 
+        // ==========================================
+        // FUNGSI PRINT STIKER CUSTOM
+        // ==========================================
         function printCustomBarcodeNow() {
-            if(tempCustomBarcodeItems.length === 0) {
-                if(typeof showToast === 'function') showToast("Antrean cetak kosong!", "error");
-                return;
-            }
+            if(tempCustomBarcodeItems.length === 0) return;
 
-            let htmlContent = '';
-            
-            // Loop membaca antrean
+            let flatCustomItems = [];
             tempCustomBarcodeItems.forEach(item => {
-                // Loop membaca tiap-tiap size di dalam antrean item tersebut
                 item.sizes.forEach(sz => {
-                    // Cetak template berulang sebanyak "qty" dari size tersebut
                     for(let i=0; i<sz.qty; i++) {
-                        htmlContent += generateTemplateStikerCustom(item.artikel, item.warna, sz.label, item.merk);
+                        flatCustomItems.push({...item, sizeLabel: sz.label});
                     }
                 });
             });
 
-            // Buat mesin printer gaib (Iframe)
+            let htmlOutput = '';
+            for (let i = 0; i < flatCustomItems.length; i += 2) {
+                let item1 = flatCustomItems[i];
+                let item2 = flatCustomItems[i+1];
+
+                htmlOutput += `
+                <div class="stiker-page" style="width: 103mm; height: 30mm; display: flex; flex-direction: row; justify-content: space-between; align-items: center; page-break-after: always; overflow: hidden; box-sizing: border-box; margin: 0; padding: 0;">
+                    <div style="width: 50mm; height: 30mm; display: flex; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box; overflow: hidden;">
+                        ${generateTemplateStikerCustom(item1.artikel, item1.warna, item1.sizeLabel, item1.merk)}
+                    </div>
+                    <div style="width: 3mm; height: 30mm;"></div>
+                    <div style="width: 50mm; height: 30mm; display: flex; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box; overflow: hidden;">
+                        ${item2 ? generateTemplateStikerCustom(item2.artikel, item2.warna, item2.sizeLabel, item2.merk) : ''}
+                    </div>
+                </div>`;
+            }
+
             let iframe = document.getElementById('print-custom-iframe');
             if(!iframe) {
                 iframe = document.createElement('iframe');
                 iframe.id = 'print-custom-iframe';
-                iframe.style.display = 'none';
+                // Hindari penggunaan display: none; untuk print!
+                iframe.style.position = 'absolute';
+                iframe.style.width = '0px';
+                iframe.style.height = '0px';
+                iframe.style.border = 'none';
                 document.body.appendChild(iframe);
             }
 
@@ -12331,20 +12354,18 @@
                 <head>
                     <title>Print Stiker Custom</title>
                     <style>
-                        /* Set Kertas Print Stiker 103 x 30 mm */
                         @page { size: 103mm 30mm; margin: 0; }
-                        body { margin: 0; padding: 0; background: white; }
+                        html, body { margin: 0 !important; padding: 0 !important; background: white !important; font-family: Arial, sans-serif; }
                         * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
                     </style>
                 </head>
                 <body>
-                    ${htmlContent}
+                    ${htmlOutput}
                 </body>
                 </html>
             `);
             doc.close();
 
-            // Panggil dialog print browser
             iframe.contentWindow.focus();
             setTimeout(() => {
                 iframe.contentWindow.print();
@@ -12353,50 +12374,39 @@
         }
 
         // ==========================================
-        // TEMPLATE STRUKTUR STIKER "CUSTOM" (103x30mm)
+        // TEMPLATE STRUKTUR STIKER "CUSTOM" (Skala 50x30mm)
         // ==========================================
         function generateTemplateStikerCustom(artikel, warna, size, merkCustom) {
-            // Memecah teks warna menjadi dua baris jika panjang (seperti "Dot Magohany")
             let warnaFormatted = warna.includes(' ') ? warna.replace(' ', '<br>') : warna;
-
             return `
-            <div style="width: 103mm; height: 30mm; padding: 2mm; box-sizing: border-box; background: white; page-break-inside: avoid;">
-                <!-- KOTAK UTAMA -->
-                <div style="width: 100%; height: 100%; border: 2px solid black; display: flex; flex-direction: column; font-family: Arial, sans-serif; box-sizing: border-box;">
-                    
+            <div style="width: 50mm; height: 30mm; box-sizing: border-box; background: white; padding: 1mm;">
+                <div style="width: 100%; height: 100%; border: 1.5px solid black; display: flex; flex-direction: column; font-family: Arial, sans-serif; box-sizing: border-box;">
                     <!-- BAGIAN ATAS: ARTICLE -->
-                    <div style="flex: 1; border-bottom: 2px solid black; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden;">
-                        <span style="position: absolute; top: 2px; left: 4px; font-size: 8px; font-weight: bold; letter-spacing: 0.5px;">ARTICLE</span>
-                        <span style="font-size: 26px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">${artikel}</span>
+                    <div style="flex: 1; border-bottom: 1.5px solid black; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden;">
+                        <span style="position: absolute; top: 1px; left: 3px; font-size: 6px; font-weight: bold;">ARTICLE</span>
+                        <span style="font-size: 14px; font-weight: 900; text-transform: uppercase;">${artikel}</span>
                     </div>
-
-                    <!-- BAGIAN BAWAH: COLOR, MERK VERTICAL, SIZE -->
+                    <!-- BAGIAN BAWAH -->
                     <div style="flex: 1.2; display: flex; flex-direction: row;">
-                        
                         <!-- KIRI: COLOR -->
-                        <div style="flex: 1; border-right: 2px solid black; position: relative; display: flex; justify-content: center; align-items: center; text-align: center;">
-                            <span style="position: absolute; top: 2px; left: 4px; font-size: 8px; font-weight: bold; letter-spacing: 0.5px;">COLOR</span>
-                            <span style="font-size: 13px; font-weight: bold; line-height: 1.1; text-transform: capitalize; padding-top: 8px;">${warnaFormatted}</span>
+                        <div style="flex: 1; border-right: 1.5px solid black; position: relative; display: flex; justify-content: center; align-items: center; text-align: center;">
+                            <span style="position: absolute; top: 1px; left: 3px; font-size: 6px; font-weight: bold;">COLOR</span>
+                            <span style="font-size: 9px; font-weight: bold; line-height: 1.1; padding-top: 5px;">${warnaFormatted}</span>
                         </div>
-
-                        <!-- TENGAH: MERK CUSTOM (ROTATED 90 DEGREE) -->
-                        <div style="width: 25mm; border-right: 2px solid black; display: flex; justify-content: center; align-items: center; overflow: hidden; background: white;">
-                            <!-- Teks diputar searah jarum jam sehingga terbaca dari atas ke bawah -->
-                            <span style="font-size: 11px; font-weight: 900; letter-spacing: 1.5px; white-space: nowrap;">${merkCustom.toUpperCase()}</span>
+                        <!-- TENGAH: MERK CUSTOM -->
+                        <div style="width: 12mm; border-right: 1.5px solid black; display: flex; justify-content: center; align-items: center; overflow: hidden; background: white;">
+                            <span style="transform: rotate(90deg); font-size: 7px; font-weight: 900; letter-spacing: 0.5px; white-space: nowrap;">${merkCustom.toUpperCase()}</span>
                         </div>
-
                         <!-- KANAN: SIZE -->
-                        <div style="width: 25mm; position: relative; display: flex; justify-content: center; align-items: center;">
-                            <span style="position: absolute; top: 2px; left: 4px; font-size: 8px; font-weight: bold; letter-spacing: 0.5px;">SIZE</span>
-                            <span style="font-size: 32px; font-weight: 900;">${size}</span>
+                        <div style="width: 15mm; position: relative; display: flex; justify-content: center; align-items: center;">
+                            <span style="position: absolute; top: 1px; left: 3px; font-size: 6px; font-weight: bold;">SIZE</span>
+                            <span style="font-size: 18px; font-weight: 900;">${size}</span>
                         </div>
-                        
                     </div>
                 </div>
-            </div>
-            `;
+            </div>`;
         }
-
+        
         // ==========================================
         // FITUR AUTO SYNC & OFFLINE DETECTOR
         // ==========================================
