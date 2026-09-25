@@ -5457,19 +5457,22 @@
             let oldFrame = document.getElementById('spk-print-iframe');
             if(oldFrame) oldFrame.remove();
 
-            // Ambil semua tag stylesheet dan style aktif dari dokumen induk (termasuk hasil kompilasi Tailwind & Google Fonts)
-            const headStyles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
+            // Ambil semua tag stylesheet dan style aktif dari dokumen induk
+            let headStyles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
                 .map(el => el.outerHTML)
                 .join('\n');
+            
+            // Netralkan aturan cetak lama yang menyembunyikan elemen (seperti 'body * { visibility: hidden }')
+            headStyles = headStyles.replace(/visibility\s*:\s*hidden/gi, 'visibility: visible');
 
-            // Buat iframe baru tersembunyi dengan ukuran viewport A4 penuh offscreen
+            // Buat iframe baru tersembunyi
             const printFrame = document.createElement('iframe');
             printFrame.id = 'spk-print-iframe';
             printFrame.style.position = 'fixed';
-            printFrame.style.top = '-9999px';
-            printFrame.style.left = '-9999px';
-            printFrame.style.width = '210mm';
-            printFrame.style.height = '297mm';
+            printFrame.style.bottom = '0';
+            printFrame.style.right = '0';
+            printFrame.style.width = '0';
+            printFrame.style.height = '0';
             printFrame.style.border = '0';
             document.body.appendChild(printFrame);
 
@@ -5491,6 +5494,9 @@
             background: white !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
+        }
+        body, body *, .spk-page-a4, .spk-page-a4 * {
+            visibility: visible !important;
         }
         .spk-page-a4 {
             width: 210mm !important;
@@ -5514,6 +5520,9 @@
             page-break-inside: avoid !important;
             break-inside: avoid !important;
             box-sizing: border-box !important;
+        }
+        .spk-page-a4 table th {
+            border-bottom: 3px double #000 !important;
         }
     </style>
 </head>
