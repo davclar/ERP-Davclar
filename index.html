@@ -12050,6 +12050,66 @@
         }
         
         // ===============================================
+        // FUNGSI RAKIT HTML DALAM (HANGTAG VERTIKAL) - REVISI ESTETIK
+        // ===============================================
+        function buildDalamHTML(item) {
+            let merkAsli = (item.merk && item.merk.trim() !== '') ? item.merk.toUpperCase() : 'DAVCLAR';
+            let teksMerk = merkAsli === 'CLARIFELA' ? 'Clarifela' : merkAsli;
+            
+            let fontWadah = merkAsli === 'CLARIFELA' ? "'Arial Light', Arial, sans-serif" : "Calibri, sans-serif";
+            let fontWeightMerk = merkAsli === 'CLARIFELA' ? 'bold' : 'bold';
+            let fontStyleMerk = merkAsli === 'CLARIFELA' ? 'italic' : 'italic';
+
+            return `
+            <div style="flex: 1; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0; padding: 0; overflow: hidden; font-family: ${fontWadah}; color: #000;">
+                
+                <div style="font-family: Calibri, sans-serif; font-size: 16px; font-weight: bold; margin-bottom: 10px; letter-spacing: 0.5px;">MADE IN INDONESIA</div>
+
+                <div class="qr-code-box" data-val="${item.artikel} ${item.warna}" data-size="110"></div>
+
+                <div style="width: 85%; border-bottom: 2px solid #000; text-align: center; margin-bottom: 5px; margin-top: 10px; padding-bottom: 1px;">
+                    <div style="font-family: ${fontWadah}; font-size: 16px; font-weight: ${fontWeightMerk}; font-style: ${fontStyleMerk}; letter-spacing: 0.5px;">${teksMerk}</div>
+                </div>
+
+                <div style="font-size: 21px; font-weight: 900; line-height: 1.1; text-align: center; text-transform: uppercase; margin-top: 5px;">${item.artikel}</div>
+                <div style="font-size: 21px; font-weight: bold; line-height: 1.1; text-align: center; text-transform: uppercase;">${item.warna}</div>
+            </div>`;
+        }
+
+        // ===============================================
+        // FUNGSI RAKIT HTML SAMPLE (TANPA BORDER LUAR)
+        // ===============================================
+        function buildSampleHTML(item) {
+            let merkAsli = (item.merk && item.merk.trim() !== '') ? item.merk.toUpperCase() : 'DAVCLAR';
+            let fontWadah = merkAsli === 'CLARIFELA' ? "'Arial Light', Arial, sans-serif" : "Calibri, sans-serif";
+
+            return `
+            <!-- BORDER LUAR DIHAPUS, Tampilan lebih clean -->
+            <div style="flex: 1; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; text-align: center; margin: 0; padding: 0; overflow: hidden; font-family: ${fontWadah}; color: #000;">
+                
+                <!-- Baris 1: Article (Ada garis pembatas bawah) -->
+                <div style="flex: 1; border-bottom: 2px solid #000; display: flex; flex-direction: column; justify-content: center; padding: 5px;">
+                    <div style="font-size: 14px; font-weight: bold; margin-bottom: 2px;">Article</div>
+                    <div style="font-size: 22px; font-weight: 900; text-transform: uppercase;">${item.artikel}</div>
+                </div>
+                
+                <!-- Baris 2: Color (Ada garis pembatas bawah) -->
+                <div style="flex: 1; border-bottom: 2px solid #000; display: flex; flex-direction: column; justify-content: center; padding: 5px;">
+                    <div style="font-size: 14px; font-weight: bold; margin-bottom: 2px;">Color</div>
+                    <!-- Font sedikit dikecilkan ke 18px jaga-jaga kalau warnanya panjang (CREAM-BISCUIT-BLACK) -->
+                    <div style="font-size: 18px; font-weight: 900; text-transform: uppercase;">${item.warna}</div>
+                </div>
+                
+                <!-- Baris 3: Price (Tanpa garis bawah) -->
+                <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 5px;">
+                    <div style="font-size: 14px; font-weight: bold; margin-bottom: 2px;">Price</div>
+                    <div style="font-size: 24px; font-weight: 900;">Rp ${(parseInt(item.harga) || 0).toLocaleString('id-ID')}</div>
+                </div>
+                
+            </div>`;
+        }
+
+        // ===============================================
         // INTEGRASI PO -> BARCODE & PENCATATAN WAKTU
         // ===============================================
         window.currentActivePO = null;
