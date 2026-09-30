@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -2767,8 +2767,6 @@
                                 </div>
                                 <select id="filterMerkMakloonCost" onchange="makloonCostPage=1; renderMakloonCostTable()" class="px-2.5 py-2 text-xs md:text-sm border border-gray-300 rounded-lg bg-white font-semibold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                                     <option value="ALL">Semua Merk</option>
-                                    <option value="DAVCLAR">DAVCLAR</option>
-                                    <option value="CLARIFELA">CLARIFELA</option>
                                 </select>
                                 <select id="filterVendorMakloonCost" onchange="makloonCostPage=1; renderMakloonCostTable()" class="px-2.5 py-2 text-xs md:text-sm border border-gray-300 rounded-lg bg-white font-semibold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                                     <option value="ALL">Semua Vendor</option>
@@ -2896,12 +2894,15 @@
                                 </div>
                                 <div>
                                     <label class="block text-[11px] font-bold text-gray-700 uppercase mb-1">Merk Sepatu <span class="text-red-500">*</span></label>
-                                    <select id="matrixInpMerk" onchange="updateMatrixLiveHeader()" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-bold text-gray-800 bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
-                                        <option value="DAVCLAR">DAVCLAR</option>
-                                        <option value="CLARIFELA">CLARIFELA</option>
-                                        <option value="PORTI">PORTI</option>
-                                        <option value="CUSTOM">LAINNYA / CUSTOM</option>
-                                    </select>
+                                    <div class="space-y-1.5">
+                                        <select id="matrixInpMerk" onchange="handleMatrixMerkChange()" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-bold text-gray-800 bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                                            <option value="DAVCLAR">DAVCLAR</option>
+                                            <option value="CLARIFELA">CLARIFELA</option>
+                                            <option value="PORTI">PORTI</option>
+                                            <option value="CUSTOM">LAINNYA / CUSTOM</option>
+                                        </select>
+                                        <input type="text" id="matrixInpMerkCustom" oninput="updateMatrixLiveHeader()" placeholder="Ketik Merk Lainnya..." class="hidden w-full px-3 py-1.5 border border-amber-300 bg-amber-50/50 rounded-lg text-xs font-bold uppercase text-gray-800 focus:ring-2 focus:ring-amber-500 outline-none transition">
+                                    </div>
                                 </div>
                                 <div>
                                     <label class="block text-[11px] font-bold text-gray-700 uppercase mb-1">Vendor Makloon</label>
@@ -13658,6 +13659,25 @@
             const btnSeed = document.getElementById('btnSeedMika');
             if (btnSeed) btnSeed.style.display = canEdit ? '' : 'none';
 
+            // Populate Merk Filter Options (Dinamis dari data & databarang)
+            const merkSelect = document.getElementById('filterMerkMakloonCost');
+            if (merkSelect) {
+                const currentMerkVal = merkSelect.value;
+                const merks = [...new Set([
+                    'DAVCLAR', 'CLARIFELA', 'PORTI',
+                    ...db_makloon_cost.map(c => (c.merk || '').trim().toUpperCase()),
+                    ...db_databarang.map(b => (b.merk || '').trim().toUpperCase())
+                ].filter(Boolean))].sort();
+                let mHtml = `<option value="ALL">Semua Merk</option>`;
+                merks.forEach(m => {
+                    mHtml += `<option value="${m}">${m}</option>`;
+                });
+                merkSelect.innerHTML = mHtml;
+                if (merks.includes(currentMerkVal) || currentMerkVal === 'ALL') {
+                    merkSelect.value = currentMerkVal;
+                }
+            }
+
             // Populate Vendor Filter Options
             const vendorSelect = document.getElementById('filterVendorMakloonCost');
             if (vendorSelect) {
@@ -13944,7 +13964,22 @@
             // Fill Header Inputs
             document.getElementById('matrixEditId').value = currentMatrixData.id || "";
             document.getElementById('matrixInpModel').value = currentMatrixData.model || currentMatrixData.artikel || "";
-            document.getElementById('matrixInpMerk').value = currentMatrixData.merk || "DAVCLAR";
+            const savedMerk = (currentMatrixData.merk || "DAVCLAR").trim().toUpperCase();
+            const selMerk = document.getElementById('matrixInpMerk');
+            const customMerkInp = document.getElementById('matrixInpMerkCustom');
+            if (['DAVCLAR', 'CLARIFELA', 'PORTI'].includes(savedMerk)) {
+                if (selMerk) selMerk.value = savedMerk;
+                if (customMerkInp) {
+                    customMerkInp.value = "";
+                    customMerkInp.classList.add('hidden');
+                }
+            } else {
+                if (selMerk) selMerk.value = "CUSTOM";
+                if (customMerkInp) {
+                    customMerkInp.value = savedMerk === 'CUSTOM' ? '' : savedMerk;
+                    customMerkInp.classList.remove('hidden');
+                }
+            }
             document.getElementById('matrixInpVendor').value = currentMatrixData.vendor || "";
             document.getElementById('matrixInpKategori').value = currentMatrixData.kategori || "";
             document.getElementById('matrixInpCatatan').value = currentMatrixData.catatan || "";
@@ -14051,10 +14086,35 @@
             updateMatrixLiveTotals();
         }
 
+        function handleMatrixMerkChange() {
+            const sel = document.getElementById('matrixInpMerk');
+            const customInp = document.getElementById('matrixInpMerkCustom');
+            if (!sel || !customInp) return;
+
+            if (sel.value === 'CUSTOM') {
+                customInp.classList.remove('hidden');
+                customInp.focus();
+            } else {
+                customInp.classList.add('hidden');
+            }
+            updateMatrixLiveHeader();
+        }
+
+        function getActiveMatrixMerk() {
+            const sel = document.getElementById('matrixInpMerk');
+            if (!sel) return 'DAVCLAR';
+            if (sel.value === 'CUSTOM') {
+                const customInp = document.getElementById('matrixInpMerkCustom');
+                const val = (customInp ? customInp.value.trim().toUpperCase() : '');
+                return val || 'LAINNYA';
+            }
+            return sel.value;
+        }
+
         function updateMatrixLiveHeader() {
             if (!currentMatrixData) return;
             const modelVal = document.getElementById('matrixInpModel').value.trim().toUpperCase() || 'UNTITLED';
-            const merkVal = document.getElementById('matrixInpMerk').value;
+            const merkVal = getActiveMatrixMerk();
             const bannerEl = document.getElementById('excelBannerModel');
             if (bannerEl) bannerEl.innerText = `${modelVal} (${merkVal})`;
         }
@@ -14405,7 +14465,8 @@
             if (!currentMatrixData) return;
 
             const modelVal = document.getElementById('matrixInpModel').value.trim().toUpperCase();
-            const merkVal = document.getElementById('matrixInpMerk').value.trim().toUpperCase();
+            const rawMerkSel = document.getElementById('matrixInpMerk') ? document.getElementById('matrixInpMerk').value : 'DAVCLAR';
+            const merkVal = getActiveMatrixMerk();
             const vendorVal = document.getElementById('matrixInpVendor').value.trim().toUpperCase();
             const katVal = document.getElementById('matrixInpKategori').value.trim().toUpperCase();
             const catatanVal = document.getElementById('matrixInpCatatan').value.trim();
@@ -14414,6 +14475,14 @@
                 if (typeof showToast === 'function') showToast("Nama Model / Seri wajib diisi!", "warning");
                 else alert("Nama Model / Seri wajib diisi!");
                 document.getElementById('matrixInpModel').focus();
+                return;
+            }
+
+            if (rawMerkSel === 'CUSTOM' && (!merkVal || merkVal === 'CUSTOM' || merkVal === 'LAINNYA')) {
+                if (typeof showToast === 'function') showToast("Silakan isi nama merk lainnya terlebih dahulu!", "warning");
+                else alert("Silakan isi nama merk lainnya terlebih dahulu!");
+                const customInp = document.getElementById('matrixInpMerkCustom');
+                if (customInp) customInp.focus();
                 return;
             }
 
