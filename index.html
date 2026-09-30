@@ -2898,7 +2898,6 @@
                                         <select id="matrixInpMerk" onchange="handleMatrixMerkChange()" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-bold text-gray-800 bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
                                             <option value="DAVCLAR">DAVCLAR</option>
                                             <option value="CLARIFELA">CLARIFELA</option>
-                                            <option value="PORTI">PORTI</option>
                                             <option value="CUSTOM">LAINNYA / CUSTOM</option>
                                         </select>
                                         <input type="text" id="matrixInpMerkCustom" oninput="updateMatrixLiveHeader()" placeholder="Ketik Merk Lainnya..." class="hidden w-full px-3 py-1.5 border border-amber-300 bg-amber-50/50 rounded-lg text-xs font-bold uppercase text-gray-800 focus:ring-2 focus:ring-amber-500 outline-none transition">
@@ -13664,10 +13663,10 @@
             if (merkSelect) {
                 const currentMerkVal = merkSelect.value;
                 const merks = [...new Set([
-                    'DAVCLAR', 'CLARIFELA', 'PORTI',
+                    'DAVCLAR', 'CLARIFELA',
                     ...db_makloon_cost.map(c => (c.merk || '').trim().toUpperCase()),
                     ...db_databarang.map(b => (b.merk || '').trim().toUpperCase())
-                ].filter(Boolean))].sort();
+                ].filter(m => Boolean(m) && m !== 'PORTI'))].sort();
                 let mHtml = `<option value="ALL">Semua Merk</option>`;
                 merks.forEach(m => {
                     mHtml += `<option value="${m}">${m}</option>`;
@@ -13751,10 +13750,9 @@
                     const rowCount = isMatrix ? item.rows.length : 5;
 
                     // Merk Badge
-                    let merkBadgeClass = "bg-gray-100 text-gray-700";
+                    let merkBadgeClass = "bg-purple-100 text-purple-700 border border-purple-200";
                     if (item.merk === 'DAVCLAR') merkBadgeClass = "bg-blue-100 text-blue-700 border border-blue-200";
                     else if (item.merk === 'CLARIFELA') merkBadgeClass = "bg-pink-100 text-pink-700 border border-pink-200";
-                    else if (item.merk === 'PORTI') merkBadgeClass = "bg-amber-100 text-amber-800 border border-amber-200";
 
                     // Article Chips
                     let artChipsHtml = articles.map((art, aIdx) => `
@@ -13967,7 +13965,7 @@
             const savedMerk = (currentMatrixData.merk || "DAVCLAR").trim().toUpperCase();
             const selMerk = document.getElementById('matrixInpMerk');
             const customMerkInp = document.getElementById('matrixInpMerkCustom');
-            if (['DAVCLAR', 'CLARIFELA', 'PORTI'].includes(savedMerk)) {
+            if (['DAVCLAR', 'CLARIFELA'].includes(savedMerk)) {
                 if (selMerk) selMerk.value = savedMerk;
                 if (customMerkInp) {
                     customMerkInp.value = "";
