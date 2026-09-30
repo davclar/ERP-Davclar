@@ -14121,7 +14121,7 @@
 
             // 1. Build Header
             let thHtml = `<tr>
-                <th class="py-2.5 px-2 text-center w-10 border-r border-slate-700">No</th>
+                <th class="py-2.5 px-2 text-center w-12 border-r border-slate-700 select-none">No</th>
                 <th class="py-2.5 px-3 min-w-[180px] border-r border-slate-700">Nama Bahan / Komponen</th>
                 <th class="py-2.5 px-3 min-w-[130px] border-r border-slate-700">Warna</th>`;
 
@@ -14148,7 +14148,7 @@
                 `;
             });
 
-            thHtml += `<th class="py-2.5 px-2 text-center w-14">Aksi</th></tr>`;
+            thHtml += `<th class="py-2.5 px-2 text-center w-20">Aksi</th></tr>`;
             thead.innerHTML = thHtml;
 
             // 2. Build Rows
@@ -14159,8 +14159,22 @@
                 const isMakloonRow = (row.bahan || '').toUpperCase().includes('JASA MAKLOON') || (row.bahan || '').toUpperCase() === 'MAKLOON';
 
                 trHtml += `
-                    <tr class="hover:bg-amber-50/20 transition border-b border-gray-200 ${isMakloonRow ? 'bg-amber-50/40 font-semibold' : ''}">
-                        <td class="py-2 px-1 text-center font-bold text-gray-400 border-r border-gray-200">${no}</td>
+                    <tr class="hover:bg-amber-50/20 transition border-b border-gray-200 ${isMakloonRow ? 'bg-amber-50/40 font-semibold' : ''}"
+                        draggable="true"
+                        data-row-index="${rowIdx}"
+                        ondragstart="handleMatrixRowDragStart(event, ${rowIdx})"
+                        ondragover="handleMatrixRowDragOver(event, ${rowIdx})"
+                        ondragleave="handleMatrixRowDragLeave(event, ${rowIdx})"
+                        ondrop="handleMatrixRowDrop(event, ${rowIdx})"
+                        ondragend="handleMatrixRowDragEnd(event)">
+                        <td class="py-2 px-1 text-center font-bold text-gray-400 border-r border-gray-200 select-none">
+                            <div class="flex items-center justify-center gap-1">
+                                <span class="text-gray-400 hover:text-indigo-600 cursor-grab active:cursor-grabbing text-xs px-0.5" title="Klik & geser baris ini ke atas/bawah">
+                                    <i class="fa-solid fa-grip-vertical"></i>
+                                </span>
+                                <span class="text-[11px] font-bold text-gray-500">${no}</span>
+                            </div>
+                        </td>
                         
                         <!-- Nama Bahan -->
                         <td class="py-1.5 px-2 border-r border-gray-200">
@@ -14231,9 +14245,21 @@
                 // Aksi (Delete Row & Move)
                 trHtml += `
                     <td class="py-1.5 px-1 text-center whitespace-nowrap">
-                        <button type="button" onclick="deleteMatrixRow(${rowIdx})" title="Hapus Baris" class="w-6 h-6 text-gray-400 hover:text-red-600 rounded flex items-center justify-center transition">
-                            <i class="fa-solid fa-trash text-xs"></i>
-                        </button>
+                        <div class="flex items-center justify-center space-x-1">
+                            ${rowIdx > 0 ? `
+                                <button type="button" onclick="moveMatrixRow(${rowIdx}, -1)" title="Geser ke Atas" class="w-5 h-5 text-gray-400 hover:text-indigo-600 rounded flex items-center justify-center transition">
+                                    <i class="fa-solid fa-arrow-up text-[10px]"></i>
+                                </button>
+                            ` : `<span class="w-5 inline-block"></span>`}
+                            ${rowIdx < currentMatrixData.rows.length - 1 ? `
+                                <button type="button" onclick="moveMatrixRow(${rowIdx}, 1)" title="Geser ke Bawah" class="w-5 h-5 text-gray-400 hover:text-indigo-600 rounded flex items-center justify-center transition">
+                                    <i class="fa-solid fa-arrow-down text-[10px]"></i>
+                                </button>
+                            ` : `<span class="w-5 inline-block"></span>`}
+                            <button type="button" onclick="deleteMatrixRow(${rowIdx})" title="Hapus Baris" class="w-5 h-5 text-gray-400 hover:text-red-600 rounded flex items-center justify-center transition">
+                                <i class="fa-solid fa-trash text-xs"></i>
+                            </button>
+                        </div>
                     </td>
                     </tr>
                 `;
@@ -14431,6 +14457,66 @@
         function deleteMatrixRow(rowIdx) {
             if (!currentMatrixData || !currentMatrixData.rows[rowIdx]) return;
             currentMatrixData.rows.splice(rowIdx, 1);
+            renderMatrixTable();
+        }
+
+        // ==========================================
+        // FITUR DRAG & DROP DAN PINDAH URUTAN BARIS
+        // ==========================================
+        let draggedMatrixRowIdx = null;
+
+        function handleMatrixRowDragStart(e, idx) {
+            // Hindari memicu drag saat user sedang menyeleksi teks di input atau dropdown
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
+                e.preventDefault();
+                return;
+            }
+            draggedMatrixRowIdx = idx;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', String(idx));
+            e.currentTarget.classList.add('opacity-40', 'bg-indigo-100');
+        }
+
+        function handleMatrixRowDragOver(e, idx) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            const tr = e.currentTarget;
+            if (draggedMatrixRowIdx !== null && draggedMatrixRowIdx !== idx) {
+                tr.classList.add('border-t-2', 'border-indigo-600', 'bg-indigo-50/70');
+            }
+        }
+
+        function handleMatrixRowDragLeave(e, idx) {
+            const tr = e.currentTarget;
+            tr.classList.remove('border-t-2', 'border-indigo-600', 'bg-indigo-50/70');
+        }
+
+        function handleMatrixRowDrop(e, targetIdx) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('border-t-2', 'border-indigo-600', 'bg-indigo-50/70');
+            if (draggedMatrixRowIdx === null || draggedMatrixRowIdx === targetIdx || !currentMatrixData) return;
+
+            const movedRow = currentMatrixData.rows.splice(draggedMatrixRowIdx, 1)[0];
+            currentMatrixData.rows.splice(targetIdx, 0, movedRow);
+            draggedMatrixRowIdx = null;
+            renderMatrixTable();
+        }
+
+        function handleMatrixRowDragEnd(e) {
+            e.currentTarget.classList.remove('opacity-40', 'bg-indigo-100');
+            document.querySelectorAll('#matrixTableBody tr').forEach(tr => {
+                tr.classList.remove('border-t-2', 'border-indigo-600', 'bg-indigo-50/70', 'opacity-40');
+            });
+            draggedMatrixRowIdx = null;
+        }
+
+        function moveMatrixRow(rowIdx, dir) {
+            if (!currentMatrixData) return;
+            const targetIdx = rowIdx + dir;
+            if (targetIdx < 0 || targetIdx >= currentMatrixData.rows.length) return;
+
+            const movedRow = currentMatrixData.rows.splice(rowIdx, 1)[0];
+            currentMatrixData.rows.splice(targetIdx, 0, movedRow);
             renderMatrixTable();
         }
 
