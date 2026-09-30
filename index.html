@@ -2750,23 +2750,35 @@
                                     <i class="fa-solid fa-calculator text-xl md:text-2xl"></i>
                                 </div>
                                 <div>
-                                    <h3 class="text-lg md:text-xl font-extrabold text-gray-800 leading-tight">Setting Cost & Tarif Makloon</h3>
-                                    <p class="text-xs md:text-sm text-gray-500 mt-0.5">Standar kalkulasi dan master tarif ongkos kerja makloon per artikel & vendor pengrajin.</p>
+                                    <div class="flex items-center gap-2">
+                                        <h3 class="text-lg md:text-xl font-extrabold text-gray-800 leading-tight">Setting Cost & BOM Makloon</h3>
+                                        <span class="bg-amber-100 text-amber-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-amber-300 uppercase tracking-wide">Excel Matrix Model</span>
+                                    </div>
+                                    <p class="text-xs md:text-sm text-gray-500 mt-0.5">Kalkulasi Bill of Materials (BOM), pemakaian bahan per pasang, dan tarif makloon per seri model.</p>
                                 </div>
                             </div>
                             <!-- Search & Action Buttons -->
-                            <div class="w-full lg:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2 md:gap-3">
-                                <div class="relative flex-1 sm:w-60">
+                            <div class="w-full lg:w-auto flex flex-wrap sm:flex-nowrap items-center gap-2 md:gap-3">
+                                <div class="relative flex-1 sm:w-56">
                                     <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 pointer-events-none">
                                         <i class="fa-solid fa-magnifying-glass text-xs"></i>
                                     </span>
-                                    <input type="search" id="searchMakloonCost" oninput="makloonCostPage=1; renderMakloonCostTable()" placeholder="Cari artikel, vendor, merk..." class="w-full pl-9 pr-3 py-2 text-xs md:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition">
+                                    <input type="search" id="searchMakloonCost" oninput="makloonCostPage=1; renderMakloonCostTable()" placeholder="Cari seri, artikel, merk..." class="w-full pl-9 pr-3 py-2 text-xs md:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition">
                                 </div>
-                                <select id="filterVendorMakloonCost" onchange="makloonCostPage=1; renderMakloonCostTable()" class="px-3 py-2 text-xs md:text-sm border border-gray-300 rounded-lg bg-white font-semibold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <select id="filterMerkMakloonCost" onchange="makloonCostPage=1; renderMakloonCostTable()" class="px-2.5 py-2 text-xs md:text-sm border border-gray-300 rounded-lg bg-white font-semibold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <option value="ALL">Semua Merk</option>
+                                    <option value="DAVCLAR">DAVCLAR</option>
+                                    <option value="CLARIFELA">CLARIFELA</option>
+                                    <option value="PORTI">PORTI</option>
+                                </select>
+                                <select id="filterVendorMakloonCost" onchange="makloonCostPage=1; renderMakloonCostTable()" class="px-2.5 py-2 text-xs md:text-sm border border-gray-300 rounded-lg bg-white font-semibold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                                     <option value="ALL">Semua Vendor</option>
                                 </select>
-                                <button onclick="openMakloonCostModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs md:text-sm flex items-center justify-center gap-2 transition shadow-md whitespace-nowrap">
-                                    <i class="fa-solid fa-plus"></i> <span>Tambah Tarif</span>
+                                <button id="btnSeedMika" onclick="seedMikaDemo()" title="Muat contoh seri MIKA seperti di Excel" class="px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold border border-amber-300 rounded-lg text-xs md:text-sm flex items-center gap-1.5 transition whitespace-nowrap">
+                                    <i class="fa-solid fa-file-excel text-emerald-600"></i> <span>Contoh MIKA</span>
+                                </button>
+                                <button id="btnCreateMatrixCost" onclick="openMatrixCostModal()" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs md:text-sm flex items-center justify-center gap-1.5 transition shadow-md whitespace-nowrap">
+                                    <i class="fa-solid fa-plus"></i> <span>Buat Cost Sheet</span>
                                 </button>
                             </div>
                         </div>
@@ -2774,39 +2786,39 @@
                         <!-- KPI SUMMARY CARDS -->
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 my-4">
                             <div class="bg-indigo-50/70 border border-indigo-100 rounded-xl p-3.5 flex items-center space-x-3">
-                                <div class="w-10 h-10 rounded-lg bg-indigo-500 text-white flex items-center justify-center text-lg font-bold shrink-0">
-                                    <i class="fa-solid fa-shoe-prints"></i>
+                                <div class="w-10 h-10 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-lg font-bold shrink-0">
+                                    <i class="fa-solid fa-layer-group"></i>
                                 </div>
                                 <div>
-                                    <p class="text-[11px] font-semibold text-indigo-700 uppercase tracking-wider">Total Model</p>
+                                    <p class="text-[11px] font-semibold text-indigo-700 uppercase tracking-wider">Total Model Seri</p>
                                     <h4 id="kpiTotalModelCost" class="text-lg md:text-xl font-black text-gray-800">0</h4>
                                 </div>
                             </div>
+                            <div class="bg-blue-50/70 border border-blue-100 rounded-xl p-3.5 flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-lg bg-blue-600 text-white flex items-center justify-center text-lg font-bold shrink-0">
+                                    <i class="fa-solid fa-shoe-prints"></i>
+                                </div>
+                                <div>
+                                    <p class="text-[11px] font-semibold text-blue-700 uppercase tracking-wider">Artikel Tercover</p>
+                                    <h4 id="kpiTotalArticlesCovered" class="text-lg md:text-xl font-black text-gray-800">0</h4>
+                                </div>
+                            </div>
                             <div class="bg-emerald-50/70 border border-emerald-100 rounded-xl p-3.5 flex items-center space-x-3">
-                                <div class="w-10 h-10 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-lg font-bold shrink-0">
+                                <div class="w-10 h-10 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-lg font-bold shrink-0">
                                     <i class="fa-solid fa-coins"></i>
                                 </div>
                                 <div>
-                                    <p class="text-[11px] font-semibold text-emerald-700 uppercase tracking-wider">Rata-Rata Tarif</p>
+                                    <p class="text-[11px] font-semibold text-emerald-700 uppercase tracking-wider">Rata-Rata HPP Seri</p>
                                     <h4 id="kpiAvgCost" class="text-base md:text-lg font-black text-gray-800">Rp 0</h4>
                                 </div>
                             </div>
-                            <div class="bg-amber-50/70 border border-amber-100 rounded-xl p-3.5 flex items-center space-x-3">
-                                <div class="w-10 h-10 rounded-lg bg-amber-500 text-white flex items-center justify-center text-lg font-bold shrink-0">
-                                    <i class="fa-solid fa-arrow-trend-up"></i>
-                                </div>
-                                <div>
-                                    <p class="text-[11px] font-semibold text-amber-700 uppercase tracking-wider">Tarif Tertinggi</p>
-                                    <h4 id="kpiMaxCost" class="text-base md:text-lg font-black text-gray-800">Rp 0</h4>
-                                </div>
-                            </div>
                             <div class="bg-purple-50/70 border border-purple-100 rounded-xl p-3.5 flex items-center space-x-3">
-                                <div class="w-10 h-10 rounded-lg bg-purple-500 text-white flex items-center justify-center text-lg font-bold shrink-0">
-                                    <i class="fa-solid fa-industry"></i>
+                                <div class="w-10 h-10 rounded-lg bg-purple-600 text-white flex items-center justify-center text-lg font-bold shrink-0">
+                                    <i class="fa-solid fa-hand-holding-dollar"></i>
                                 </div>
                                 <div>
-                                    <p class="text-[11px] font-semibold text-purple-700 uppercase tracking-wider">Vendor Terdaftar</p>
-                                    <h4 id="kpiTotalVendorCost" class="text-lg md:text-xl font-black text-gray-800">0</h4>
+                                    <p class="text-[11px] font-semibold text-purple-700 uppercase tracking-wider">Rata-Rata Makloon</p>
+                                    <h4 id="kpiAvgJasaMakloon" class="text-base md:text-lg font-black text-gray-800">Rp 0</h4>
                                 </div>
                             </div>
                         </div>
@@ -2817,15 +2829,15 @@
                                 <thead>
                                     <tr class="bg-gray-50 border-b border-gray-200 text-[11px] font-bold text-gray-600 uppercase tracking-wider">
                                         <th class="py-3 px-3 text-center w-12">No</th>
-                                        <th class="py-3 px-3">Artikel & Merk</th>
-                                        <th class="py-3 px-3">Vendor Makloon</th>
-                                        <th class="py-3 px-3 text-right">Potong</th>
-                                        <th class="py-3 px-3 text-right">Jahit</th>
-                                        <th class="py-3 px-3 text-right">Assembling</th>
-                                        <th class="py-3 px-3 text-right">Finishing/Lain</th>
-                                        <th class="py-3 px-3 text-right">Total Ongkos</th>
+                                        <th class="py-3 px-3">Model Seri & Merk</th>
+                                        <th class="py-3 px-3">Sub-Artikel (BOM)</th>
+                                        <th class="py-3 px-3 text-center">Komponen</th>
+                                        <th class="py-3 px-3 text-left">Rincian Cost / Artikel</th>
+                                        <th class="py-3 px-3 text-right">Rata-Rata Seri</th>
+                                        <th class="py-3 px-3 text-right">Jasa Makloon</th>
+                                        <th class="py-3 px-3">Vendor</th>
                                         <th class="py-3 px-3 text-center">Update</th>
-                                        <th id="th-aksi-maklooncost" class="py-3 px-3 text-center w-24">Aksi</th>
+                                        <th id="th-aksi-maklooncost" class="py-3 px-3 text-center w-32">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody id="makloonCostTableBody" class="divide-y divide-gray-100 text-xs md:text-sm">
@@ -2844,114 +2856,146 @@
                     </div>
                 </section>
 
-                <!-- MODAL: TAMBAH / EDIT SETTING COST MAKLOON -->
-                <div id="modal-makloon-cost" class="fixed inset-0 z-[9999] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
-                    <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onclick="closeMakloonCostModal()"></div>
-                    <div class="bg-white rounded-2xl shadow-2xl z-10 w-11/12 max-w-2xl transform scale-95 transition-transform duration-300 flex flex-col max-h-[92vh]">
+                <!-- MODAL INTERAKTIF: MATRIX COST SHEET & BOM (EXCEL MODEL) -->
+                <div id="modal-matrix-cost" class="fixed inset-0 z-[9999] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+                    <div class="fixed inset-0 bg-black/60 backdrop-blur-sm" onclick="closeMatrixCostModal()"></div>
+                    <div class="bg-white rounded-2xl shadow-2xl z-10 w-[98vw] md:w-11/12 max-w-7xl max-h-[96vh] transform scale-95 transition-transform duration-300 flex flex-col overflow-hidden">
+                        
                         <!-- Header Modal -->
-                        <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-indigo-50 rounded-t-2xl shrink-0">
+                        <div class="p-4 md:px-6 md:py-4 border-b border-gray-200 flex justify-between items-center bg-slate-900 text-white shrink-0">
                             <div class="flex items-center space-x-3">
-                                <div class="w-9 h-9 rounded-lg bg-indigo-600 text-white flex items-center justify-center">
-                                    <i class="fa-solid fa-calculator"></i>
+                                <div class="w-10 h-10 rounded-xl bg-amber-400 text-slate-900 flex items-center justify-center font-black text-lg shadow-md">
+                                    <i class="fa-solid fa-table-cells"></i>
                                 </div>
                                 <div>
-                                    <h4 id="modalMakloonCostTitle" class="font-extrabold text-gray-800 text-base">Tambah Setting Cost Makloon</h4>
-                                    <p class="text-xs text-gray-500">Tentukan tarif dan rincian ongkos kerja per pasang.</p>
+                                    <div class="flex items-center gap-2">
+                                        <h4 id="matrixModalTitle" class="font-extrabold text-base md:text-lg text-white">Cost Sheet & BOM Makloon</h4>
+                                        <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded uppercase">Interactive Matrix</span>
+                                    </div>
+                                    <p class="text-xs text-gray-300">Mendukung pecahan otomatis (cth: input <code class="bg-slate-800 text-amber-300 px-1 py-0.5 rounded font-mono">1/18</code> atau <code class="bg-slate-800 text-amber-300 px-1 py-0.5 rounded font-mono">1/25</code>, otomatis menjadi desimal!).</p>
                                 </div>
                             </div>
-                            <button onclick="closeMakloonCostModal()" class="text-gray-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+                            <div class="flex items-center space-x-2">
+                                <button type="button" onclick="printActiveMatrixSheet()" title="Cetak Sheet Ini" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-gray-200 text-xs font-bold rounded-lg border border-slate-700 flex items-center gap-1.5 transition">
+                                    <i class="fa-solid fa-print"></i> <span class="hidden sm:inline">Cetak</span>
+                                </button>
+                                <button type="button" onclick="closeMatrixCostModal()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-red-600 text-gray-400 hover:text-white flex items-center justify-center transition">
+                                    <i class="fa-solid fa-xmark text-lg"></i>
+                                </button>
+                            </div>
                         </div>
 
-                        <!-- Body Modal -->
-                        <form id="formMakloonCost" onsubmit="saveMakloonCost(event)" class="p-6 overflow-y-auto space-y-4">
-                            <input type="hidden" id="costEditId">
+                        <!-- Form & Matrix Container (Scrollable) -->
+                        <div class="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-gray-50/50">
+                            <input type="hidden" id="matrixEditId">
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <!-- FIELD ARTIKEL (AUTOCOMPLETE / MANUAL) -->
-                                <div class="relative">
-                                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Artikel / Kode Barang <span class="text-red-500">*</span></label>
-                                    <input type="text" id="costArtikel" oninput="handleCostArtikelInput(this.value)" placeholder="Pilih / ketik nama artikel..." required autocomplete="off" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-bold uppercase focus:ring-2 focus:ring-indigo-500 outline-none">
-                                    <div id="costArtikelSuggestions" class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-48 overflow-y-auto z-50 divide-y divide-gray-100"></div>
-                                </div>
-
-                                <!-- FIELD MERK -->
+                            <!-- Top Form: Model, Merk, Vendor, Kategori -->
+                            <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Merk Sepatu <span class="text-red-500">*</span></label>
-                                    <select id="costMerk" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                                    <label class="block text-[11px] font-bold text-gray-700 uppercase mb-1">Nama Model / Seri <span class="text-red-500">*</span></label>
+                                    <input type="text" id="matrixInpModel" oninput="updateMatrixLiveHeader()" placeholder="Cth: MIKA, ROSA, SHERLY" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-black uppercase text-indigo-700 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-gray-700 uppercase mb-1">Merk Sepatu <span class="text-red-500">*</span></label>
+                                    <select id="matrixInpMerk" onchange="updateMatrixLiveHeader()" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-bold text-gray-800 bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
                                         <option value="DAVCLAR">DAVCLAR</option>
                                         <option value="CLARIFELA">CLARIFELA</option>
                                         <option value="PORTI">PORTI</option>
                                         <option value="CUSTOM">LAINNYA / CUSTOM</option>
                                     </select>
                                 </div>
-                            </div>
-
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <!-- FIELD VENDOR MAKLOON -->
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Vendor / Bengkel Makloon <span class="text-red-500">*</span></label>
-                                    <input type="text" id="costVendor" list="listVendorSuggestions" required placeholder="Cth: PORTI / PAK DADANG / BENGKEL A" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-bold uppercase focus:ring-2 focus:ring-indigo-500 outline-none">
-                                    <datalist id="listVendorSuggestions"></datalist>
+                                    <label class="block text-[11px] font-bold text-gray-700 uppercase mb-1">Vendor Makloon</label>
+                                    <input type="text" id="matrixInpVendor" list="listVendorSuggestionsCost" placeholder="Cth: PORTI / PAK DADANG" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-semibold uppercase focus:ring-2 focus:ring-indigo-500 outline-none">
+                                    <datalist id="listVendorSuggestionsCost"></datalist>
                                 </div>
-
-                                <!-- FIELD KATEGORI -->
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Kategori / Model</label>
-                                    <input type="text" id="costKategori" placeholder="Cth: SNEAKERS, SLIP ON, FLAT" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm uppercase focus:ring-2 focus:ring-indigo-500 outline-none">
+                                    <label class="block text-[11px] font-bold text-gray-700 uppercase mb-1">Kategori / Model</label>
+                                    <input type="text" id="matrixInpKategori" placeholder="Cth: FLAT, SANDAL, SLIP ON" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm uppercase focus:ring-2 focus:ring-indigo-500 outline-none">
                                 </div>
                             </div>
 
-                            <!-- RINCIAN KOMPONEN BIAYA -->
-                            <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-3">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
-                                        <i class="fa-solid fa-coins text-indigo-600"></i> Rincian Ongkos Kerja (Rp / Pasang)
+                            <!-- Sub-Articles Manager Row -->
+                            <div class="bg-indigo-50/70 p-3.5 rounded-xl border border-indigo-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+                                <div class="flex items-center gap-2 flex-wrap flex-1">
+                                    <span class="text-xs font-extrabold text-indigo-900 uppercase tracking-wider flex items-center gap-1.5 shrink-0">
+                                        <i class="fa-solid fa-shoe-prints text-indigo-600"></i> Sub-Artikel Seri:
                                     </span>
-                                    <span class="text-[11px] text-gray-400">Isi rincian atau isi langsung total</span>
+                                    <div id="matrixArticleChips" class="flex items-center gap-1.5 flex-wrap">
+                                        <!-- Article input chips rendered dynamically -->
+                                    </div>
                                 </div>
-
-                                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                                    <div>
-                                        <label class="block text-[11px] font-semibold text-gray-600 mb-1">1. Potong (Cutting)</label>
-                                        <input type="number" id="costPotong" oninput="calculateLiveTotalCost()" placeholder="0" min="0" class="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs font-bold text-gray-800 text-right focus:ring-2 focus:ring-indigo-500 outline-none">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[11px] font-semibold text-gray-600 mb-1">2. Jahit (Upper)</label>
-                                        <input type="number" id="costJahit" oninput="calculateLiveTotalCost()" placeholder="0" min="0" class="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs font-bold text-gray-800 text-right focus:ring-2 focus:ring-indigo-500 outline-none">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[11px] font-semibold text-gray-600 mb-1">3. Pasang Sol (Assembling)</label>
-                                        <input type="number" id="costAssembling" oninput="calculateLiveTotalCost()" placeholder="0" min="0" class="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs font-bold text-gray-800 text-right focus:ring-2 focus:ring-indigo-500 outline-none">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[11px] font-semibold text-gray-600 mb-1">4. Finishing & Dus</label>
-                                        <input type="number" id="costFinishing" oninput="calculateLiveTotalCost()" placeholder="0" min="0" class="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs font-bold text-gray-800 text-right focus:ring-2 focus:ring-indigo-500 outline-none">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[11px] font-semibold text-gray-600 mb-1">5. Variasi / Sablon / Lain</label>
-                                        <input type="number" id="costLain" oninput="calculateLiveTotalCost()" placeholder="0" min="0" class="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs font-bold text-gray-800 text-right focus:ring-2 focus:ring-indigo-500 outline-none">
-                                    </div>
-                                    <div class="bg-indigo-100/60 p-2 rounded-lg border border-indigo-200 flex flex-col justify-center">
-                                        <span class="text-[10px] font-bold text-indigo-700 uppercase">Total Makloon / Psg</span>
-                                        <span id="displayLiveTotalCost" class="text-base font-black text-indigo-900">Rp 0</span>
-                                    </div>
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <button type="button" onclick="addMatrixArticleColumn()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-sm">
+                                        <i class="fa-solid fa-plus"></i> <span>Tambah Artikel (Kolom)</span>
+                                    </button>
                                 </div>
                             </div>
 
-                            <!-- CATATAN -->
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Catatan / Spesifikasi Pengerjaan</label>
-                                <textarea id="costCatatan" rows="2" placeholder="Catatan bahan, instruksi lem, packing, atau syarat khusus..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs text-gray-700 focus:ring-2 focus:ring-indigo-500 outline-none"></textarea>
+                            <!-- EXCEL HEADER SUMMARY BANNER (MIRRORS EXCEL SHEET EXACTLY!) -->
+                            <div class="bg-slate-900 border-2 border-slate-800 rounded-xl p-3.5 shadow-md flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-3">
+                                <div class="flex items-center gap-3 flex-wrap">
+                                    <div class="bg-amber-300 text-slate-950 font-black px-4 py-2 rounded-lg text-sm md:text-base tracking-wider uppercase shadow">
+                                        <span id="excelBannerModel">MIKA</span>
+                                    </div>
+                                    <div class="bg-amber-400 text-slate-950 font-black px-4 py-2 rounded-lg text-sm md:text-base tracking-wider shadow flex items-center gap-2">
+                                        <span class="text-xs font-bold text-slate-800 uppercase">Rata-Rata Seri:</span>
+                                        <span id="excelBannerAvg" class="text-base md:text-lg">Rp 63.880</span>
+                                    </div>
+                                </div>
+
+                                <!-- Mini Badges per Article (H1, H2, H3...) -->
+                                <div id="excelBannerArticleTotals" class="flex items-center gap-2 flex-wrap">
+                                    <!-- Rendered dynamically -->
+                                </div>
                             </div>
 
-                            <!-- Footer Modal Form -->
-                            <div class="pt-3 border-t border-gray-100 flex justify-end space-x-2">
-                                <button type="button" onclick="closeMakloonCostModal()" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-lg text-xs transition">Batal</button>
-                                <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs transition shadow-md flex items-center gap-1.5">
-                                    <i class="fa-solid fa-floppy-disk"></i> <span>Simpan Tarif</span>
+                            <!-- MATRIX BOM TABLE -->
+                            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+                                <div class="overflow-x-auto max-h-[50vh]">
+                                    <table class="w-full text-left border-collapse text-xs">
+                                        <thead id="matrixTableHead" class="bg-slate-800 text-white sticky top-0 z-20 font-bold uppercase tracking-wider text-[11px]">
+                                            <!-- Dynamically generated based on articles -->
+                                        </thead>
+                                        <tbody id="matrixTableBody" class="divide-y divide-gray-200">
+                                            <!-- Dynamically generated rows -->
+                                        </tbody>
+                                        <tfoot id="matrixTableFoot" class="bg-slate-100 font-extrabold text-slate-900 border-t-2 border-slate-300 sticky bottom-0 z-10 text-xs">
+                                            <!-- Dynamically generated totals -->
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- CATATAN & QUICK ACTIONS -->
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-1">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <button type="button" onclick="addMatrixRow()" class="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-lg text-xs border border-indigo-200 transition flex items-center gap-1.5 shadow-sm">
+                                        <i class="fa-solid fa-plus text-indigo-600"></i> <span>Tambah Baris Bahan</span>
+                                    </button>
+                                    <button type="button" onclick="loadMatrixShoeTemplate()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs border border-slate-300 transition flex items-center gap-1.5">
+                                        <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i> <span>Muat 17 Komponen Standar</span>
+                                    </button>
+                                </div>
+                                <div class="w-full sm:w-80">
+                                    <input type="text" id="matrixInpCatatan" placeholder="Catatan spesifikasi / ketentuan makloon..." class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footer Modal Actions -->
+                        <div class="p-4 border-t border-gray-200 bg-white flex justify-between items-center shrink-0">
+                            <span class="text-xs text-gray-500 flex items-center gap-1.5">
+                                <i class="fa-solid fa-circle-info text-indigo-500"></i> Nilai desimal dihitung presisi dan otomatis dibulatkan ke rupiah terdekat.
+                            </span>
+                            <div class="flex items-center space-x-2">
+                                <button type="button" onclick="closeMatrixCostModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-lg text-xs md:text-sm transition">Batal</button>
+                                <button type="button" onclick="saveMatrixCost()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs md:text-sm transition shadow-md flex items-center gap-1.5">
+                                    <i class="fa-solid fa-floppy-disk"></i> <span>Simpan Cost Sheet</span>
                                 </button>
                             </div>
-                        </form>
+                        </div>
+
                     </div>
                 </div>
 
@@ -4983,24 +5027,45 @@
                     document.getElementById('poInpMerk').value = b.merk; 
                     
                     // 3. Otomatis isi Harga Makloon (prioritas ambil dari Setting Cost Makloon jika ada)
+                    // 3. Otomatis isi Harga Makloon (prioritas ambil dari Setting Cost Makloon jika ada)
                     const currentVendor = (document.getElementById('poFormMakloon') ? document.getElementById('poFormMakloon').value : '').trim().toUpperCase();
+                    const targetArt = (b.artikel || '').trim().toUpperCase();
                     let costRecord = null;
                     if (typeof db_makloon_cost !== 'undefined' && Array.isArray(db_makloon_cost)) {
                         if (currentVendor) {
-                            costRecord = db_makloon_cost.find(c => (c.artikel || '').toUpperCase() === (b.artikel || '').toUpperCase() && (c.vendor || '').toUpperCase() === currentVendor);
+                            costRecord = db_makloon_cost.find(c => {
+                                const vendorMatch = (c.vendor || '').toUpperCase() === currentVendor;
+                                if (!vendorMatch) return false;
+                                return (c.model || '').toUpperCase() === targetArt ||
+                                       (c.artikel || '').toUpperCase() === targetArt ||
+                                       (Array.isArray(c.articles) && c.articles.map(a => a.toUpperCase()).includes(targetArt));
+                            });
                         }
                         if (!costRecord) {
-                            costRecord = db_makloon_cost.find(c => (c.artikel || '').toUpperCase() === (b.artikel || '').toUpperCase());
+                            costRecord = db_makloon_cost.find(c => {
+                                return (c.model || '').toUpperCase() === targetArt ||
+                                       (c.artikel || '').toUpperCase() === targetArt ||
+                                       (Array.isArray(c.articles) && c.articles.map(a => a.toUpperCase()).includes(targetArt));
+                            });
                         }
                     }
 
-                    if (costRecord && costRecord.total > 0) {
-                        document.getElementById('poFormHarga').value = costRecord.total;
+                    let determinedFee = 0;
+                    if (costRecord) {
+                        if (typeof getMakloonTarifFromRecord === 'function') {
+                            determinedFee = getMakloonTarifFromRecord(costRecord, targetArt);
+                        } else {
+                            determinedFee = costRecord.total || 0;
+                        }
+                    }
+
+                    if (determinedFee > 0) {
+                        document.getElementById('poFormHarga').value = determinedFee;
                         if (!currentVendor && costRecord.vendor) {
                             document.getElementById('poFormMakloon').value = costRecord.vendor;
                         }
                     } else {
-                        document.getElementById('poFormHarga').value = b.hpp; 
+                        document.getElementById('poFormHarga').value = b.hpp || 0; 
                     }
                     
                     dropdown.classList.add('hidden');
@@ -13425,16 +13490,161 @@
         }
 
         // ==========================================
-        // FITUR SETTING COST MAKLOON
+        // FITUR SETTING COST MAKLOON (BOM & MATRIX EXCEL MODEL)
         // ==========================================
         let makloonCostPage = 1;
         const makloonCostPerPage = 10;
+        let currentMatrixData = null; // State object untuk modal aktif
 
+        // Template Standar Contoh Seri MIKA (Exact dari Excel User)
+        const sampleMikaCostSheet = {
+            id: "CST-MIKA",
+            model: "MIKA",
+            merk: "DAVCLAR",
+            vendor: "PORTI",
+            kategori: "SANDAL",
+            articles: ["3301", "3302", "3303"],
+            rows: [
+                { bahan: "B.UPPER TESLA", warna: "", usage: ["0.055556", "0.05", "0.055556"], rawUsage: ["1/18", "0.05", "1/18"], satuan: "M", harga: 43000 },
+                { bahan: "B.TATAK TESLA", warna: "SESUAI WARNA UPPER", usage: ["0.045455", "0.045455", "0.045455"], rawUsage: ["1/22", "1/22", "1/22"], satuan: "M", harga: 43000 },
+                { bahan: "ASESORIS 44897", warna: "GOLD", usage: ["2", "2", "0"], rawUsage: ["2", "2", "0"], satuan: "PCS", harga: 1600 },
+                { bahan: "ASESORIS BULAT 7487 1.2CM", warna: "GOLD", usage: ["2", "2", "0"], rawUsage: ["2", "2", "0"], satuan: "PCS", harga: 800 },
+                { bahan: "RING TARIK JYSH", warna: "", usage: ["0", "0", "2"], rawUsage: ["0", "0", "2"], satuan: "PCS", harga: 2800 },
+                { bahan: "INSOLE MIKA", warna: "", usage: ["1", "1", "1"], rawUsage: ["1", "1", "1"], satuan: "PSG", harga: 4700 },
+                { bahan: "SOLE MIKA", warna: "", usage: ["1", "1", "1"], rawUsage: ["1", "1", "1"], satuan: "PSG", harga: 17750 },
+                { bahan: "DUS PAKET", warna: "", usage: ["1", "1", "1"], rawUsage: ["1", "1", "1"], satuan: "PSG", harga: 7000 },
+                { bahan: "LEM & BENANG", warna: "", usage: ["1", "1", "1"], rawUsage: ["1", "1", "1"], satuan: "PSG", harga: 4000 },
+                { bahan: "O.GURAT", warna: "", usage: ["1", "1", "1"], rawUsage: ["1", "1", "1"], satuan: "PSG", harga: 1000 },
+                { bahan: "O.MUKA", warna: "", usage: ["1", "1", "1"], rawUsage: ["1", "1", "1"], satuan: "PSG", harga: 4000 },
+                { bahan: "O.BUNGKUS", warna: "", usage: ["1", "1", "1"], rawUsage: ["1", "1", "1"], satuan: "PSG", harga: 1250 },
+                { bahan: "O.SOLE", warna: "", usage: ["1", "1", "1"], rawUsage: ["1", "1", "1"], satuan: "PSG", harga: 3250 },
+                { bahan: "O.SABLON EMBOSH", warna: "", usage: ["1", "1", "1"], rawUsage: ["1", "1", "1"], satuan: "PSG", harga: 600 },
+                { bahan: "O.FINISHING", warna: "", usage: ["1", "1", "1"], rawUsage: ["1", "1", "1"], satuan: "PSG", harga: 2000 },
+                { bahan: "OVERHEAD", warna: "", usage: ["1", "1", "1"], rawUsage: ["1", "1", "1"], satuan: "PSG", harga: 3000 },
+                { bahan: "JASA MAKLOON", warna: "", usage: ["1", "1", "1"], rawUsage: ["1", "1", "1"], satuan: "PSG", harga: 6000 }
+            ],
+            catatan: "Kalkulasi HPP & Makloon Seri MIKA Davclar (3301, 3302, 3303)",
+            createdAt: "30 Sep 2026",
+            updatedAt: "30 Sep 2026"
+        };
+
+        // Template Standar 17 Komponen Sepatu/Sandal
+        const defaultShoeBOMTemplate = [
+            { bahan: "B.UPPER TESLA", warna: "", usage: [], satuan: "M", harga: 0 },
+            { bahan: "B.TATAK TESLA", warna: "", usage: [], satuan: "M", harga: 0 },
+            { bahan: "ASESORIS", warna: "", usage: [], satuan: "PCS", harga: 0 },
+            { bahan: "INSOLE", warna: "", usage: [], satuan: "PSG", harga: 0 },
+            { bahan: "SOLE", warna: "", usage: [], satuan: "PSG", harga: 0 },
+            { bahan: "DUS PAKET", warna: "", usage: [], satuan: "PSG", harga: 0 },
+            { bahan: "LEM & BENANG", warna: "", usage: [], satuan: "PSG", harga: 0 },
+            { bahan: "O.GURAT", warna: "", usage: [], satuan: "PSG", harga: 0 },
+            { bahan: "O.MUKA", warna: "", usage: [], satuan: "PSG", harga: 0 },
+            { bahan: "O.BUNGKUS", warna: "", usage: [], satuan: "PSG", harga: 0 },
+            { bahan: "O.SOLE", warna: "", usage: [], satuan: "PSG", harga: 0 },
+            { bahan: "O.SABLON EMBOSH", warna: "", usage: [], satuan: "PSG", harga: 0 },
+            { bahan: "O.FINISHING", warna: "", usage: [], satuan: "PSG", harga: 0 },
+            { bahan: "OVERHEAD", warna: "", usage: [], satuan: "PSG", harga: 0 },
+            { bahan: "JASA MAKLOON", warna: "", usage: [], satuan: "PSG", harga: 0 }
+        ];
+
+        // Parser Rumus Pecahan (e.g. "1/18" -> 0.055556, "=1/22" -> 0.045455, "0,05" -> 0.05)
+        function parseFractionOrNumber(val) {
+            if (val === null || val === undefined) return 0;
+            let s = String(val).trim().replace(',', '.').replace(/^=/, '').trim();
+            if (!s) return 0;
+            if (s.includes('/')) {
+                let parts = s.split('/');
+                if (parts.length === 2) {
+                    let num = parseFloat(parts[0]);
+                    let den = parseFloat(parts[1]);
+                    if (!isNaN(num) && !isNaN(den) && den !== 0) {
+                        return num / den;
+                    }
+                }
+            }
+            let num = parseFloat(s);
+            return isNaN(num) ? 0 : num;
+        }
+
+        function formatFractionDisplay(val) {
+            let num = parseFractionOrNumber(val);
+            if (num === 0) return '0';
+            if (Number.isInteger(num)) return num.toString();
+            return parseFloat(num.toFixed(6)).toString();
+        }
+
+        // Kalkulasi Total untuk sebuah Cost Sheet Record
+        function calculateMatrixRecordTotals(item) {
+            if (!item) return { articleTotals: [], avgTotal: 0, jasaMakloon: 0 };
+            
+            // Format Matrix Baru
+            if (Array.isArray(item.rows) && Array.isArray(item.articles)) {
+                const numArticles = item.articles.length;
+                const articleTotals = new Array(numArticles).fill(0);
+                let jasaMakloon = 0;
+
+                item.rows.forEach(r => {
+                    const h = parseFloat(r.harga) || 0;
+                    const isMakloon = (r.bahan || '').toUpperCase().includes('JASA MAKLOON') || (r.bahan || '').toUpperCase() === 'MAKLOON';
+                    for (let i = 0; i < numArticles; i++) {
+                        const u = parseFractionOrNumber(r.usage ? r.usage[i] : 0);
+                        const cost = Math.round(u * h);
+                        articleTotals[i] += cost;
+                        if (isMakloon && u > 0 && jasaMakloon === 0) {
+                            jasaMakloon = cost;
+                        }
+                    }
+                });
+
+                const sum = articleTotals.reduce((a, b) => a + b, 0);
+                const avg = numArticles > 0 ? Math.round(sum / numArticles) : 0;
+                return { articleTotals, avgTotal: avg, jasaMakloon };
+            }
+
+            // Fallback untuk legacy item flat
+            const potong = parseInt(item.potong) || 0;
+            const jahit = parseInt(item.jahit) || 0;
+            const assembling = parseInt(item.assembling) || 0;
+            const finishing = parseInt(item.finishing) || 0;
+            const lain = parseInt(item.lain) || 0;
+            const total = parseInt(item.total) || (potong + jahit + assembling + finishing + lain);
+            return { articleTotals: [total], avgTotal: total, jasaMakloon: total };
+        }
+
+        // Ekstraksi Tarif Makloon untuk suatu artikel spesifik (digunakan di modul PO)
+        function getMakloonTarifFromRecord(record, targetArt) {
+            if (!record) return 0;
+            if (Array.isArray(record.rows) && Array.isArray(record.articles)) {
+                let artIdx = record.articles.findIndex(a => (a || '').toUpperCase() === (targetArt || '').toUpperCase());
+                if (artIdx === -1) artIdx = 0;
+                
+                const makloonRow = record.rows.find(r => (r.bahan || '').toUpperCase().includes('JASA MAKLOON') || (r.bahan || '').toUpperCase() === 'MAKLOON');
+                if (makloonRow) {
+                    const u = parseFractionOrNumber(makloonRow.usage ? makloonRow.usage[artIdx] : 1);
+                    const h = parseFloat(makloonRow.harga) || 0;
+                    const fee = Math.round(u * h);
+                    if (fee > 0) return fee;
+                }
+
+                const { articleTotals } = calculateMatrixRecordTotals(record);
+                return articleTotals[artIdx] || 0;
+            }
+            return parseInt(record.total) || 0;
+        }
+
+        // Auto-seed contoh MIKA jika db_makloon_cost masih kosong
+        if (typeof db_makloon_cost !== 'undefined' && Array.isArray(db_makloon_cost) && db_makloon_cost.length === 0) {
+            db_makloon_cost.push(JSON.parse(JSON.stringify(sampleMikaCostSheet)));
+            localStorage.setItem('davclar_makloon_cost', JSON.stringify(db_makloon_cost));
+        }
+
+        // Render List Table Setting Cost
         function renderMakloonCostTable() {
             const tbody = document.getElementById('makloonCostTableBody');
             if (!tbody) return;
 
             const search = (document.getElementById('searchMakloonCost') ? document.getElementById('searchMakloonCost').value : '').toLowerCase().trim();
+            const filterMerk = document.getElementById('filterMerkMakloonCost') ? document.getElementById('filterMerkMakloonCost').value : 'ALL';
             const filterVendor = document.getElementById('filterVendorMakloonCost') ? document.getElementById('filterVendorMakloonCost').value : 'ALL';
 
             // Hak akses
@@ -13444,6 +13654,10 @@
 
             const thAksi = document.getElementById('th-aksi-maklooncost');
             if (thAksi) thAksi.style.display = canEdit ? '' : 'none';
+            const btnCreate = document.getElementById('btnCreateMatrixCost');
+            if (btnCreate) btnCreate.style.display = canEdit ? '' : 'none';
+            const btnSeed = document.getElementById('btnSeedMika');
+            if (btnSeed) btnSeed.style.display = canEdit ? '' : 'none';
 
             // Populate Vendor Filter Options
             const vendorSelect = document.getElementById('filterVendorMakloonCost');
@@ -13462,12 +13676,19 @@
 
             // Filter Data
             let filtered = db_makloon_cost.filter(item => {
+                const merkMatch = (filterMerk === 'ALL' || (item.merk || '').toUpperCase() === filterMerk.toUpperCase());
+                if (!merkMatch) return false;
+
                 const vendorMatch = (filterVendor === 'ALL' || (item.vendor || '').toUpperCase() === filterVendor.toUpperCase());
                 if (!vendorMatch) return false;
 
                 if (!search) return true;
-                const str = `${item.artikel || ''} ${item.merk || ''} ${item.vendor || ''} ${item.kategori || ''} ${item.catatan || ''}`.toLowerCase();
-                return str.includes(search);
+                const modelStr = (item.model || item.artikel || '').toLowerCase();
+                const merkStr = (item.merk || '').toLowerCase();
+                const vendorStr = (item.vendor || '').toLowerCase();
+                const katStr = (item.kategori || '').toLowerCase();
+                const artStr = Array.isArray(item.articles) ? item.articles.join(' ').toLowerCase() : '';
+                return `${modelStr} ${merkStr} ${vendorStr} ${katStr} ${artStr}`.includes(search);
             });
 
             // Update KPI Cards
@@ -13488,10 +13709,13 @@
                     <tr>
                         <td colspan="10" class="text-center py-10 text-gray-400">
                             <i class="fa-solid fa-calculator text-4xl mb-2 text-gray-300 block"></i>
-                            <span class="font-medium">Belum ada data Setting Cost Makloon...</span>
-                            <div class="mt-2">
-                                <button onclick="openMakloonCostModal()" class="text-xs text-indigo-600 hover:text-indigo-800 font-bold underline">
-                                    + Tambah Tarif Baru Sekarang
+                            <span class="font-medium">Belum ada data Setting Cost & BOM Makloon...</span>
+                            <div class="mt-3 flex items-center justify-center gap-2">
+                                <button onclick="seedMikaDemo()" class="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold transition">
+                                    <i class="fa-solid fa-file-excel mr-1 text-emerald-600"></i> Muat Contoh Seri MIKA
+                                </button>
+                                <button onclick="openMatrixCostModal()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition">
+                                    + Buat Cost Sheet Baru
                                 </button>
                             </div>
                         </td>
@@ -13501,40 +13725,74 @@
                 let html = '';
                 pagedData.forEach((item, idx) => {
                     const no = startIdx + idx + 1;
-                    const potong = parseInt(item.potong) || 0;
-                    const jahit = parseInt(item.jahit) || 0;
-                    const assembling = parseInt(item.assembling) || 0;
-                    const finishing = parseInt(item.finishing) || 0;
-                    const lain = parseInt(item.lain) || 0;
-                    const total = parseInt(item.total) || (potong + jahit + assembling + finishing + lain);
+                    const modelName = item.model || item.artikel || 'TANPA NAMA';
+                    const isMatrix = Array.isArray(item.rows) && Array.isArray(item.articles);
+                    const { articleTotals, avgTotal, jasaMakloon } = calculateMatrixRecordTotals(item);
+                    const articles = isMatrix ? item.articles : [item.artikel || '-'];
+                    const rowCount = isMatrix ? item.rows.length : 5;
 
-                    // Badge Merk
+                    // Merk Badge
                     let merkBadgeClass = "bg-gray-100 text-gray-700";
                     if (item.merk === 'DAVCLAR') merkBadgeClass = "bg-blue-100 text-blue-700 border border-blue-200";
                     else if (item.merk === 'CLARIFELA') merkBadgeClass = "bg-pink-100 text-pink-700 border border-pink-200";
                     else if (item.merk === 'PORTI') merkBadgeClass = "bg-amber-100 text-amber-800 border border-amber-200";
 
+                    // Article Chips
+                    let artChipsHtml = articles.map((art, aIdx) => `
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                            ${art}
+                        </span>
+                    `).join('');
+
+                    // Article Cost Breakdown
+                    let costDetailsHtml = '';
+                    if (isMatrix && articles.length > 0) {
+                        costDetailsHtml = articles.map((art, aIdx) => {
+                            const c = articleTotals[aIdx] || 0;
+                            return `<div class="text-[11px]"><span class="font-bold text-gray-700">${art}:</span> <span class="font-semibold text-gray-900">Rp ${c.toLocaleString('id-ID')}</span></div>`;
+                        }).join('');
+                    } else {
+                        costDetailsHtml = `<span class="font-bold text-gray-800 text-xs">Rp ${avgTotal.toLocaleString('id-ID')}</span>`;
+                    }
+
                     html += `
-                        <tr class="hover:bg-gray-50 transition border-b border-gray-100">
+                        <tr class="hover:bg-indigo-50/30 transition border-b border-gray-100">
                             <td class="py-3 px-3 text-center text-gray-500 font-medium">${no}</td>
                             <td class="py-3 px-3">
-                                <div class="font-bold text-gray-800 text-sm uppercase">${item.artikel || '-'}</div>
-                                <div class="flex items-center gap-1.5 mt-0.5">
-                                    <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${merkBadgeClass}">${item.merk || 'DAVCLAR'}</span>
-                                    ${item.kategori ? `<span class="text-[10px] text-gray-400">• ${item.kategori}</span>` : ''}
+                                <div class="font-black text-gray-800 text-sm tracking-wide uppercase flex items-center gap-1.5">
+                                    <span>${modelName}</span>
+                                    <span class="text-[10px] font-bold px-1.5 py-0.2 rounded ${merkBadgeClass}">${item.merk || 'DAVCLAR'}</span>
+                                </div>
+                                <div class="text-[10px] text-gray-400 mt-0.5">
+                                    ${item.kategori ? `<span>${item.kategori}</span> • ` : ''}
+                                    <span class="text-indigo-600 font-semibold">${isMatrix ? 'Matrix BOM' : 'Flat Cost'}</span>
                                 </div>
                             </td>
-                            <td class="py-3 px-3 font-semibold text-gray-700 uppercase">
-                                <span class="bg-gray-100 px-2 py-0.5 rounded text-xs">${item.vendor || '-'}</span>
+                            <td class="py-3 px-3">
+                                <div class="flex items-center gap-1 flex-wrap">
+                                    ${artChipsHtml}
+                                </div>
                             </td>
-                            <td class="py-3 px-3 text-right font-medium text-gray-600">Rp ${potong.toLocaleString('id-ID')}</td>
-                            <td class="py-3 px-3 text-right font-medium text-gray-600">Rp ${jahit.toLocaleString('id-ID')}</td>
-                            <td class="py-3 px-3 text-right font-medium text-gray-600">Rp ${assembling.toLocaleString('id-ID')}</td>
-                            <td class="py-3 px-3 text-right font-medium text-gray-600">Rp ${(finishing + lain).toLocaleString('id-ID')}</td>
-                            <td class="py-3 px-3 text-right">
-                                <span class="font-black text-indigo-700 bg-indigo-50 px-2 py-1 rounded-md text-xs md:text-sm">
-                                    Rp ${total.toLocaleString('id-ID')}
+                            <td class="py-3 px-3 text-center">
+                                <span class="bg-gray-100 text-gray-700 font-bold px-2 py-0.5 rounded text-xs">
+                                    ${rowCount} Item
                                 </span>
+                            </td>
+                            <td class="py-3 px-3">
+                                <div class="space-y-0.5">
+                                    ${costDetailsHtml}
+                                </div>
+                            </td>
+                            <td class="py-3 px-3 text-right">
+                                <span class="font-black text-indigo-900 bg-amber-100 border border-amber-300 px-2.5 py-1 rounded-md text-xs md:text-sm whitespace-nowrap shadow-xs">
+                                    Rp ${avgTotal.toLocaleString('id-ID')}
+                                </span>
+                            </td>
+                            <td class="py-3 px-3 text-right font-bold text-emerald-700 whitespace-nowrap">
+                                Rp ${(jasaMakloon || 0).toLocaleString('id-ID')}
+                            </td>
+                            <td class="py-3 px-3 font-semibold text-gray-700 uppercase whitespace-nowrap">
+                                <span class="bg-gray-100 px-2 py-0.5 rounded text-xs">${item.vendor || '-'}</span>
                             </td>
                             <td class="py-3 px-3 text-center text-[11px] text-gray-400 whitespace-nowrap">
                                 ${item.updatedAt || item.createdAt || '-'}
@@ -13542,10 +13800,16 @@
                             ${canEdit ? `
                             <td class="py-3 px-3 text-center whitespace-nowrap">
                                 <div class="flex items-center justify-center space-x-1.5">
-                                    <button onclick="editMakloonCost('${item.id}')" title="Edit" class="w-7 h-7 bg-amber-50 hover:bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center transition">
-                                        <i class="fa-solid fa-pen text-xs"></i>
+                                    <button onclick="openMatrixCostModal('${item.id}')" title="Buka / Edit Matrix" class="w-7 h-7 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg flex items-center justify-center transition shadow-xs">
+                                        <i class="fa-solid fa-pen-to-square text-xs"></i>
                                     </button>
-                                    <button onclick="deleteMakloonCost('${item.id}')" title="Hapus" class="w-7 h-7 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg flex items-center justify-center transition">
+                                    <button onclick="duplicateMatrixCost('${item.id}')" title="Duplikat Model" class="w-7 h-7 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg flex items-center justify-center transition shadow-xs">
+                                        <i class="fa-solid fa-copy text-xs"></i>
+                                    </button>
+                                    <button onclick="printMatrixCost('${item.id}')" title="Cetak Sheet" class="w-7 h-7 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg flex items-center justify-center transition shadow-xs">
+                                        <i class="fa-solid fa-print text-xs"></i>
+                                    </button>
+                                    <button onclick="deleteMatrixCost('${item.id}')" title="Hapus" class="w-7 h-7 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg flex items-center justify-center transition shadow-xs">
                                         <i class="fa-solid fa-trash text-xs"></i>
                                     </button>
                                 </div>
@@ -13556,15 +13820,15 @@
                 tbody.innerHTML = html;
             }
 
-            // Pagination info & buttons
             renderMakloonCostPagination(totalData, totalPages);
         }
 
+        // Update KPI Header Cards
         function updateMakloonCostKPI(data) {
             const kpiTotal = document.getElementById('kpiTotalModelCost');
+            const kpiArticles = document.getElementById('kpiTotalArticlesCovered');
             const kpiAvg = document.getElementById('kpiAvgCost');
-            const kpiMax = document.getElementById('kpiMaxCost');
-            const kpiVendors = document.getElementById('kpiTotalVendorCost');
+            const kpiJasa = document.getElementById('kpiAvgJasaMakloon');
 
             if (!kpiTotal) return;
 
@@ -13572,24 +13836,37 @@
             kpiTotal.innerText = totalCount.toLocaleString('id-ID');
 
             if (totalCount === 0) {
+                if (kpiArticles) kpiArticles.innerText = "0";
                 if (kpiAvg) kpiAvg.innerText = "Rp 0";
-                if (kpiMax) kpiMax.innerText = "Rp 0";
-                if (kpiVendors) kpiVendors.innerText = "0";
+                if (kpiJasa) kpiJasa.innerText = "Rp 0";
                 return;
             }
 
-            const costs = data.map(d => parseInt(d.total) || 0).filter(c => c > 0);
-            const sumCost = costs.reduce((a, b) => a + b, 0);
-            const avgCost = costs.length > 0 ? Math.round(sumCost / costs.length) : 0;
-            const maxCost = costs.length > 0 ? Math.max(...costs) : 0;
+            let articleSet = new Set();
+            let allAvgCosts = [];
+            let allJasaMakloon = [];
 
-            const vendorSet = new Set(data.map(d => (d.vendor || '').trim().toUpperCase()).filter(Boolean));
+            data.forEach(item => {
+                const { avgTotal, jasaMakloon } = calculateMatrixRecordTotals(item);
+                if (avgTotal > 0) allAvgCosts.push(avgTotal);
+                if (jasaMakloon > 0) allJasaMakloon.push(jasaMakloon);
 
-            if (kpiAvg) kpiAvg.innerText = "Rp " + avgCost.toLocaleString('id-ID');
-            if (kpiMax) kpiMax.innerText = "Rp " + maxCost.toLocaleString('id-ID');
-            if (kpiVendors) kpiVendors.innerText = vendorSet.size.toLocaleString('id-ID');
+                if (Array.isArray(item.articles)) {
+                    item.articles.forEach(a => { if (a) articleSet.add(a.trim().toUpperCase()); });
+                } else if (item.artikel) {
+                    articleSet.add(item.artikel.trim().toUpperCase());
+                }
+            });
+
+            const avgHPP = allAvgCosts.length > 0 ? Math.round(allAvgCosts.reduce((a, b) => a + b, 0) / allAvgCosts.length) : 0;
+            const avgMakloon = allJasaMakloon.length > 0 ? Math.round(allJasaMakloon.reduce((a, b) => a + b, 0) / allJasaMakloon.length) : 0;
+
+            if (kpiArticles) kpiArticles.innerText = articleSet.size.toLocaleString('id-ID');
+            if (kpiAvg) kpiAvg.innerText = "Rp " + avgHPP.toLocaleString('id-ID');
+            if (kpiJasa) kpiJasa.innerText = "Rp " + avgMakloon.toLocaleString('id-ID');
         }
 
+        // Pagination UI
         function renderMakloonCostPagination(totalData, totalPages) {
             const infoEl = document.getElementById('makloonCostPaginationInfo');
             const btnsEl = document.getElementById('makloonCostPaginationBtns');
@@ -13597,7 +13874,7 @@
 
             const startIdx = totalData === 0 ? 0 : (makloonCostPage - 1) * makloonCostPerPage + 1;
             const endIdx = Math.min(makloonCostPage * makloonCostPerPage, totalData);
-            infoEl.innerText = `Menampilkan ${startIdx}-${endIdx} dari ${totalData} data`;
+            infoEl.innerText = `Menampilkan ${startIdx}-${endIdx} dari ${totalData} model seri`;
 
             let btnHtml = '';
             btnHtml += `<button onclick="changeMakloonCostPage(${makloonCostPage - 1})" ${makloonCostPage <= 1 ? 'disabled class="px-2.5 py-1 text-gray-300 cursor-not-allowed"' : 'class="px-2.5 py-1 text-gray-600 hover:bg-gray-100 rounded"'}>Prev</button>`;
@@ -13619,37 +13896,67 @@
             renderMakloonCostTable();
         }
 
-        function openMakloonCostModal(isEdit = false) {
-            const modal = document.getElementById('modal-makloon-cost');
+        // ==========================================
+        // MATRIX COST SHEET EDITOR (CORE ENGINE)
+        // ==========================================
+
+        function openMatrixCostModal(id = null, isDuplicate = false) {
+            const modal = document.getElementById('modal-matrix-cost');
             if (!modal) return;
 
-            // Populate vendor suggestions datalist
-            const datalist = document.getElementById('listVendorSuggestions');
+            // Populate vendor suggestions
+            const datalist = document.getElementById('listVendorSuggestionsCost');
             if (datalist) {
                 const vendors = [...new Set([
                     ...db_makloon_cost.map(c => (c.vendor || '').trim().toUpperCase()),
                     ...db_po.map(p => (p.makloon || '').trim().toUpperCase()),
                     'PORTI', 'FAJAR MAKMUR'
                 ].filter(Boolean))].sort();
-
                 datalist.innerHTML = vendors.map(v => `<option value="${v}">`).join('');
             }
 
-            if (!isEdit) {
-                document.getElementById('modalMakloonCostTitle').innerText = "Tambah Setting Cost Makloon";
-                document.getElementById('costEditId').value = "";
-                document.getElementById('costArtikel').value = "";
-                document.getElementById('costMerk').value = "DAVCLAR";
-                document.getElementById('costVendor').value = "";
-                document.getElementById('costKategori').value = "";
-                document.getElementById('costPotong').value = "";
-                document.getElementById('costJahit').value = "";
-                document.getElementById('costAssembling').value = "";
-                document.getElementById('costFinishing').value = "";
-                document.getElementById('costLain').value = "";
-                document.getElementById('costCatatan').value = "";
-                calculateLiveTotalCost();
+            if (id) {
+                const existing = db_makloon_cost.find(c => c.id === id);
+                if (existing) {
+                    currentMatrixData = JSON.parse(JSON.stringify(existing));
+                    if (isDuplicate) {
+                        currentMatrixData.id = "";
+                        currentMatrixData.model = (currentMatrixData.model || currentMatrixData.artikel || '') + " (COPY)";
+                    }
+                }
+            } else {
+                // New Empty / Template Sheet
+                currentMatrixData = {
+                    id: "",
+                    model: "",
+                    merk: "DAVCLAR",
+                    vendor: "PORTI",
+                    kategori: "SANDAL",
+                    articles: ["3301", "3302", "3303"],
+                    rows: defaultShoeBOMTemplate.map(r => ({
+                        ...r,
+                        usage: ["0", "0", "0"],
+                        rawUsage: ["0", "0", "0"]
+                    })),
+                    catatan: ""
+                };
             }
+
+            // Fill Header Inputs
+            document.getElementById('matrixEditId').value = currentMatrixData.id || "";
+            document.getElementById('matrixInpModel').value = currentMatrixData.model || currentMatrixData.artikel || "";
+            document.getElementById('matrixInpMerk').value = currentMatrixData.merk || "DAVCLAR";
+            document.getElementById('matrixInpVendor').value = currentMatrixData.vendor || "";
+            document.getElementById('matrixInpKategori').value = currentMatrixData.kategori || "";
+            document.getElementById('matrixInpCatatan').value = currentMatrixData.catatan || "";
+
+            document.getElementById('matrixModalTitle').innerText = isDuplicate
+                ? "Duplikat Cost Sheet & BOM"
+                : (currentMatrixData.id ? "Edit Cost Sheet & BOM Matrix" : "Buat Cost Sheet & BOM Baru");
+
+            renderMatrixArticleChips();
+            renderMatrixTable();
+            updateMatrixLiveHeader();
 
             const box = modal.querySelector('.bg-white');
             modal.classList.remove('hidden');
@@ -13659,211 +13966,526 @@
             }, 10);
         }
 
-        function closeMakloonCostModal() {
-            const modal = document.getElementById('modal-makloon-cost');
+        function closeMatrixCostModal() {
+            const modal = document.getElementById('modal-matrix-cost');
             if (!modal) return;
             const box = modal.querySelector('.bg-white');
             modal.classList.add('opacity-0');
             if (box) box.classList.add('scale-95');
             setTimeout(() => {
                 modal.classList.add('hidden');
+                currentMatrixData = null;
             }, 300);
         }
 
-        function calculateLiveTotalCost() {
-            const potong = parseInt(document.getElementById('costPotong').value) || 0;
-            const jahit = parseInt(document.getElementById('costJahit').value) || 0;
-            const assembling = parseInt(document.getElementById('costAssembling').value) || 0;
-            const finishing = parseInt(document.getElementById('costFinishing').value) || 0;
-            const lain = parseInt(document.getElementById('costLain').value) || 0;
-
-            const total = potong + jahit + assembling + finishing + lain;
-            const displayEl = document.getElementById('displayLiveTotalCost');
-            if (displayEl) {
-                displayEl.innerText = "Rp " + total.toLocaleString('id-ID');
-            }
-            return total;
-        }
-
-        function handleCostArtikelInput(val) {
-            const sugBox = document.getElementById('costArtikelSuggestions');
-            if (!sugBox) return;
-
-            const q = (val || '').toLowerCase().trim();
-            if (q.length === 0) {
-                sugBox.classList.add('hidden');
-                sugBox.innerHTML = '';
-                return;
-            }
-
-            const matches = db_databarang.filter(b => {
-                const art = (b.artikel || b.namaBarang || '').toLowerCase();
-                const mrk = (b.merk || '').toLowerCase();
-                return art.includes(q) || mrk.includes(q);
-            }).slice(0, 8);
-
-            if (matches.length === 0) {
-                sugBox.classList.add('hidden');
-                sugBox.innerHTML = '';
-                return;
-            }
+        // Render chips artikel (B1..Bn)
+        function renderMatrixArticleChips() {
+            const container = document.getElementById('matrixArticleChips');
+            if (!container || !currentMatrixData) return;
 
             let html = '';
-            matches.forEach(b => {
-                const safeArt = (b.artikel || b.namaBarang || '').replace(/'/g, "\\'");
-                const safeMerk = (b.merk || 'DAVCLAR').replace(/'/g, "\\'");
-                const safeKat = (b.kategori || '').replace(/'/g, "\\'");
-                const safeHpp = parseInt(b.hpp) || 0;
-
+            currentMatrixData.articles.forEach((art, idx) => {
                 html += `
-                    <div onclick="selectCostArtikel('${safeArt}', '${safeMerk}', '${safeKat}', ${safeHpp})" class="px-3.5 py-2 hover:bg-indigo-50 cursor-pointer flex justify-between items-center transition">
-                        <div>
-                            <div class="text-xs font-bold text-gray-800 uppercase">${b.artikel || b.namaBarang}</div>
-                            <div class="text-[10px] text-gray-400">${b.merk || 'DAVCLAR'} ${b.kategori ? '• ' + b.kategori : ''}</div>
-                        </div>
-                        ${safeHpp > 0 ? `<span class="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded font-bold">HPP: Rp ${safeHpp.toLocaleString('id-ID')}</span>` : ''}
+                    <div class="flex items-center bg-white border border-indigo-200 rounded-lg shadow-xs overflow-hidden">
+                        <span class="bg-indigo-600 text-white font-black text-[10px] px-2 py-1 uppercase">B${idx + 1}</span>
+                        <input type="text" value="${art}" oninput="updateMatrixArticleCode(${idx}, this.value)" placeholder="Kode" class="w-16 px-2 py-1 text-xs font-bold uppercase text-gray-800 focus:outline-none">
+                        ${currentMatrixData.articles.length > 1 ? `
+                            <button type="button" onclick="removeMatrixArticleColumn(${idx})" title="Hapus Kolom Artikel" class="px-1.5 py-1 text-gray-400 hover:text-red-500 hover:bg-red-50 transition">
+                                <i class="fa-solid fa-xmark text-xs"></i>
+                            </button>
+                        ` : ''}
                     </div>
                 `;
             });
-
-            sugBox.innerHTML = html;
-            sugBox.classList.remove('hidden');
+            container.innerHTML = html;
         }
 
-        function selectCostArtikel(artikel, merk, kategori, hpp) {
-            document.getElementById('costArtikel').value = artikel;
-            if (merk) document.getElementById('costMerk').value = merk;
-            if (kategori) document.getElementById('costKategori').value = kategori;
+        function addMatrixArticleColumn() {
+            if (!currentMatrixData) return;
+            const nextIdx = currentMatrixData.articles.length + 1;
+            let nextCode = "330" + nextIdx;
+            
+            // Cek jika ada kode terakhir bertipe angka
+            const lastArt = currentMatrixData.articles[currentMatrixData.articles.length - 1];
+            if (lastArt && !isNaN(parseInt(lastArt))) {
+                nextCode = String(parseInt(lastArt) + 1);
+            }
 
-            // Jika belum ada nilai di komponen biaya dan HPP terisi, jadikan default jahit/total
-            if (hpp > 0) {
-                const currentTotal = calculateLiveTotalCost();
-                if (currentTotal === 0) {
-                    document.getElementById('costJahit').value = hpp;
-                    calculateLiveTotalCost();
+            currentMatrixData.articles.push(nextCode);
+            // Tambahkan kolom usage 0 ke tiap baris
+            currentMatrixData.rows.forEach(r => {
+                if (!Array.isArray(r.usage)) r.usage = [];
+                r.usage.push("0");
+                if (r.rawUsage) r.rawUsage.push("0");
+            });
+
+            renderMatrixArticleChips();
+            renderMatrixTable();
+            updateMatrixLiveTotals();
+        }
+
+        function removeMatrixArticleColumn(idx) {
+            if (!currentMatrixData || currentMatrixData.articles.length <= 1) return;
+            const artCode = currentMatrixData.articles[idx];
+            if (confirm(`Hapus kolom artikel ${artCode}? Data pemakaian bahan untuk artikel ini akan ikut terhapus dari tabel.`)) {
+                currentMatrixData.articles.splice(idx, 1);
+                currentMatrixData.rows.forEach(r => {
+                    if (Array.isArray(r.usage)) r.usage.splice(idx, 1);
+                    if (Array.isArray(r.rawUsage)) r.rawUsage.splice(idx, 1);
+                });
+                renderMatrixArticleChips();
+                renderMatrixTable();
+                updateMatrixLiveTotals();
+            }
+        }
+
+        function updateMatrixArticleCode(idx, val) {
+            if (!currentMatrixData || !currentMatrixData.articles[idx]) return;
+            currentMatrixData.articles[idx] = val.trim().toUpperCase();
+            
+            // Update table headers & banner totals labels
+            const headB = document.getElementById(`th-col-b-${idx}`);
+            if (headB) headB.innerHTML = `B${idx + 1}<div class="text-[9px] text-amber-300 font-normal">(${currentMatrixData.articles[idx]})</div>`;
+            const headH = document.getElementById(`th-col-h-${idx}`);
+            if (headH) headH.innerHTML = `H${idx + 1}<div class="text-[9px] text-emerald-300 font-normal">(${currentMatrixData.articles[idx]})</div>`;
+            
+            updateMatrixLiveTotals();
+        }
+
+        function updateMatrixLiveHeader() {
+            if (!currentMatrixData) return;
+            const modelVal = document.getElementById('matrixInpModel').value.trim().toUpperCase() || 'UNTITLED';
+            const merkVal = document.getElementById('matrixInpMerk').value;
+            const bannerEl = document.getElementById('excelBannerModel');
+            if (bannerEl) bannerEl.innerText = `${modelVal} (${merkVal})`;
+        }
+
+        // Render Matrix Spreadsheet Table
+        function renderMatrixTable() {
+            const thead = document.getElementById('matrixTableHead');
+            const tbody = document.getElementById('matrixTableBody');
+            const tfoot = document.getElementById('matrixTableFoot');
+            if (!thead || !tbody || !tfoot || !currentMatrixData) return;
+
+            const articles = currentMatrixData.articles;
+            const numArt = articles.length;
+
+            // 1. Build Header
+            let thHtml = `<tr>
+                <th class="py-2.5 px-2 text-center w-10 border-r border-slate-700">No</th>
+                <th class="py-2.5 px-3 min-w-[180px] border-r border-slate-700">Nama Bahan / Komponen</th>
+                <th class="py-2.5 px-3 min-w-[130px] border-r border-slate-700">Warna</th>`;
+
+            articles.forEach((art, i) => {
+                thHtml += `
+                    <th id="th-col-b-${i}" class="py-2.5 px-2 text-center min-w-[85px] border-r border-slate-700 bg-slate-900/60 text-amber-300">
+                        B${i + 1}
+                        <div class="text-[9px] text-amber-200 font-normal">(${art || '-'})</div>
+                    </th>
+                `;
+            });
+
+            thHtml += `
+                <th class="py-2.5 px-2 text-center w-20 border-r border-slate-700">Satuan</th>
+                <th class="py-2.5 px-3 text-right min-w-[110px] border-r border-slate-700 bg-slate-900/40">Harga (Rp)</th>
+            `;
+
+            articles.forEach((art, i) => {
+                thHtml += `
+                    <th id="th-col-h-${i}" class="py-2.5 px-2 text-right min-w-[95px] border-r border-slate-700 bg-slate-900/60 text-emerald-300">
+                        H${i + 1}
+                        <div class="text-[9px] text-emerald-200 font-normal">(${art || '-'})</div>
+                    </th>
+                `;
+            });
+
+            thHtml += `<th class="py-2.5 px-2 text-center w-14">Aksi</th></tr>`;
+            thead.innerHTML = thHtml;
+
+            // 2. Build Rows
+            let trHtml = '';
+            currentMatrixData.rows.forEach((row, rowIdx) => {
+                const no = rowIdx + 1;
+                const harga = parseFloat(row.harga) || 0;
+                const isMakloonRow = (row.bahan || '').toUpperCase().includes('JASA MAKLOON') || (row.bahan || '').toUpperCase() === 'MAKLOON';
+
+                trHtml += `
+                    <tr class="hover:bg-amber-50/20 transition border-b border-gray-200 ${isMakloonRow ? 'bg-amber-50/40 font-semibold' : ''}">
+                        <td class="py-2 px-1 text-center font-bold text-gray-400 border-r border-gray-200">${no}</td>
+                        
+                        <!-- Nama Bahan -->
+                        <td class="py-1.5 px-2 border-r border-gray-200">
+                            <input type="text" value="${(row.bahan || '').replace(/"/g, '&quot;')}" oninput="handleMatrixBahanInput(this, ${rowIdx})" placeholder="Nama komponen..." class="w-full px-2 py-1 border border-gray-300 rounded text-xs font-bold uppercase text-gray-800 focus:ring-1 focus:ring-indigo-500 outline-none">
+                        </td>
+                        
+                        <!-- Warna -->
+                        <td class="py-1.5 px-2 border-r border-gray-200">
+                            <input type="text" value="${(row.warna || '').replace(/"/g, '&quot;')}" oninput="handleMatrixWarnaInput(this, ${rowIdx})" placeholder="Cth: GOLD / HITAM" class="w-full px-2 py-1 border border-gray-300 rounded text-xs uppercase text-gray-700 focus:ring-1 focus:ring-indigo-500 outline-none">
+                        </td>
+                `;
+
+                // B1..Bn Inputs (FRACTION SUPPORTED)
+                articles.forEach((art, artIdx) => {
+                    const rawVal = (row.rawUsage && row.rawUsage[artIdx] !== undefined) ? row.rawUsage[artIdx] : (row.usage ? row.usage[artIdx] : "0");
+                    const dispVal = (row.usage && row.usage[artIdx] !== undefined) ? row.usage[artIdx] : "0";
+                    const toolTip = (rawVal && rawVal.includes('/')) ? `Rumus: ${rawVal} = ${dispVal}` : `Pemakaian per pasang`;
+
+                    trHtml += `
+                        <td class="py-1.5 px-1.5 border-r border-gray-200 bg-amber-50/20">
+                            <input type="text"
+                                   id="inp-b-${rowIdx}-${artIdx}"
+                                   value="${dispVal}"
+                                   data-raw="${rawVal}"
+                                   title="${toolTip}"
+                                   oninput="handleMatrixCellInput(this, ${rowIdx}, ${artIdx})"
+                                   onblur="handleMatrixCellBlur(this, ${rowIdx}, ${artIdx})"
+                                   onfocus="handleMatrixCellFocus(this, ${rowIdx}, ${artIdx})"
+                                   placeholder="0 atau 1/18"
+                                   class="w-full px-1.5 py-1 border border-amber-300 rounded text-xs font-bold text-amber-950 text-right focus:bg-amber-100 focus:ring-1 focus:ring-amber-500 outline-none transition">
+                        </td>
+                    `;
+                });
+
+                // Satuan
+                trHtml += `
+                    <td class="py-1.5 px-1 border-r border-gray-200 text-center">
+                        <select onchange="handleMatrixSatuanInput(this, ${rowIdx})" class="w-full px-1 py-1 border border-gray-300 rounded text-[11px] font-bold text-gray-700 bg-white focus:outline-none">
+                            <option value="PSG" ${row.satuan === 'PSG' ? 'selected' : ''}>PSG</option>
+                            <option value="M" ${row.satuan === 'M' ? 'selected' : ''}>M</option>
+                            <option value="YARD" ${row.satuan === 'YARD' ? 'selected' : ''}>YARD</option>
+                            <option value="PCS" ${row.satuan === 'PCS' ? 'selected' : ''}>PCS</option>
+                            <option value="SET" ${row.satuan === 'SET' ? 'selected' : ''}>SET</option>
+                            <option value="LEM" ${row.satuan === 'LEM' ? 'selected' : ''}>LEM</option>
+                            <option value="ROLL" ${row.satuan === 'ROLL' ? 'selected' : ''}>ROLL</option>
+                            <option value="LBR" ${row.satuan === 'LBR' ? 'selected' : ''}>LBR</option>
+                        </select>
+                    </td>
+                    
+                    <!-- Harga Satuan -->
+                    <td class="py-1.5 px-2 border-r border-gray-200 bg-gray-50/50">
+                        <input type="number" min="0" step="any" value="${harga || ''}" oninput="handleMatrixHargaInput(this, ${rowIdx})" placeholder="0" class="w-full px-2 py-1 border border-gray-300 rounded text-xs font-bold text-gray-900 text-right focus:ring-1 focus:ring-indigo-500 outline-none">
+                    </td>
+                `;
+
+                // H1..Hn Calculated Columns
+                articles.forEach((art, artIdx) => {
+                    const u = parseFractionOrNumber(row.usage ? row.usage[artIdx] : 0);
+                    const cost = Math.round(u * harga);
+
+                    trHtml += `
+                        <td id="cell-h-${rowIdx}-${artIdx}" class="py-2 px-2 text-right font-extrabold text-emerald-800 border-r border-gray-200 bg-emerald-50/20 whitespace-nowrap text-xs">
+                            Rp ${cost.toLocaleString('id-ID')}
+                        </td>
+                    `;
+                });
+
+                // Aksi (Delete Row & Move)
+                trHtml += `
+                    <td class="py-1.5 px-1 text-center whitespace-nowrap">
+                        <button type="button" onclick="deleteMatrixRow(${rowIdx})" title="Hapus Baris" class="w-6 h-6 text-gray-400 hover:text-red-600 rounded flex items-center justify-center transition">
+                            <i class="fa-solid fa-trash text-xs"></i>
+                        </button>
+                    </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = trHtml;
+
+            // 3. Build Foot Totals
+            let footHtml = `<tr>
+                <td colspan="3" class="py-3 px-3 text-right font-black uppercase text-gray-800 tracking-wider border-r border-gray-300 bg-slate-200">
+                    TOTAL BIAYA / HPP:
+                </td>
+            `;
+
+            articles.forEach((art, i) => {
+                footHtml += `<td class="py-2 px-1 border-r border-gray-300 bg-amber-100/50 text-center text-[10px] text-gray-400 font-semibold">-</td>`;
+            });
+
+            footHtml += `
+                <td class="border-r border-gray-300 bg-slate-200"></td>
+                <td class="border-r border-gray-300 bg-slate-200 text-right text-xs font-black text-gray-600 px-2 py-3">SUBTOTAL</td>
+            `;
+
+            articles.forEach((art, i) => {
+                footHtml += `
+                    <td id="foot-total-${i}" class="py-3 px-2 text-right font-black text-slate-950 border-r border-gray-300 bg-emerald-100/70 text-xs md:text-sm whitespace-nowrap shadow-inner">
+                        Rp 0
+                    </td>
+                `;
+            });
+
+            footHtml += `<td class="bg-slate-200"></td></tr>`;
+            tfoot.innerHTML = footHtml;
+
+            updateMatrixLiveTotals();
+        }
+
+        // Live Math & Fraction Input Handlers
+        function handleMatrixCellInput(el, rowIdx, artIdx) {
+            if (!currentMatrixData || !currentMatrixData.rows[rowIdx]) return;
+            const val = el.value.trim();
+            const evaluated = parseFractionOrNumber(val);
+            const harga = parseFloat(currentMatrixData.rows[rowIdx].harga) || 0;
+            const cost = Math.round(evaluated * harga);
+
+            const cellH = document.getElementById(`cell-h-${rowIdx}-${artIdx}`);
+            if (cellH) cellH.innerText = 'Rp ' + cost.toLocaleString('id-ID');
+
+            // Temporarily store evaluated in state
+            currentMatrixData.rows[rowIdx].usage[artIdx] = val;
+            updateMatrixLiveTotals();
+        }
+
+        function handleMatrixCellBlur(el, rowIdx, artIdx) {
+            if (!currentMatrixData || !currentMatrixData.rows[rowIdx]) return;
+            const raw = el.value.trim();
+            const evaluated = parseFractionOrNumber(raw);
+            const formatted = formatFractionDisplay(evaluated);
+
+            if (raw.includes('/') || raw.startsWith('=')) {
+                el.value = formatted;
+                el.setAttribute('data-raw', raw);
+                el.setAttribute('title', `Rumus: ${raw} = ${formatted}`);
+                currentMatrixData.rows[rowIdx].usage[artIdx] = formatted;
+                if (!currentMatrixData.rows[rowIdx].rawUsage) currentMatrixData.rows[rowIdx].rawUsage = [];
+                currentMatrixData.rows[rowIdx].rawUsage[artIdx] = raw;
+            } else {
+                el.value = formatted;
+                el.removeAttribute('data-raw');
+                el.setAttribute('title', `Pemakaian per pasang: ${formatted}`);
+                currentMatrixData.rows[rowIdx].usage[artIdx] = formatted;
+                if (currentMatrixData.rows[rowIdx].rawUsage) {
+                    currentMatrixData.rows[rowIdx].rawUsage[artIdx] = formatted;
                 }
             }
 
-            const sugBox = document.getElementById('costArtikelSuggestions');
-            if (sugBox) {
-                sugBox.classList.add('hidden');
-                sugBox.innerHTML = '';
+            // Recalculate row's H column
+            const harga = parseFloat(currentMatrixData.rows[rowIdx].harga) || 0;
+            const cost = Math.round(evaluated * harga);
+            const cellH = document.getElementById(`cell-h-${rowIdx}-${artIdx}`);
+            if (cellH) cellH.innerText = 'Rp ' + cost.toLocaleString('id-ID');
+
+            updateMatrixLiveTotals();
+        }
+
+        function handleMatrixCellFocus(el, rowIdx, artIdx) {
+            if (!currentMatrixData || !currentMatrixData.rows[rowIdx]) return;
+            // Jika ada rumus pecahan mentah e.g. "1/18", tampilkan saat user fokus agar mudah diedit kembali
+            if (currentMatrixData.rows[rowIdx].rawUsage && currentMatrixData.rows[rowIdx].rawUsage[artIdx]) {
+                const raw = currentMatrixData.rows[rowIdx].rawUsage[artIdx];
+                if (raw && raw.includes('/')) {
+                    el.value = raw;
+                    el.select();
+                }
             }
         }
 
-        function saveMakloonCost(e) {
-            e.preventDefault();
+        function handleMatrixHargaInput(el, rowIdx) {
+            if (!currentMatrixData || !currentMatrixData.rows[rowIdx]) return;
+            const h = parseFloat(el.value) || 0;
+            currentMatrixData.rows[rowIdx].harga = h;
 
-            const editId = document.getElementById('costEditId').value;
-            const artikel = document.getElementById('costArtikel').value.trim().toUpperCase();
-            const merk = document.getElementById('costMerk').value.trim().toUpperCase();
-            const vendor = document.getElementById('costVendor').value.trim().toUpperCase();
-            const kategori = document.getElementById('costKategori').value.trim().toUpperCase();
+            currentMatrixData.articles.forEach((art, artIdx) => {
+                const u = parseFractionOrNumber(currentMatrixData.rows[rowIdx].usage[artIdx]);
+                const cost = Math.round(u * h);
+                const cellH = document.getElementById(`cell-h-${rowIdx}-${artIdx}`);
+                if (cellH) cellH.innerText = 'Rp ' + cost.toLocaleString('id-ID');
+            });
 
-            const potong = parseInt(document.getElementById('costPotong').value) || 0;
-            const jahit = parseInt(document.getElementById('costJahit').value) || 0;
-            const assembling = parseInt(document.getElementById('costAssembling').value) || 0;
-            const finishing = parseInt(document.getElementById('costFinishing').value) || 0;
-            const lain = parseInt(document.getElementById('costLain').value) || 0;
-            const total = calculateLiveTotalCost();
+            updateMatrixLiveTotals();
+        }
 
-            const catatan = document.getElementById('costCatatan').value.trim();
+        function handleMatrixBahanInput(el, rowIdx) {
+            if (!currentMatrixData || !currentMatrixData.rows[rowIdx]) return;
+            currentMatrixData.rows[rowIdx].bahan = el.value.trim().toUpperCase();
+        }
 
-            if (!artikel || !vendor) {
-                if (typeof showToast === 'function') showToast("Artikel dan Vendor Makloon wajib diisi!", "warning");
-                else alert("Artikel dan Vendor Makloon wajib diisi!");
+        function handleMatrixWarnaInput(el, rowIdx) {
+            if (!currentMatrixData || !currentMatrixData.rows[rowIdx]) return;
+            currentMatrixData.rows[rowIdx].warna = el.value.trim().toUpperCase();
+        }
+
+        function handleMatrixSatuanInput(el, rowIdx) {
+            if (!currentMatrixData || !currentMatrixData.rows[rowIdx]) return;
+            currentMatrixData.rows[rowIdx].satuan = el.value;
+        }
+
+        // Live Totals Calculation (Matches Excel)
+        function updateMatrixLiveTotals() {
+            if (!currentMatrixData) return;
+            const articles = currentMatrixData.articles;
+            const numArt = articles.length;
+            const articleSums = new Array(numArt).fill(0);
+
+            currentMatrixData.rows.forEach((row, rowIdx) => {
+                const h = parseFloat(row.harga) || 0;
+                articles.forEach((art, artIdx) => {
+                    const u = parseFractionOrNumber(row.usage ? row.usage[artIdx] : 0);
+                    articleSums[artIdx] += Math.round(u * h);
+                });
+            });
+
+            // Update Table Foot
+            articleSums.forEach((sum, i) => {
+                const footCell = document.getElementById(`foot-total-${i}`);
+                if (footCell) footCell.innerText = 'Rp ' + sum.toLocaleString('id-ID');
+            });
+
+            // Update Excel Banner
+            const grandTotalSum = articleSums.reduce((a, b) => a + b, 0);
+            const grandAvg = numArt > 0 ? Math.round(grandTotalSum / numArt) : 0;
+
+            const bannerAvg = document.getElementById('excelBannerAvg');
+            if (bannerAvg) bannerAvg.innerText = 'Rp ' + grandAvg.toLocaleString('id-ID');
+
+            const bannerArtContainer = document.getElementById('excelBannerArticleTotals');
+            if (bannerArtContainer) {
+                let html = '';
+                articles.forEach((art, i) => {
+                    const c = articleSums[i] || 0;
+                    html += `
+                        <div class="bg-slate-800 text-white px-3 py-1.5 rounded-lg border border-slate-700 text-xs flex items-center gap-1.5 shadow-sm">
+                            <span class="text-amber-300 font-bold uppercase">${art} (H${i + 1}):</span>
+                            <span class="font-black text-emerald-300">Rp ${c.toLocaleString('id-ID')}</span>
+                        </div>
+                    `;
+                });
+                bannerArtContainer.innerHTML = html;
+            }
+        }
+
+        // Add, Delete & Move Rows
+        function addMatrixRow() {
+            if (!currentMatrixData) return;
+            const numArt = currentMatrixData.articles.length;
+            currentMatrixData.rows.push({
+                bahan: "",
+                warna: "",
+                usage: new Array(numArt).fill("0"),
+                rawUsage: new Array(numArt).fill("0"),
+                satuan: "PSG",
+                harga: 0
+            });
+            renderMatrixTable();
+
+            // Focus on newly added row bahan input
+            setTimeout(() => {
+                const rows = document.querySelectorAll('#matrixTableBody tr');
+                if (rows.length > 0) {
+                    const lastInp = rows[rows.length - 1].querySelector('input[type="text"]');
+                    if (lastInp) lastInp.focus();
+                }
+            }, 50);
+        }
+
+        function deleteMatrixRow(rowIdx) {
+            if (!currentMatrixData || !currentMatrixData.rows[rowIdx]) return;
+            currentMatrixData.rows.splice(rowIdx, 1);
+            renderMatrixTable();
+        }
+
+        function loadMatrixShoeTemplate() {
+            if (!currentMatrixData) return;
+            if (confirm("Muat template standar 17 komponen sepatu & sandal? Baris bahan yang ada saat ini akan diganti dengan format standar.")) {
+                const numArt = currentMatrixData.articles.length;
+                currentMatrixData.rows = defaultShoeBOMTemplate.map(t => ({
+                    bahan: t.bahan,
+                    warna: t.warna,
+                    usage: new Array(numArt).fill("1"),
+                    rawUsage: new Array(numArt).fill("1"),
+                    satuan: t.satuan,
+                    harga: t.harga
+                }));
+                renderMatrixTable();
+            }
+        }
+
+        // Save Matrix Cost
+        function saveMatrixCost() {
+            if (!currentMatrixData) return;
+
+            const modelVal = document.getElementById('matrixInpModel').value.trim().toUpperCase();
+            const merkVal = document.getElementById('matrixInpMerk').value.trim().toUpperCase();
+            const vendorVal = document.getElementById('matrixInpVendor').value.trim().toUpperCase();
+            const katVal = document.getElementById('matrixInpKategori').value.trim().toUpperCase();
+            const catatanVal = document.getElementById('matrixInpCatatan').value.trim();
+
+            if (!modelVal) {
+                if (typeof showToast === 'function') showToast("Nama Model / Seri wajib diisi!", "warning");
+                else alert("Nama Model / Seri wajib diisi!");
+                document.getElementById('matrixInpModel').focus();
                 return;
             }
 
-            if (total <= 0) {
-                if (typeof showToast === 'function') showToast("Total tarif ongkos kerja makloon harus lebih dari 0!", "warning");
-                else alert("Total tarif ongkos kerja makloon harus lebih dari 0!");
+            if (!currentMatrixData.articles || currentMatrixData.articles.length === 0) {
+                if (typeof showToast === 'function') showToast("Minimal harus ada 1 sub-artikel dalam seri ini!", "warning");
+                else alert("Minimal harus ada 1 sub-artikel dalam seri ini!");
                 return;
             }
 
             const nowStr = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+            const editId = document.getElementById('matrixEditId').value;
+
+            // Clean rows
+            const cleanRows = currentMatrixData.rows.map(r => ({
+                bahan: (r.bahan || '').trim().toUpperCase(),
+                warna: (r.warna || '').trim().toUpperCase(),
+                usage: (r.usage || []).map(u => formatFractionDisplay(u)),
+                rawUsage: (r.rawUsage || []).map(ru => ru ? String(ru).trim() : "0"),
+                satuan: r.satuan || 'PSG',
+                harga: parseFloat(r.harga) || 0
+            })).filter(r => r.bahan.length > 0 || r.harga > 0);
+
+            const recordData = {
+                id: editId || ('CST-' + Date.now().toString(36).toUpperCase()),
+                model: modelVal,
+                artikel: currentMatrixData.articles[0] || modelVal, // Backward compatibility
+                merk: merkVal,
+                vendor: vendorVal || 'PORTI',
+                kategori: katVal,
+                articles: currentMatrixData.articles.map(a => a.trim().toUpperCase()),
+                rows: cleanRows,
+                catatan: catatanVal,
+                createdAt: currentMatrixData.createdAt || nowStr,
+                updatedAt: nowStr
+            };
 
             if (editId) {
-                // EDIT EXISTING
                 const idx = db_makloon_cost.findIndex(c => c.id === editId);
                 if (idx !== -1) {
-                    db_makloon_cost[idx] = {
-                        ...db_makloon_cost[idx],
-                        artikel,
-                        merk,
-                        vendor,
-                        kategori,
-                        potong,
-                        jahit,
-                        assembling,
-                        finishing,
-                        lain,
-                        total,
-                        catatan,
-                        updatedAt: nowStr
-                    };
+                    db_makloon_cost[idx] = recordData;
+                } else {
+                    db_makloon_cost.unshift(recordData);
                 }
             } else {
-                // INSERT NEW
-                const newId = 'CST-' + Date.now().toString(36).toUpperCase();
-                db_makloon_cost.unshift({
-                    id: newId,
-                    artikel,
-                    merk,
-                    vendor,
-                    kategori,
-                    potong,
-                    jahit,
-                    assembling,
-                    finishing,
-                    lain,
-                    total,
-                    catatan,
-                    createdAt: nowStr,
-                    updatedAt: nowStr
-                });
+                db_makloon_cost.unshift(recordData);
             }
 
-            // Simpan ke localStorage & Firebase
+            // Sync ke LocalStorage & Firebase
             localStorage.setItem('davclar_makloon_cost', JSON.stringify(db_makloon_cost));
             if (window.firebaseWrite) {
                 window.firebaseWrite('davclar_makloon_cost', db_makloon_cost);
             }
 
-            closeMakloonCostModal();
+            closeMatrixCostModal();
             renderMakloonCostTable();
 
-            if (typeof showToast === 'function') showToast("Setting Cost Makloon berhasil disimpan!", "success");
-            else alert("Setting Cost Makloon berhasil disimpan!");
+            if (typeof showToast === 'function') showToast(`Cost Sheet Seri ${modelVal} berhasil disimpan!`, "success");
+            else alert(`Cost Sheet Seri ${modelVal} berhasil disimpan!`);
         }
 
-        function editMakloonCost(id) {
+        // Duplicate Model
+        function duplicateMatrixCost(id) {
+            openMatrixCostModal(id, true);
+        }
+
+        // Delete Cost Sheet
+        function deleteMatrixCost(id) {
             const item = db_makloon_cost.find(c => c.id === id);
             if (!item) return;
 
-            openMakloonCostModal(true);
-
-            document.getElementById('modalMakloonCostTitle').innerText = "Edit Setting Cost Makloon";
-            document.getElementById('costEditId').value = item.id;
-            document.getElementById('costArtikel').value = item.artikel || '';
-            document.getElementById('costMerk').value = item.merk || 'DAVCLAR';
-            document.getElementById('costVendor').value = item.vendor || '';
-            document.getElementById('costKategori').value = item.kategori || '';
-
-            document.getElementById('costPotong').value = item.potong || '';
-            document.getElementById('costJahit').value = item.jahit || '';
-            document.getElementById('costAssembling').value = item.assembling || '';
-            document.getElementById('costFinishing').value = item.finishing || '';
-            document.getElementById('costLain').value = item.lain || '';
-            document.getElementById('costCatatan').value = item.catatan || '';
-
-            calculateLiveTotalCost();
-        }
-
-        function deleteMakloonCost(id) {
-            const item = db_makloon_cost.find(c => c.id === id);
-            if (!item) return;
-
+            const modelName = item.model || item.artikel || 'Model ini';
             const konfirmasi = () => {
                 db_makloon_cost = db_makloon_cost.filter(c => c.id !== id);
                 localStorage.setItem('davclar_makloon_cost', JSON.stringify(db_makloon_cost));
@@ -13871,13 +14493,13 @@
                     window.firebaseWrite('davclar_makloon_cost', db_makloon_cost);
                 }
                 renderMakloonCostTable();
-                if (typeof showToast === 'function') showToast("Data tarif makloon berhasil dihapus!", "success");
+                if (typeof showToast === 'function') showToast(`Cost Sheet Seri ${modelName} berhasil dihapus!`, "success");
             };
 
             if (typeof Swal !== 'undefined') {
                 Swal.fire({
-                    title: 'Hapus Setting Cost?',
-                    text: `Hapus tarif untuk artikel ${item.artikel} (${item.vendor})?`,
+                    title: 'Hapus Cost Sheet?',
+                    text: `Yakin ingin menghapus seluruh data kalkulasi BOM seri ${modelName}?`,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#ef4444',
@@ -13888,21 +14510,173 @@
                     if (res.isConfirmed) konfirmasi();
                 });
             } else {
-                if (confirm(`Hapus tarif untuk artikel ${item.artikel} (${item.vendor})?`)) {
+                if (confirm(`Yakin ingin menghapus seluruh data kalkulasi BOM seri ${modelName}?`)) {
                     konfirmasi();
                 }
             }
         }
 
-        // Tutup dropdown artikel cost jika klik di luar
-        document.addEventListener('click', function(e) {
-            const sugBox = document.getElementById('costArtikelSuggestions');
-            const inp = document.getElementById('costArtikel');
-            if (!sugBox || !inp) return;
-            if (!sugBox.contains(e.target) && e.target !== inp) {
-                sugBox.classList.add('hidden');
+        // Muat Contoh MIKA
+        function seedMikaDemo() {
+            const existingIdx = db_makloon_cost.findIndex(c => (c.model || c.artikel || '').toUpperCase() === 'MIKA');
+            if (existingIdx !== -1) {
+                db_makloon_cost[existingIdx] = JSON.parse(JSON.stringify(sampleMikaCostSheet));
+            } else {
+                db_makloon_cost.unshift(JSON.parse(JSON.stringify(sampleMikaCostSheet)));
             }
-        });
+            localStorage.setItem('davclar_makloon_cost', JSON.stringify(db_makloon_cost));
+            if (window.firebaseWrite) {
+                window.firebaseWrite('davclar_makloon_cost', db_makloon_cost);
+            }
+            renderMakloonCostTable();
+            if (typeof showToast === 'function') showToast("Contoh Cost Sheet Seri MIKA (3301-3303) berhasil dimuat!", "success");
+            else alert("Contoh Cost Sheet Seri MIKA berhasil dimuat!");
+        }
+
+        // Print Matrix Sheet
+        function printActiveMatrixSheet() {
+            if (!currentMatrixData) return;
+            printMatrixCost(currentMatrixData.id || 'ACTIVE');
+        }
+
+        function printMatrixCost(id) {
+            let item = null;
+            if (id === 'ACTIVE' && currentMatrixData) {
+                item = currentMatrixData;
+            } else {
+                item = db_makloon_cost.find(c => c.id === id);
+            }
+            if (!item) return;
+
+            const isMatrix = Array.isArray(item.rows) && Array.isArray(item.articles);
+            const articles = isMatrix ? item.articles : [item.artikel || '-'];
+            const { articleTotals, avgTotal, jasaMakloon } = calculateMatrixRecordTotals(item);
+
+            let thColsB = articles.map((art, i) => `<th style="padding:6px; border:1px solid #333; background:#f0f0f0; text-align:center;">B${i+1}<br><small>(${art})</small></th>`).join('');
+            let thColsH = articles.map((art, i) => `<th style="padding:6px; border:1px solid #333; background:#e6f4ea; text-align:right;">H${i+1}<br><small>(${art})</small></th>`).join('');
+
+            let rowsHtml = '';
+            if (isMatrix) {
+                item.rows.forEach((r, idx) => {
+                    const h = parseFloat(r.harga) || 0;
+                    let bCells = articles.map((art, i) => `<td style="padding:5px; border:1px solid #ccc; text-align:right;">${r.usage ? r.usage[i] : '0'}</td>`).join('');
+                    let hCells = articles.map((art, i) => {
+                        const u = parseFractionOrNumber(r.usage ? r.usage[i] : 0);
+                        const cost = Math.round(u * h);
+                        return `<td style="padding:5px; border:1px solid #ccc; text-align:right; font-weight:bold;">Rp ${cost.toLocaleString('id-ID')}</td>`;
+                    }).join('');
+
+                    rowsHtml += `
+                        <tr>
+                            <td style="padding:5px; border:1px solid #ccc; text-align:center;">${idx + 1}</td>
+                            <td style="padding:5px; border:1px solid #ccc; font-weight:bold;">${r.bahan || '-'}</td>
+                            <td style="padding:5px; border:1px solid #ccc;">${r.warna || '-'}</td>
+                            ${bCells}
+                            <td style="padding:5px; border:1px solid #ccc; text-align:center;">${r.satuan || 'PSG'}</td>
+                            <td style="padding:5px; border:1px solid #ccc; text-align:right;">Rp ${h.toLocaleString('id-ID')}</td>
+                            ${hCells}
+                        </tr>
+                    `;
+                });
+            }
+
+            let footTotalsHtml = articles.map((art, i) => `<td style="padding:6px; border:1px solid #333; text-align:right; font-weight:bold; background:#e6f4ea;">Rp ${(articleTotals[i] || 0).toLocaleString('id-ID')}</td>`).join('');
+
+            const printContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Cost Sheet & BOM - ${item.model || item.artikel || 'Makloon'}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; font-size: 11px; margin: 20px; color: #111; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+                        .header { display: flex; justify-content: space-between; border-bottom: 2px solid #222; padding-bottom: 10px; }
+                        .kpi-box { background: #fef08a; padding: 10px 15px; border: 1px solid #eab308; border-radius: 6px; text-align: center; }
+                        @media print {
+                            body { margin: 0; }
+                            @page { size: A4 landscape; margin: 10mm; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <div>
+                            <h2 style="margin:0; text-transform:uppercase;">PORTI SHOES / DAVCLAR</h2>
+                            <p style="margin:3px 0 0 0; font-size:12px; color:#555;">BILL OF MATERIALS (BOM) & SETTING COST MAKLOON</p>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:14px; font-weight:bold;">SERI: ${item.model || item.artikel || '-'} (${item.merk || 'DAVCLAR'})</div>
+                            <div style="font-size:11px; color:#666;">Vendor: ${item.vendor || 'PORTI'} • Tanggal: ${item.updatedAt || item.createdAt || '-'}</div>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; gap:10px;">
+                        <div class="kpi-box" style="flex:1;">
+                            <div style="font-size:10px; font-weight:bold; color:#854d0e;">RATA-RATA HPP SERI</div>
+                            <div style="font-size:16px; font-weight:black; color:#1e293b;">Rp ${avgTotal.toLocaleString('id-ID')}</div>
+                        </div>
+                        <div class="kpi-box" style="flex:1; background:#ecfdf5; border-color:#10b981;">
+                            <div style="font-size:10px; font-weight:bold; color:#065f46;">TARIF JASA MAKLOON</div>
+                            <div style="font-size:16px; font-weight:black; color:#065f46;">Rp ${jasaMakloon.toLocaleString('id-ID')}</div>
+                        </div>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="padding:6px; border:1px solid #333; background:#f0f0f0; width:30px;">No</th>
+                                <th style="padding:6px; border:1px solid #333; background:#f0f0f0; text-align:left;">Nama Bahan / Komponen</th>
+                                <th style="padding:6px; border:1px solid #333; background:#f0f0f0; text-align:left;">Warna</th>
+                                ${thColsB}
+                                <th style="padding:6px; border:1px solid #333; background:#f0f0f0;">Satuan</th>
+                                <th style="padding:6px; border:1px solid #333; background:#f0f0f0; text-align:right;">Harga (Rp)</th>
+                                ${thColsH}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHtml}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="${3 + articles.length + 2}" style="padding:6px; border:1px solid #333; text-align:right; font-weight:bold; background:#f0f0f0;">TOTAL HPP PER ARTIKEL:</td>
+                                ${footTotalsHtml}
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    ${item.catatan ? `<div style="margin-top:15px; font-style:italic; color:#555;">Catatan: ${item.catatan}</div>` : ''}
+
+                    <div style="margin-top:40px; display:flex; justify-content:space-between; text-align:center;">
+                        <div style="width:200px;">
+                            <p>Dibuat Oleh,</p>
+                            <br><br><br>
+                            <p><b>( _________________ )</b><br>Bag. Produksi / Costing</p>
+                        </div>
+                        <div style="width:200px;">
+                            <p>Diperiksa Oleh,</p>
+                            <br><br><br>
+                            <p><b>( _________________ )</b><br>Supervisor Makloon</p>
+                        </div>
+                        <div style="width:200px;">
+                            <p>Disetujui Oleh,</p>
+                            <br><br><br>
+                            <p><b>( _________________ )</b><br>Manajemen / Pimpinan</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `;
+
+            const printWin = window.open('', '_blank', 'width=1100,height=800');
+            if (printWin) {
+                printWin.document.write(printContent);
+                printWin.document.close();
+                printWin.focus();
+                setTimeout(() => {
+                    printWin.print();
+                }, 500);
+            }
+        }
 
         // ==========================================
         // FITUR AUTO SYNC & OFFLINE DETECTOR
