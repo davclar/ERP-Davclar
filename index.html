@@ -194,6 +194,15 @@
                 <!-- KELOLA MAKLOON -->
                 <div id="menu-makloon">
                     <p class="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 mt-6">Kelola Makloon</p>
+                    <button onclick="openTab('tab-makloon-cost')" id="btn-tab-makloon-cost" class="menu-btn w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition text-left text-sm">
+                        <i class="fa-solid fa-calculator w-5 text-center shrink-0"></i> <span>Setting Cost Makloon</span>
+                    </button>
+                    <button onclick="openTab('tab-makloon-bahan')" id="btn-tab-makloon-bahan" class="menu-btn w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition text-left text-sm">
+                        <i class="fa-solid fa-truck-ramp-box w-5 text-center shrink-0"></i> <span>Kirim Bahan Baku</span>
+                    </button>
+                    <button onclick="openTab('tab-makloon-qc')" id="btn-tab-makloon-qc" class="menu-btn w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition text-left text-sm">
+                        <i class="fa-solid fa-clipboard-check w-5 text-center shrink-0"></i> <span>Penerimaan & QC</span>
+                    </button>
                     <button onclick="openTab('tab-hutang')" id="btn-tab-hutang" class="menu-btn w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition text-left text-sm">
                         <i class="fa-solid fa-hand-holding-hand w-5 text-center shrink-0"></i> <span>Hutang Pabrik (AP)</span>
                     </button>
@@ -2730,9 +2739,250 @@
                 </section>
 
                 <!-- ========================================== -->
+                <!-- TAB: SETTING COST MAKLOON -->
+                <!-- ========================================== -->
+                <section id="tab-makloon-cost" class="tab-content hidden-tab h-full">
+                    <div class="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-full w-full overflow-y-auto">
+                        <!-- HEADER -->
+                        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white pb-4 border-b border-gray-200 shrink-0">
+                            <div class="flex items-center space-x-3 md:space-x-4">
+                                <div class="flex items-center justify-center w-10 h-10 md:w-12 md:h-12 bg-indigo-100 rounded-lg text-indigo-600 shrink-0">
+                                    <i class="fa-solid fa-calculator text-xl md:text-2xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg md:text-xl font-extrabold text-gray-800 leading-tight">Setting Cost & Tarif Makloon</h3>
+                                    <p class="text-xs md:text-sm text-gray-500 mt-0.5">Standar kalkulasi dan master tarif ongkos kerja makloon per artikel & vendor pengrajin.</p>
+                                </div>
+                            </div>
+                            <!-- Search & Action Buttons -->
+                            <div class="w-full lg:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2 md:gap-3">
+                                <div class="relative flex-1 sm:w-60">
+                                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 pointer-events-none">
+                                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                                    </span>
+                                    <input type="search" id="searchMakloonCost" oninput="makloonCostPage=1; renderMakloonCostTable()" placeholder="Cari artikel, vendor, merk..." class="w-full pl-9 pr-3 py-2 text-xs md:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition">
+                                </div>
+                                <select id="filterVendorMakloonCost" onchange="makloonCostPage=1; renderMakloonCostTable()" class="px-3 py-2 text-xs md:text-sm border border-gray-300 rounded-lg bg-white font-semibold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <option value="ALL">Semua Vendor</option>
+                                </select>
+                                <button onclick="openMakloonCostModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs md:text-sm flex items-center justify-center gap-2 transition shadow-md whitespace-nowrap">
+                                    <i class="fa-solid fa-plus"></i> <span>Tambah Tarif</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- KPI SUMMARY CARDS -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 my-4">
+                            <div class="bg-indigo-50/70 border border-indigo-100 rounded-xl p-3.5 flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-lg bg-indigo-500 text-white flex items-center justify-center text-lg font-bold shrink-0">
+                                    <i class="fa-solid fa-shoe-prints"></i>
+                                </div>
+                                <div>
+                                    <p class="text-[11px] font-semibold text-indigo-700 uppercase tracking-wider">Total Model</p>
+                                    <h4 id="kpiTotalModelCost" class="text-lg md:text-xl font-black text-gray-800">0</h4>
+                                </div>
+                            </div>
+                            <div class="bg-emerald-50/70 border border-emerald-100 rounded-xl p-3.5 flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-lg font-bold shrink-0">
+                                    <i class="fa-solid fa-coins"></i>
+                                </div>
+                                <div>
+                                    <p class="text-[11px] font-semibold text-emerald-700 uppercase tracking-wider">Rata-Rata Tarif</p>
+                                    <h4 id="kpiAvgCost" class="text-base md:text-lg font-black text-gray-800">Rp 0</h4>
+                                </div>
+                            </div>
+                            <div class="bg-amber-50/70 border border-amber-100 rounded-xl p-3.5 flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-lg bg-amber-500 text-white flex items-center justify-center text-lg font-bold shrink-0">
+                                    <i class="fa-solid fa-arrow-trend-up"></i>
+                                </div>
+                                <div>
+                                    <p class="text-[11px] font-semibold text-amber-700 uppercase tracking-wider">Tarif Tertinggi</p>
+                                    <h4 id="kpiMaxCost" class="text-base md:text-lg font-black text-gray-800">Rp 0</h4>
+                                </div>
+                            </div>
+                            <div class="bg-purple-50/70 border border-purple-100 rounded-xl p-3.5 flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-lg bg-purple-500 text-white flex items-center justify-center text-lg font-bold shrink-0">
+                                    <i class="fa-solid fa-industry"></i>
+                                </div>
+                                <div>
+                                    <p class="text-[11px] font-semibold text-purple-700 uppercase tracking-wider">Vendor Terdaftar</p>
+                                    <h4 id="kpiTotalVendorCost" class="text-lg md:text-xl font-black text-gray-800">0</h4>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TABEL DATA SETTING COST -->
+                        <div class="flex-1 overflow-x-auto border border-gray-200 rounded-xl bg-white shadow-sm mt-1">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-gray-50 border-b border-gray-200 text-[11px] font-bold text-gray-600 uppercase tracking-wider">
+                                        <th class="py-3 px-3 text-center w-12">No</th>
+                                        <th class="py-3 px-3">Artikel & Merk</th>
+                                        <th class="py-3 px-3">Vendor Makloon</th>
+                                        <th class="py-3 px-3 text-right">Potong</th>
+                                        <th class="py-3 px-3 text-right">Jahit</th>
+                                        <th class="py-3 px-3 text-right">Assembling</th>
+                                        <th class="py-3 px-3 text-right">Finishing/Lain</th>
+                                        <th class="py-3 px-3 text-right">Total Ongkos</th>
+                                        <th class="py-3 px-3 text-center">Update</th>
+                                        <th id="th-aksi-maklooncost" class="py-3 px-3 text-center w-24">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="makloonCostTableBody" class="divide-y divide-gray-100 text-xs md:text-sm">
+                                    <!-- Rendered dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- PAGINATION -->
+                        <div class="flex flex-col sm:flex-row justify-between items-center gap-3 pt-4 mt-2 border-t border-gray-200 shrink-0 text-xs text-gray-500">
+                            <div id="makloonCostPaginationInfo">Menampilkan 0 dari 0 data</div>
+                            <div class="flex items-center space-x-1" id="makloonCostPaginationBtns">
+                                <!-- Pagination buttons rendered dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- MODAL: TAMBAH / EDIT SETTING COST MAKLOON -->
+                <div id="modal-makloon-cost" class="fixed inset-0 z-[9999] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+                    <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onclick="closeMakloonCostModal()"></div>
+                    <div class="bg-white rounded-2xl shadow-2xl z-10 w-11/12 max-w-2xl transform scale-95 transition-transform duration-300 flex flex-col max-h-[92vh]">
+                        <!-- Header Modal -->
+                        <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-indigo-50 rounded-t-2xl shrink-0">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-9 h-9 rounded-lg bg-indigo-600 text-white flex items-center justify-center">
+                                    <i class="fa-solid fa-calculator"></i>
+                                </div>
+                                <div>
+                                    <h4 id="modalMakloonCostTitle" class="font-extrabold text-gray-800 text-base">Tambah Setting Cost Makloon</h4>
+                                    <p class="text-xs text-gray-500">Tentukan tarif dan rincian ongkos kerja per pasang.</p>
+                                </div>
+                            </div>
+                            <button onclick="closeMakloonCostModal()" class="text-gray-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+                        </div>
+
+                        <!-- Body Modal -->
+                        <form id="formMakloonCost" onsubmit="saveMakloonCost(event)" class="p-6 overflow-y-auto space-y-4">
+                            <input type="hidden" id="costEditId">
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- FIELD ARTIKEL (AUTOCOMPLETE / MANUAL) -->
+                                <div class="relative">
+                                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Artikel / Kode Barang <span class="text-red-500">*</span></label>
+                                    <input type="text" id="costArtikel" oninput="handleCostArtikelInput(this.value)" placeholder="Pilih / ketik nama artikel..." required autocomplete="off" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-bold uppercase focus:ring-2 focus:ring-indigo-500 outline-none">
+                                    <div id="costArtikelSuggestions" class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-48 overflow-y-auto z-50 divide-y divide-gray-100"></div>
+                                </div>
+
+                                <!-- FIELD MERK -->
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Merk Sepatu <span class="text-red-500">*</span></label>
+                                    <select id="costMerk" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                                        <option value="DAVCLAR">DAVCLAR</option>
+                                        <option value="CLARIFELA">CLARIFELA</option>
+                                        <option value="PORTI">PORTI</option>
+                                        <option value="CUSTOM">LAINNYA / CUSTOM</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- FIELD VENDOR MAKLOON -->
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Vendor / Bengkel Makloon <span class="text-red-500">*</span></label>
+                                    <input type="text" id="costVendor" list="listVendorSuggestions" required placeholder="Cth: PORTI / PAK DADANG / BENGKEL A" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-bold uppercase focus:ring-2 focus:ring-indigo-500 outline-none">
+                                    <datalist id="listVendorSuggestions"></datalist>
+                                </div>
+
+                                <!-- FIELD KATEGORI -->
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Kategori / Model</label>
+                                    <input type="text" id="costKategori" placeholder="Cth: SNEAKERS, SLIP ON, FLAT" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm uppercase focus:ring-2 focus:ring-indigo-500 outline-none">
+                                </div>
+                            </div>
+
+                            <!-- RINCIAN KOMPONEN BIAYA -->
+                            <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+                                        <i class="fa-solid fa-coins text-indigo-600"></i> Rincian Ongkos Kerja (Rp / Pasang)
+                                    </span>
+                                    <span class="text-[11px] text-gray-400">Isi rincian atau isi langsung total</span>
+                                </div>
+
+                                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-gray-600 mb-1">1. Potong (Cutting)</label>
+                                        <input type="number" id="costPotong" oninput="calculateLiveTotalCost()" placeholder="0" min="0" class="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs font-bold text-gray-800 text-right focus:ring-2 focus:ring-indigo-500 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-gray-600 mb-1">2. Jahit (Upper)</label>
+                                        <input type="number" id="costJahit" oninput="calculateLiveTotalCost()" placeholder="0" min="0" class="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs font-bold text-gray-800 text-right focus:ring-2 focus:ring-indigo-500 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-gray-600 mb-1">3. Pasang Sol (Assembling)</label>
+                                        <input type="number" id="costAssembling" oninput="calculateLiveTotalCost()" placeholder="0" min="0" class="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs font-bold text-gray-800 text-right focus:ring-2 focus:ring-indigo-500 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-gray-600 mb-1">4. Finishing & Dus</label>
+                                        <input type="number" id="costFinishing" oninput="calculateLiveTotalCost()" placeholder="0" min="0" class="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs font-bold text-gray-800 text-right focus:ring-2 focus:ring-indigo-500 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-gray-600 mb-1">5. Variasi / Sablon / Lain</label>
+                                        <input type="number" id="costLain" oninput="calculateLiveTotalCost()" placeholder="0" min="0" class="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs font-bold text-gray-800 text-right focus:ring-2 focus:ring-indigo-500 outline-none">
+                                    </div>
+                                    <div class="bg-indigo-100/60 p-2 rounded-lg border border-indigo-200 flex flex-col justify-center">
+                                        <span class="text-[10px] font-bold text-indigo-700 uppercase">Total Makloon / Psg</span>
+                                        <span id="displayLiveTotalCost" class="text-base font-black text-indigo-900">Rp 0</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- CATATAN -->
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Catatan / Spesifikasi Pengerjaan</label>
+                                <textarea id="costCatatan" rows="2" placeholder="Catatan bahan, instruksi lem, packing, atau syarat khusus..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs text-gray-700 focus:ring-2 focus:ring-indigo-500 outline-none"></textarea>
+                            </div>
+
+                            <!-- Footer Modal Form -->
+                            <div class="pt-3 border-t border-gray-100 flex justify-end space-x-2">
+                                <button type="button" onclick="closeMakloonCostModal()" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-lg text-xs transition">Batal</button>
+                                <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs transition shadow-md flex items-center gap-1.5">
+                                    <i class="fa-solid fa-floppy-disk"></i> <span>Simpan Tarif</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- ========================================== -->
                 <!-- HALAMAN COMING SOON (PLACEHOLDERS) -->
                 <!-- ========================================== -->
                 
+                <!-- TAB: KIRIM BAHAN BAKU -->
+                <section id="tab-makloon-bahan" class="tab-content hidden-tab p-2 h-full">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col items-center justify-center h-full p-8 text-center">
+                        <div class="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mb-6 border border-gray-100 shadow-inner">
+                            <i class="fa-solid fa-truck-ramp-box text-4xl text-gray-400"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-800">Kirim Bahan Baku ke Makloon</h2>
+                        <p class="text-sm text-gray-500 mt-2 max-w-md">Catat dan pantau surat jalan bahan baku (upper, sol, dus, aksesoris) yang dikirim ke pengrajin makloon luar.</p>
+                        <span class="mt-6 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-2 rounded-full text-xs font-bold tracking-wider uppercase shadow-sm"><i class="fa-solid fa-person-digging mr-2"></i>Tahap Pengembangan</span>
+                    </div>
+                </section>
+
+                <!-- TAB: PENERIMAAN & QC -->
+                <section id="tab-makloon-qc" class="tab-content hidden-tab p-2 h-full">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col items-center justify-center h-full p-8 text-center">
+                        <div class="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mb-6 border border-gray-100 shadow-inner">
+                            <i class="fa-solid fa-clipboard-check text-4xl text-gray-400"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-800">Penerimaan & Quality Control (QC)</h2>
+                        <p class="text-sm text-gray-500 mt-2 max-w-md">Catat sepatu jadi yang datang dari pabrik makloon, sortir Grade A, barang perbaikan (rework), dan reject (BS).</p>
+                        <span class="mt-6 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-2 rounded-full text-xs font-bold tracking-wider uppercase shadow-sm"><i class="fa-solid fa-person-digging mr-2"></i>Tahap Pengembangan</span>
+                    </div>
+                </section>
+
                 <!-- TAB: KARTU STOK -->
                 <section id="tab-stok" class="tab-content hidden-tab p-2 h-full">
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col items-center justify-center h-full p-8 text-center">
@@ -3064,6 +3314,7 @@
         let db_sales_cp   = getSafeArray('davclar_sales_cp');
         let db_kasbon     = getSafeArray('davclar_kasbon');
         let db_users      = getSafeArray('davclar_users');
+        let db_makloon_cost = getSafeArray('davclar_makloon_cost');
 
         // ==========================================
         // FITUR RESPONSIVE (SIDEBAR TOGGLE MOBILE & PC)
@@ -3190,7 +3441,7 @@
         };
 
         // 3. Definisikan dbKeys & Listener Firebase
-        const dbKeys = ['davclar_barang', 'davclar_customer', 'davclar_po', 'davclar_so', 'davclar_invoice', 'davclar_payment', 'davclar_kontrabon', 'davclar_sales_cp', 'davclar_kasbon', 'davclar_users'];
+        const dbKeys = ['davclar_barang', 'davclar_customer', 'davclar_po', 'davclar_so', 'davclar_invoice', 'davclar_payment', 'davclar_kontrabon', 'davclar_sales_cp', 'davclar_kasbon', 'davclar_users', 'davclar_makloon_cost'];
 
         if (window.firebaseDB) {
             // Debounce render — UI auto-refresh 1x setelah semua key Firebase selesai diupdate
@@ -3207,6 +3458,7 @@
                     if (typeof renderRiwayatKB === 'function') renderRiwayatKB();
                     if (typeof renderSalesLedger === 'function') renderSalesLedger();
                     if (typeof renderDashboard === 'function') renderDashboard();
+                    if (typeof renderMakloonCostTable === 'function') renderMakloonCostTable();
                 }, 500);
             }
 
@@ -3234,7 +3486,7 @@
                     // Penanganan khusus davclar_users: jangan kosongkan akun admin jika server kosong/belum siap
                     if (key === 'davclar_users') {
                         if (rawData) {
-                            const cleanUsers = toCleanArray(rawData);
+                             const cleanUsers = toCleanArray(rawData);
                             if (cleanUsers.length > 0) {
                                 db_users = cleanUsers;
                                 window.originalSetItem.call(window.localStorage, key, JSON.stringify(db_users));
@@ -3244,7 +3496,7 @@
                         return;
                     }
 
-                    // Untuk seluruh data operasional (kontrabon, invoice, barang, customer, po, so, payment, sales_cp, kasbon):
+                    // Untuk seluruh data operasional (kontrabon, invoice, barang, customer, po, so, payment, sales_cp, kasbon, makloon_cost):
                     // Jika di server null (karena sudah dihapus), cleanData = [] sehingga data lama di localStorage TERHAPUS!
                     const cleanData = toCleanArray(rawData);
 
@@ -3257,6 +3509,7 @@
                     if(key === 'davclar_kontrabon') db_kontrabon = cleanData;
                     if(key === 'davclar_sales_cp') db_sales_cp = cleanData;
                     if(key === 'davclar_kasbon') db_kasbon = cleanData;
+                    if(key === 'davclar_makloon_cost') db_makloon_cost = cleanData;
                     
                     // Tulis ke localStorage TANPA memicu Firebase sync (pakai originalSetItem)
                     window.originalSetItem.call(window.localStorage, key, JSON.stringify(cleanData));
@@ -3378,7 +3631,7 @@
                 { judul: "TRANSAKSI", tombol: ['btn-tab-production', 'btn-tab-order', 'btn-tab-invoice', 'btn-tab-payment', 'btn-tab-kontrabon'] },
                 { judul: "MANAGE SALES", tombol: ['btn-tab-komisi', 'btn-tab-salesledger'] },
                 { judul: "CETAK", tombol: ['btn-tab-barcode', 'btn-tab-amplop'] },
-                { judul: "KELOLA MAKLOON", tombol: ['btn-tab-hutang'] },
+                { judul: "KELOLA MAKLOON", tombol: ['btn-tab-makloon-cost', 'btn-tab-makloon-bahan', 'btn-tab-makloon-qc', 'btn-tab-hutang'] },
                 { judul: "LAPORAN", tombol: ['btn-tab-labarugi'] },
                 { judul: "SISTEM", tombol: ['btn-tab-usersetting'] },
                 { judul: "DATABASE", tombol: ['menu-database'] }
@@ -3602,6 +3855,10 @@
 
             if(tabId === 'tab-amplop') { 
                 if(typeof initTabAmplop === 'function') initTabAmplop();
+            }
+
+            if(tabId === 'tab-makloon-cost') { 
+                if(typeof renderMakloonCostTable === 'function') renderMakloonCostTable();
             }
         }
 
@@ -4725,8 +4982,26 @@
                     // 2. Otomatis isi Merk
                     document.getElementById('poInpMerk').value = b.merk; 
                     
-                    // 3. Otomatis isi Harga Makloon dari HPP Barang
-                    document.getElementById('poFormHarga').value = b.hpp; 
+                    // 3. Otomatis isi Harga Makloon (prioritas ambil dari Setting Cost Makloon jika ada)
+                    const currentVendor = (document.getElementById('poFormMakloon') ? document.getElementById('poFormMakloon').value : '').trim().toUpperCase();
+                    let costRecord = null;
+                    if (typeof db_makloon_cost !== 'undefined' && Array.isArray(db_makloon_cost)) {
+                        if (currentVendor) {
+                            costRecord = db_makloon_cost.find(c => (c.artikel || '').toUpperCase() === (b.artikel || '').toUpperCase() && (c.vendor || '').toUpperCase() === currentVendor);
+                        }
+                        if (!costRecord) {
+                            costRecord = db_makloon_cost.find(c => (c.artikel || '').toUpperCase() === (b.artikel || '').toUpperCase());
+                        }
+                    }
+
+                    if (costRecord && costRecord.total > 0) {
+                        document.getElementById('poFormHarga').value = costRecord.total;
+                        if (!currentVendor && costRecord.vendor) {
+                            document.getElementById('poFormMakloon').value = costRecord.vendor;
+                        }
+                    } else {
+                        document.getElementById('poFormHarga').value = b.hpp; 
+                    }
                     
                     dropdown.classList.add('hidden');
                 };
@@ -8967,6 +9242,9 @@
             { id: 'tab-salesledger', label: 'Sales Ledger & Kasbon', group: 'MANAGE SALES' },
             { id: 'tab-barcode', label: 'Cetak Barcode', group: 'CETAK' },
             { id: 'tab-amplop', label: 'Cetak Amplop', group: 'CETAK' },
+            { id: 'tab-makloon-cost', label: 'Setting Cost Makloon', group: 'KELOLA MAKLOON' },
+            { id: 'tab-makloon-bahan', label: 'Kirim Bahan Baku', group: 'KELOLA MAKLOON' },
+            { id: 'tab-makloon-qc', label: 'Penerimaan & QC', group: 'KELOLA MAKLOON' },
             { id: 'tab-hutang', label: 'Hutang Pabrik (AP)', group: 'KELOLA MAKLOON' },
             { id: 'tab-labarugi', label: 'Laba Rugi (P&L)', group: 'LAPORAN' },
             { id: 'tab-usersetting', label: 'User Management', group: 'SISTEM' },
@@ -13147,6 +13425,486 @@
         }
 
         // ==========================================
+        // FITUR SETTING COST MAKLOON
+        // ==========================================
+        let makloonCostPage = 1;
+        const makloonCostPerPage = 10;
+
+        function renderMakloonCostTable() {
+            const tbody = document.getElementById('makloonCostTableBody');
+            if (!tbody) return;
+
+            const search = (document.getElementById('searchMakloonCost') ? document.getElementById('searchMakloonCost').value : '').toLowerCase().trim();
+            const filterVendor = document.getElementById('filterVendorMakloonCost') ? document.getElementById('filterVendorMakloonCost').value : 'ALL';
+
+            // Hak akses
+            const role = (localStorage.getItem('davclar_role') || '').toUpperCase();
+            const access = (window.currentUserAccess && window.currentUserAccess['tab-makloon-cost']) || 'READ';
+            const canEdit = (role === 'ADMIN' || access === 'FULL');
+
+            const thAksi = document.getElementById('th-aksi-maklooncost');
+            if (thAksi) thAksi.style.display = canEdit ? '' : 'none';
+
+            // Populate Vendor Filter Options
+            const vendorSelect = document.getElementById('filterVendorMakloonCost');
+            if (vendorSelect) {
+                const currentVendorVal = vendorSelect.value;
+                const vendors = [...new Set(db_makloon_cost.map(c => (c.vendor || '').trim().toUpperCase()).filter(Boolean))].sort();
+                let vHtml = `<option value="ALL">Semua Vendor</option>`;
+                vendors.forEach(v => {
+                    vHtml += `<option value="${v}">${v}</option>`;
+                });
+                vendorSelect.innerHTML = vHtml;
+                if (vendors.includes(currentVendorVal) || currentVendorVal === 'ALL') {
+                    vendorSelect.value = currentVendorVal;
+                }
+            }
+
+            // Filter Data
+            let filtered = db_makloon_cost.filter(item => {
+                const vendorMatch = (filterVendor === 'ALL' || (item.vendor || '').toUpperCase() === filterVendor.toUpperCase());
+                if (!vendorMatch) return false;
+
+                if (!search) return true;
+                const str = `${item.artikel || ''} ${item.merk || ''} ${item.vendor || ''} ${item.kategori || ''} ${item.catatan || ''}`.toLowerCase();
+                return str.includes(search);
+            });
+
+            // Update KPI Cards
+            updateMakloonCostKPI(db_makloon_cost);
+
+            // Pagination calculation
+            const totalData = filtered.length;
+            const totalPages = Math.ceil(totalData / makloonCostPerPage) || 1;
+            if (makloonCostPage > totalPages) makloonCostPage = totalPages;
+            if (makloonCostPage < 1) makloonCostPage = 1;
+
+            const startIdx = (makloonCostPage - 1) * makloonCostPerPage;
+            const pagedData = filtered.slice(startIdx, startIdx + makloonCostPerPage);
+
+            // Render Table Rows
+            if (pagedData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="10" class="text-center py-10 text-gray-400">
+                            <i class="fa-solid fa-calculator text-4xl mb-2 text-gray-300 block"></i>
+                            <span class="font-medium">Belum ada data Setting Cost Makloon...</span>
+                            <div class="mt-2">
+                                <button onclick="openMakloonCostModal()" class="text-xs text-indigo-600 hover:text-indigo-800 font-bold underline">
+                                    + Tambah Tarif Baru Sekarang
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            } else {
+                let html = '';
+                pagedData.forEach((item, idx) => {
+                    const no = startIdx + idx + 1;
+                    const potong = parseInt(item.potong) || 0;
+                    const jahit = parseInt(item.jahit) || 0;
+                    const assembling = parseInt(item.assembling) || 0;
+                    const finishing = parseInt(item.finishing) || 0;
+                    const lain = parseInt(item.lain) || 0;
+                    const total = parseInt(item.total) || (potong + jahit + assembling + finishing + lain);
+
+                    // Badge Merk
+                    let merkBadgeClass = "bg-gray-100 text-gray-700";
+                    if (item.merk === 'DAVCLAR') merkBadgeClass = "bg-blue-100 text-blue-700 border border-blue-200";
+                    else if (item.merk === 'CLARIFELA') merkBadgeClass = "bg-pink-100 text-pink-700 border border-pink-200";
+                    else if (item.merk === 'PORTI') merkBadgeClass = "bg-amber-100 text-amber-800 border border-amber-200";
+
+                    html += `
+                        <tr class="hover:bg-gray-50 transition border-b border-gray-100">
+                            <td class="py-3 px-3 text-center text-gray-500 font-medium">${no}</td>
+                            <td class="py-3 px-3">
+                                <div class="font-bold text-gray-800 text-sm uppercase">${item.artikel || '-'}</div>
+                                <div class="flex items-center gap-1.5 mt-0.5">
+                                    <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${merkBadgeClass}">${item.merk || 'DAVCLAR'}</span>
+                                    ${item.kategori ? `<span class="text-[10px] text-gray-400">• ${item.kategori}</span>` : ''}
+                                </div>
+                            </td>
+                            <td class="py-3 px-3 font-semibold text-gray-700 uppercase">
+                                <span class="bg-gray-100 px-2 py-0.5 rounded text-xs">${item.vendor || '-'}</span>
+                            </td>
+                            <td class="py-3 px-3 text-right font-medium text-gray-600">Rp ${potong.toLocaleString('id-ID')}</td>
+                            <td class="py-3 px-3 text-right font-medium text-gray-600">Rp ${jahit.toLocaleString('id-ID')}</td>
+                            <td class="py-3 px-3 text-right font-medium text-gray-600">Rp ${assembling.toLocaleString('id-ID')}</td>
+                            <td class="py-3 px-3 text-right font-medium text-gray-600">Rp ${(finishing + lain).toLocaleString('id-ID')}</td>
+                            <td class="py-3 px-3 text-right">
+                                <span class="font-black text-indigo-700 bg-indigo-50 px-2 py-1 rounded-md text-xs md:text-sm">
+                                    Rp ${total.toLocaleString('id-ID')}
+                                </span>
+                            </td>
+                            <td class="py-3 px-3 text-center text-[11px] text-gray-400 whitespace-nowrap">
+                                ${item.updatedAt || item.createdAt || '-'}
+                            </td>
+                            ${canEdit ? `
+                            <td class="py-3 px-3 text-center whitespace-nowrap">
+                                <div class="flex items-center justify-center space-x-1.5">
+                                    <button onclick="editMakloonCost('${item.id}')" title="Edit" class="w-7 h-7 bg-amber-50 hover:bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center transition">
+                                        <i class="fa-solid fa-pen text-xs"></i>
+                                    </button>
+                                    <button onclick="deleteMakloonCost('${item.id}')" title="Hapus" class="w-7 h-7 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg flex items-center justify-center transition">
+                                        <i class="fa-solid fa-trash text-xs"></i>
+                                    </button>
+                                </div>
+                            </td>` : ''}
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+            }
+
+            // Pagination info & buttons
+            renderMakloonCostPagination(totalData, totalPages);
+        }
+
+        function updateMakloonCostKPI(data) {
+            const kpiTotal = document.getElementById('kpiTotalModelCost');
+            const kpiAvg = document.getElementById('kpiAvgCost');
+            const kpiMax = document.getElementById('kpiMaxCost');
+            const kpiVendors = document.getElementById('kpiTotalVendorCost');
+
+            if (!kpiTotal) return;
+
+            const totalCount = data.length;
+            kpiTotal.innerText = totalCount.toLocaleString('id-ID');
+
+            if (totalCount === 0) {
+                if (kpiAvg) kpiAvg.innerText = "Rp 0";
+                if (kpiMax) kpiMax.innerText = "Rp 0";
+                if (kpiVendors) kpiVendors.innerText = "0";
+                return;
+            }
+
+            const costs = data.map(d => parseInt(d.total) || 0).filter(c => c > 0);
+            const sumCost = costs.reduce((a, b) => a + b, 0);
+            const avgCost = costs.length > 0 ? Math.round(sumCost / costs.length) : 0;
+            const maxCost = costs.length > 0 ? Math.max(...costs) : 0;
+
+            const vendorSet = new Set(data.map(d => (d.vendor || '').trim().toUpperCase()).filter(Boolean));
+
+            if (kpiAvg) kpiAvg.innerText = "Rp " + avgCost.toLocaleString('id-ID');
+            if (kpiMax) kpiMax.innerText = "Rp " + maxCost.toLocaleString('id-ID');
+            if (kpiVendors) kpiVendors.innerText = vendorSet.size.toLocaleString('id-ID');
+        }
+
+        function renderMakloonCostPagination(totalData, totalPages) {
+            const infoEl = document.getElementById('makloonCostPaginationInfo');
+            const btnsEl = document.getElementById('makloonCostPaginationBtns');
+            if (!infoEl || !btnsEl) return;
+
+            const startIdx = totalData === 0 ? 0 : (makloonCostPage - 1) * makloonCostPerPage + 1;
+            const endIdx = Math.min(makloonCostPage * makloonCostPerPage, totalData);
+            infoEl.innerText = `Menampilkan ${startIdx}-${endIdx} dari ${totalData} data`;
+
+            let btnHtml = '';
+            btnHtml += `<button onclick="changeMakloonCostPage(${makloonCostPage - 1})" ${makloonCostPage <= 1 ? 'disabled class="px-2.5 py-1 text-gray-300 cursor-not-allowed"' : 'class="px-2.5 py-1 text-gray-600 hover:bg-gray-100 rounded"'}>Prev</button>`;
+
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= makloonCostPage - 1 && i <= makloonCostPage + 1)) {
+                    btnHtml += `<button onclick="changeMakloonCostPage(${i})" class="px-3 py-1 text-xs rounded font-bold ${i === makloonCostPage ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-100'}">${i}</button>`;
+                } else if (i === makloonCostPage - 2 || i === makloonCostPage + 2) {
+                    btnHtml += `<span class="px-1 text-gray-400">...</span>`;
+                }
+            }
+
+            btnHtml += `<button onclick="changeMakloonCostPage(${makloonCostPage + 1})" ${makloonCostPage >= totalPages ? 'disabled class="px-2.5 py-1 text-gray-300 cursor-not-allowed"' : 'class="px-2.5 py-1 text-gray-600 hover:bg-gray-100 rounded"'}>Next</button>`;
+            btnsEl.innerHTML = btnHtml;
+        }
+
+        function changeMakloonCostPage(p) {
+            makloonCostPage = p;
+            renderMakloonCostTable();
+        }
+
+        function openMakloonCostModal(isEdit = false) {
+            const modal = document.getElementById('modal-makloon-cost');
+            if (!modal) return;
+
+            // Populate vendor suggestions datalist
+            const datalist = document.getElementById('listVendorSuggestions');
+            if (datalist) {
+                const vendors = [...new Set([
+                    ...db_makloon_cost.map(c => (c.vendor || '').trim().toUpperCase()),
+                    ...db_po.map(p => (p.makloon || '').trim().toUpperCase()),
+                    'PORTI', 'FAJAR MAKMUR'
+                ].filter(Boolean))].sort();
+
+                datalist.innerHTML = vendors.map(v => `<option value="${v}">`).join('');
+            }
+
+            if (!isEdit) {
+                document.getElementById('modalMakloonCostTitle').innerText = "Tambah Setting Cost Makloon";
+                document.getElementById('costEditId').value = "";
+                document.getElementById('costArtikel').value = "";
+                document.getElementById('costMerk').value = "DAVCLAR";
+                document.getElementById('costVendor').value = "";
+                document.getElementById('costKategori').value = "";
+                document.getElementById('costPotong').value = "";
+                document.getElementById('costJahit').value = "";
+                document.getElementById('costAssembling').value = "";
+                document.getElementById('costFinishing').value = "";
+                document.getElementById('costLain').value = "";
+                document.getElementById('costCatatan').value = "";
+                calculateLiveTotalCost();
+            }
+
+            const box = modal.querySelector('.bg-white');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                if (box) box.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeMakloonCostModal() {
+            const modal = document.getElementById('modal-makloon-cost');
+            if (!modal) return;
+            const box = modal.querySelector('.bg-white');
+            modal.classList.add('opacity-0');
+            if (box) box.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function calculateLiveTotalCost() {
+            const potong = parseInt(document.getElementById('costPotong').value) || 0;
+            const jahit = parseInt(document.getElementById('costJahit').value) || 0;
+            const assembling = parseInt(document.getElementById('costAssembling').value) || 0;
+            const finishing = parseInt(document.getElementById('costFinishing').value) || 0;
+            const lain = parseInt(document.getElementById('costLain').value) || 0;
+
+            const total = potong + jahit + assembling + finishing + lain;
+            const displayEl = document.getElementById('displayLiveTotalCost');
+            if (displayEl) {
+                displayEl.innerText = "Rp " + total.toLocaleString('id-ID');
+            }
+            return total;
+        }
+
+        function handleCostArtikelInput(val) {
+            const sugBox = document.getElementById('costArtikelSuggestions');
+            if (!sugBox) return;
+
+            const q = (val || '').toLowerCase().trim();
+            if (q.length === 0) {
+                sugBox.classList.add('hidden');
+                sugBox.innerHTML = '';
+                return;
+            }
+
+            const matches = db_databarang.filter(b => {
+                const art = (b.artikel || b.namaBarang || '').toLowerCase();
+                const mrk = (b.merk || '').toLowerCase();
+                return art.includes(q) || mrk.includes(q);
+            }).slice(0, 8);
+
+            if (matches.length === 0) {
+                sugBox.classList.add('hidden');
+                sugBox.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+            matches.forEach(b => {
+                const safeArt = (b.artikel || b.namaBarang || '').replace(/'/g, "\\'");
+                const safeMerk = (b.merk || 'DAVCLAR').replace(/'/g, "\\'");
+                const safeKat = (b.kategori || '').replace(/'/g, "\\'");
+                const safeHpp = parseInt(b.hpp) || 0;
+
+                html += `
+                    <div onclick="selectCostArtikel('${safeArt}', '${safeMerk}', '${safeKat}', ${safeHpp})" class="px-3.5 py-2 hover:bg-indigo-50 cursor-pointer flex justify-between items-center transition">
+                        <div>
+                            <div class="text-xs font-bold text-gray-800 uppercase">${b.artikel || b.namaBarang}</div>
+                            <div class="text-[10px] text-gray-400">${b.merk || 'DAVCLAR'} ${b.kategori ? '• ' + b.kategori : ''}</div>
+                        </div>
+                        ${safeHpp > 0 ? `<span class="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded font-bold">HPP: Rp ${safeHpp.toLocaleString('id-ID')}</span>` : ''}
+                    </div>
+                `;
+            });
+
+            sugBox.innerHTML = html;
+            sugBox.classList.remove('hidden');
+        }
+
+        function selectCostArtikel(artikel, merk, kategori, hpp) {
+            document.getElementById('costArtikel').value = artikel;
+            if (merk) document.getElementById('costMerk').value = merk;
+            if (kategori) document.getElementById('costKategori').value = kategori;
+
+            // Jika belum ada nilai di komponen biaya dan HPP terisi, jadikan default jahit/total
+            if (hpp > 0) {
+                const currentTotal = calculateLiveTotalCost();
+                if (currentTotal === 0) {
+                    document.getElementById('costJahit').value = hpp;
+                    calculateLiveTotalCost();
+                }
+            }
+
+            const sugBox = document.getElementById('costArtikelSuggestions');
+            if (sugBox) {
+                sugBox.classList.add('hidden');
+                sugBox.innerHTML = '';
+            }
+        }
+
+        function saveMakloonCost(e) {
+            e.preventDefault();
+
+            const editId = document.getElementById('costEditId').value;
+            const artikel = document.getElementById('costArtikel').value.trim().toUpperCase();
+            const merk = document.getElementById('costMerk').value.trim().toUpperCase();
+            const vendor = document.getElementById('costVendor').value.trim().toUpperCase();
+            const kategori = document.getElementById('costKategori').value.trim().toUpperCase();
+
+            const potong = parseInt(document.getElementById('costPotong').value) || 0;
+            const jahit = parseInt(document.getElementById('costJahit').value) || 0;
+            const assembling = parseInt(document.getElementById('costAssembling').value) || 0;
+            const finishing = parseInt(document.getElementById('costFinishing').value) || 0;
+            const lain = parseInt(document.getElementById('costLain').value) || 0;
+            const total = calculateLiveTotalCost();
+
+            const catatan = document.getElementById('costCatatan').value.trim();
+
+            if (!artikel || !vendor) {
+                if (typeof showToast === 'function') showToast("Artikel dan Vendor Makloon wajib diisi!", "warning");
+                else alert("Artikel dan Vendor Makloon wajib diisi!");
+                return;
+            }
+
+            if (total <= 0) {
+                if (typeof showToast === 'function') showToast("Total tarif ongkos kerja makloon harus lebih dari 0!", "warning");
+                else alert("Total tarif ongkos kerja makloon harus lebih dari 0!");
+                return;
+            }
+
+            const nowStr = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+
+            if (editId) {
+                // EDIT EXISTING
+                const idx = db_makloon_cost.findIndex(c => c.id === editId);
+                if (idx !== -1) {
+                    db_makloon_cost[idx] = {
+                        ...db_makloon_cost[idx],
+                        artikel,
+                        merk,
+                        vendor,
+                        kategori,
+                        potong,
+                        jahit,
+                        assembling,
+                        finishing,
+                        lain,
+                        total,
+                        catatan,
+                        updatedAt: nowStr
+                    };
+                }
+            } else {
+                // INSERT NEW
+                const newId = 'CST-' + Date.now().toString(36).toUpperCase();
+                db_makloon_cost.unshift({
+                    id: newId,
+                    artikel,
+                    merk,
+                    vendor,
+                    kategori,
+                    potong,
+                    jahit,
+                    assembling,
+                    finishing,
+                    lain,
+                    total,
+                    catatan,
+                    createdAt: nowStr,
+                    updatedAt: nowStr
+                });
+            }
+
+            // Simpan ke localStorage & Firebase
+            localStorage.setItem('davclar_makloon_cost', JSON.stringify(db_makloon_cost));
+            if (window.firebaseWrite) {
+                window.firebaseWrite('davclar_makloon_cost', db_makloon_cost);
+            }
+
+            closeMakloonCostModal();
+            renderMakloonCostTable();
+
+            if (typeof showToast === 'function') showToast("Setting Cost Makloon berhasil disimpan!", "success");
+            else alert("Setting Cost Makloon berhasil disimpan!");
+        }
+
+        function editMakloonCost(id) {
+            const item = db_makloon_cost.find(c => c.id === id);
+            if (!item) return;
+
+            openMakloonCostModal(true);
+
+            document.getElementById('modalMakloonCostTitle').innerText = "Edit Setting Cost Makloon";
+            document.getElementById('costEditId').value = item.id;
+            document.getElementById('costArtikel').value = item.artikel || '';
+            document.getElementById('costMerk').value = item.merk || 'DAVCLAR';
+            document.getElementById('costVendor').value = item.vendor || '';
+            document.getElementById('costKategori').value = item.kategori || '';
+
+            document.getElementById('costPotong').value = item.potong || '';
+            document.getElementById('costJahit').value = item.jahit || '';
+            document.getElementById('costAssembling').value = item.assembling || '';
+            document.getElementById('costFinishing').value = item.finishing || '';
+            document.getElementById('costLain').value = item.lain || '';
+            document.getElementById('costCatatan').value = item.catatan || '';
+
+            calculateLiveTotalCost();
+        }
+
+        function deleteMakloonCost(id) {
+            const item = db_makloon_cost.find(c => c.id === id);
+            if (!item) return;
+
+            const konfirmasi = () => {
+                db_makloon_cost = db_makloon_cost.filter(c => c.id !== id);
+                localStorage.setItem('davclar_makloon_cost', JSON.stringify(db_makloon_cost));
+                if (window.firebaseWrite) {
+                    window.firebaseWrite('davclar_makloon_cost', db_makloon_cost);
+                }
+                renderMakloonCostTable();
+                if (typeof showToast === 'function') showToast("Data tarif makloon berhasil dihapus!", "success");
+            };
+
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Hapus Setting Cost?',
+                    text: `Hapus tarif untuk artikel ${item.artikel} (${item.vendor})?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ef4444',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Ya, Hapus!',
+                    cancelButtonText: 'Batal'
+                }).then((res) => {
+                    if (res.isConfirmed) konfirmasi();
+                });
+            } else {
+                if (confirm(`Hapus tarif untuk artikel ${item.artikel} (${item.vendor})?`)) {
+                    konfirmasi();
+                }
+            }
+        }
+
+        // Tutup dropdown artikel cost jika klik di luar
+        document.addEventListener('click', function(e) {
+            const sugBox = document.getElementById('costArtikelSuggestions');
+            const inp = document.getElementById('costArtikel');
+            if (!sugBox || !inp) return;
+            if (!sugBox.contains(e.target) && e.target !== inp) {
+                sugBox.classList.add('hidden');
+            }
+        });
+
+        // ==========================================
         // FITUR AUTO SYNC & OFFLINE DETECTOR
         // ==========================================
         function updateNetworkStatus() {
@@ -13185,6 +13943,7 @@
         renderInvoiceList();
         renderCustomerList();
         renderPaymentList();
+        renderMakloonCostTable();
         updateNetworkStatus();
 
     </script>
