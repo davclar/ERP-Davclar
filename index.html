@@ -3427,6 +3427,33 @@
                     }
                     #${tabId} input[type="checkbox"] { pointer-events: none; opacity: 0.5; }
                     `;
+
+                    // [KHUSUS CETAK BARCODE & AMPLOP]: Hilangkan tombol print jika cuma akses READ
+                    if(tabId === 'tab-barcode') {
+                        css += `
+                        #tab-barcode button[onclick*="print"],
+                        #tab-barcode button[onclick*="Print"],
+                        #tab-barcode button[onclick*="cetak"],
+                        #tab-barcode button[onclick*="Cetak"],
+                        #modal-custom-barcode button[onclick*="print"],
+                        #modal-custom-barcode button[onclick*="Print"],
+                        #modal-custom-barcode button[onclick*="cetak"],
+                        #modal-custom-barcode button[onclick*="Cetak"] {
+                            display: none !important;
+                        }
+                        `;
+                    }
+
+                    if(tabId === 'tab-amplop') {
+                        css += `
+                        #tab-amplop button[onclick*="print"],
+                        #tab-amplop button[onclick*="Print"],
+                        #tab-amplop button[onclick*="cetak"],
+                        #tab-amplop button[onclick*="Cetak"] {
+                            display: none !important;
+                        }
+                        `;
+                    }
                 }
             });
             styleEl.innerHTML = css;
@@ -12092,6 +12119,14 @@
         // MESIN RAKIT HTML & PRINT (ANTI BLANK PAGE & ROTASI)
         // ==========================================
         function printBarcodeAction() {
+            const uRole = (localStorage.getItem('davclar_role') || '').toUpperCase();
+            const uAccess = (window.currentUserAccess && window.currentUserAccess['tab-barcode']) || 'READ';
+            if (uRole !== 'ADMIN' && uAccess !== 'FULL') {
+                if (typeof showToast === 'function') showToast("Anda hanya memiliki hak akses LIHAT (READ) untuk Cetak Barcode!", "error");
+                else alert("Anda hanya memiliki hak akses LIHAT (READ) untuk Cetak Barcode!");
+                return;
+            }
+
             if(barcodeQueue.length === 0) return showToast("Antrean kosong!", "warning");
             
             if (typeof QRCode === 'undefined' || typeof JsBarcode === 'undefined') {
@@ -12626,6 +12661,14 @@
         // FUNGSI PRINT STIKER CUSTOM
         // ==========================================
         function printCustomBarcodeNow() {
+            const uRole = (localStorage.getItem('davclar_role') || '').toUpperCase();
+            const uAccess = (window.currentUserAccess && window.currentUserAccess['tab-barcode']) || 'READ';
+            if (uRole !== 'ADMIN' && uAccess !== 'FULL') {
+                if (typeof showToast === 'function') showToast("Anda hanya memiliki hak akses LIHAT (READ) untuk Cetak Barcode!", "error");
+                else alert("Anda hanya memiliki hak akses LIHAT (READ) untuk Cetak Barcode!");
+                return;
+            }
+
             if(tempCustomBarcodeItems.length === 0) return;
 
             let flatCustomItems = [];
@@ -12913,6 +12956,21 @@
         });
 
         function printAmplopAction() {
+            const uRole = (localStorage.getItem('davclar_role') || '').toUpperCase();
+            const uAccess = (window.currentUserAccess && window.currentUserAccess['tab-amplop']) || 'READ';
+            if (uRole !== 'ADMIN' && uAccess !== 'FULL') {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Akses Ditolak',
+                        text: 'Anda hanya memiliki hak akses LIHAT (READ) untuk Cetak Amplop!'
+                    });
+                } else {
+                    alert('Anda hanya memiliki hak akses LIHAT (READ) untuk Cetak Amplop!');
+                }
+                return;
+            }
+
             const kopSelect = document.getElementById('amplopKop');
             const kop = kopSelect ? kopSelect.value : 'PORTI';
             const custName = (document.getElementById('amplopCustomer') ? document.getElementById('amplopCustomer').value : '').trim().toUpperCase();
