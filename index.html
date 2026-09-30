@@ -158,10 +158,6 @@
                 <button onclick="openTab('tab-production')" id="btn-tab-production" class="menu-btn w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition text-left text-sm">
                     <i class="fa-solid fa-industry w-5 text-center shrink-0"></i> <span>Production (PO)</span>
                 </button>
-                <!-- Hutang Pabrik -->
-                <button onclick="openTab('tab-hutang')" id="btn-tab-hutang" class="menu-btn w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition text-left text-sm">
-                    <i class="fa-solid fa-hand-holding-hand w-5 text-center shrink-0"></i> <span>Hutang Pabrik (AP)</span>
-                </button>
                 <button onclick="openTab('tab-order')" id="btn-tab-order" class="menu-btn w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition text-left text-sm">
                     <i class="fa-solid fa-cart-shopping w-5 text-center shrink-0"></i> <span>Order Data (SO)</span>
                 </button>
@@ -192,6 +188,14 @@
                     </button>
                     <button onclick="openTab('tab-amplop')" id="btn-tab-amplop" class="menu-btn w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition text-left text-sm">
                         <i class="fa-solid fa-envelope w-5 text-center shrink-0"></i> <span>Cetak Amplop</span>
+                    </button>
+                </div>
+
+                <!-- KELOLA MAKLOON -->
+                <div id="menu-makloon">
+                    <p class="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 mt-6">Kelola Makloon</p>
+                    <button onclick="openTab('tab-hutang')" id="btn-tab-hutang" class="menu-btn w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition text-left text-sm">
+                        <i class="fa-solid fa-hand-holding-hand w-5 text-center shrink-0"></i> <span>Hutang Pabrik (AP)</span>
                     </button>
                 </div>
 
@@ -3371,9 +3375,10 @@
                 { judul: "MENU UTAMA", tombol: ['btn-tab-dashboard'] },
                 { judul: "MASTER DATA", tombol: ['btn-tab-databarang', 'btn-tab-customer'] },
                 { judul: "GUDANG & STOK", tombol: ['btn-tab-stok', 'btn-tab-retur'] }, // <--- FIX NYANGKUT
-                { judul: "TRANSAKSI", tombol: ['btn-tab-production', 'btn-tab-hutang', 'btn-tab-order', 'btn-tab-invoice', 'btn-tab-payment', 'btn-tab-kontrabon'] },
+                { judul: "TRANSAKSI", tombol: ['btn-tab-production', 'btn-tab-order', 'btn-tab-invoice', 'btn-tab-payment', 'btn-tab-kontrabon'] },
                 { judul: "MANAGE SALES", tombol: ['btn-tab-komisi', 'btn-tab-salesledger'] },
                 { judul: "CETAK", tombol: ['btn-tab-barcode', 'btn-tab-amplop'] },
+                { judul: "KELOLA MAKLOON", tombol: ['btn-tab-hutang'] },
                 { judul: "LAPORAN", tombol: ['btn-tab-labarugi'] },
                 { judul: "SISTEM", tombol: ['btn-tab-usersetting'] },
                 { judul: "DATABASE", tombol: ['menu-database'] }
@@ -8954,7 +8959,6 @@
             { id: 'tab-stok', label: 'Kartu Stok', group: 'GUDANG & STOK' },
             { id: 'tab-retur', label: 'Manajemen Retur', group: 'GUDANG & STOK' },
             { id: 'tab-production', label: 'Production (PO)', group: 'TRANSAKSI' },
-            { id: 'tab-hutang', label: 'Hutang Pabrik (AP)', group: 'TRANSAKSI' },
             { id: 'tab-order', label: 'Order Data (SO)', group: 'TRANSAKSI' },
             { id: 'tab-invoice', label: 'Report Invoice', group: 'TRANSAKSI' },
             { id: 'tab-payment', label: 'Payment', group: 'TRANSAKSI' },
@@ -8963,6 +8967,7 @@
             { id: 'tab-salesledger', label: 'Sales Ledger & Kasbon', group: 'MANAGE SALES' },
             { id: 'tab-barcode', label: 'Cetak Barcode', group: 'CETAK' },
             { id: 'tab-amplop', label: 'Cetak Amplop', group: 'CETAK' },
+            { id: 'tab-hutang', label: 'Hutang Pabrik (AP)', group: 'KELOLA MAKLOON' },
             { id: 'tab-labarugi', label: 'Laba Rugi (P&L)', group: 'LAPORAN' },
             { id: 'tab-usersetting', label: 'User Management', group: 'SISTEM' },
             { id: 'menu-database', label: 'Backup Data (JSON)', group: 'DATABASE' }
