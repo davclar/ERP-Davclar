@@ -24,7 +24,7 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;500;600;700;800&family=Roboto+Condensed:wght@400;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
         .spk-font { font-family: 'Arial Narrow', 'Barlow Condensed', 'Roboto Condensed', sans-serif !important; }
-        .hidden-tab { display: none; }
+        .hidden-tab { display: none !important; }
 
         /* ==========================================
            GHOST SCROLLBAR (MUNCUL SAAT DI-HOVER)
@@ -3005,9 +3005,10 @@
                 <!-- ========================================== -->
                 
                 <!-- TAB: KIRIM BAHAN BAKU -->
-                <section id="tab-makloon-bahan" class="tab-content hidden-tab p-2 md:p-4 h-full flex flex-col overflow-hidden">
-                    <!-- Sub Header Nav & Title -->
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-3 flex flex-col md:flex-row md:items-center justify-between gap-3 shrink-0">
+                <section id="tab-makloon-bahan" class="tab-content hidden-tab p-2 md:p-4 h-full overflow-hidden">
+                    <div class="flex flex-col h-full w-full">
+                        <!-- Sub Header Nav & Title -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-3 flex flex-col md:flex-row md:items-center justify-between gap-3 shrink-0">
                         <div class="flex items-center space-x-3">
                             <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg shadow-sm">
                                 <i class="fa-solid fa-truck-ramp-box"></i>
@@ -3252,6 +3253,7 @@
                             </table>
                         </div>
                     </div>
+                </div>
                 </section>
 
                 <!-- TAB: PENERIMAAN & QC -->
