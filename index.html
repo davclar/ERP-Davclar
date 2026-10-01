@@ -2922,7 +2922,7 @@
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-2 shrink-0">
-                                    <button type="button" onclick="addMatrixArticleColumn()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-sm">
+                                    <button type="button" id="btnAddMatrixCol" onclick="addMatrixArticleColumn()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-sm">
                                         <i class="fa-solid fa-plus"></i> <span>Tambah Artikel (Kolom)</span>
                                     </button>
                                 </div>
@@ -2965,7 +2965,7 @@
 
                             <!-- CATATAN & QUICK ACTIONS -->
                             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-1">
-                                <div class="flex items-center gap-2 flex-wrap">
+                                <div id="matrixQuickActionBtns" class="flex items-center gap-2 flex-wrap">
                                     <button type="button" onclick="addMatrixRow()" class="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-lg text-xs border border-indigo-200 transition flex items-center gap-1.5 shadow-sm">
                                         <i class="fa-solid fa-plus text-indigo-600"></i> <span>Tambah Baris Bahan</span>
                                     </button>
@@ -2981,12 +2981,17 @@
 
                         <!-- Footer Modal Actions -->
                         <div class="p-4 border-t border-gray-200 bg-white flex justify-between items-center shrink-0">
-                            <span class="text-xs text-gray-500 flex items-center gap-1.5">
-                                <i class="fa-solid fa-circle-info text-indigo-500"></i> Nilai desimal dihitung presisi dan otomatis dibulatkan ke rupiah terdekat.
-                            </span>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="text-xs text-gray-500 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-circle-info text-indigo-500"></i> Nilai desimal dihitung presisi dan otomatis dibulatkan ke rupiah terdekat.
+                                </span>
+                                <span id="matrixReadOnlyNotice" class="hidden text-xs bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1 rounded-full font-bold">
+                                    <i class="fa-solid fa-lock mr-1"></i> Mode Hanya Lihat (Read-Only)
+                                </span>
+                            </div>
                             <div class="flex items-center space-x-2">
-                                <button type="button" onclick="closeMatrixCostModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-lg text-xs md:text-sm transition">Batal</button>
-                                <button type="button" onclick="saveMatrixCost()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs md:text-sm transition shadow-md flex items-center gap-1.5">
+                                <button type="button" id="btnCancelMatrixCost" onclick="closeMatrixCostModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-lg text-xs md:text-sm transition">Tutup</button>
+                                <button type="button" id="btnSaveMatrixCost" onclick="saveMatrixCost()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs md:text-sm transition shadow-md flex items-center gap-1.5">
                                     <i class="fa-solid fa-floppy-disk"></i> <span>Simpan Cost Sheet</span>
                                 </button>
                             </div>
@@ -3715,6 +3720,8 @@
                     #${tabId} button[onclick*="hapus"], 
                     #${tabId} button[onclick*="batal"], 
                     #${tabId} button[onclick*="edit"], 
+                    #${tabId} button[onclick*="duplicate"], 
+                    #${tabId} button[onclick*="duplikat"], 
                     #${tabId} button[onclick*="open"][onclick*="Form"], 
                     #${tabId} button[onclick*="open"][onclick*="Modal"]:not([onclick*="Piutang"]):not([onclick*="Detail"]), 
                     #${tabId} button[onclick*="cairkan"],
@@ -3725,6 +3732,21 @@
                     }
                     #${tabId} input[type="checkbox"] { pointer-events: none; opacity: 0.5; }
                     `;
+
+                    // [KHUSUS KELOLA MAKLOON COST]: Hilangkan tombol create & duplikat & save jika READ
+                    if(tabId === 'tab-makloon-cost') {
+                        css += `
+                        #tab-makloon-cost button[onclick*="duplicateMatrixCost"],
+                        #tab-makloon-cost button[onclick*="deleteMatrixCost"],
+                        #btnCreateMatrixCost,
+                        #modal-matrix-cost button[onclick*="saveMatrixCost"],
+                        #modal-matrix-cost button[onclick*="addMatrixRow"],
+                        #modal-matrix-cost button[onclick*="loadMatrixShoeTemplate"],
+                        #modal-matrix-cost button[onclick*="addMatrixArticleColumn"] {
+                            display: none !important;
+                        }
+                        `;
+                    }
 
                     // [KHUSUS CETAK BARCODE & AMPLOP]: Hilangkan tombol print jika cuma akses READ
                     if(tabId === 'tab-barcode') {
@@ -13646,11 +13668,12 @@
 
             // Hak akses
             const role = (localStorage.getItem('davclar_role') || '').toUpperCase();
-            const access = (window.currentUserAccess && window.currentUserAccess['tab-makloon-cost']) || 'READ';
-            const canEdit = (role === 'ADMIN' || access === 'FULL');
+            const uName = (localStorage.getItem('davclar_user') || '').toUpperCase();
+            const access = (window.currentUserAccess && window.currentUserAccess['tab-makloon-cost']) ? window.currentUserAccess['tab-makloon-cost'] : (uName === 'ADMIN' ? 'FULL' : 'READ');
+            const canEdit = (access === 'FULL');
 
             const thAksi = document.getElementById('th-aksi-maklooncost');
-            if (thAksi) thAksi.style.display = canEdit ? '' : 'none';
+            if (thAksi) thAksi.style.display = '';
             const btnCreate = document.getElementById('btnCreateMatrixCost');
             if (btnCreate) btnCreate.style.display = canEdit ? '' : 'none';
 
@@ -13807,23 +13830,30 @@
                             <td class="py-3 px-3 text-center text-[11px] text-gray-400 whitespace-nowrap">
                                 ${item.updatedAt || item.createdAt || '-'}
                             </td>
-                            ${canEdit ? `
                             <td class="py-3 px-3 text-center whitespace-nowrap">
                                 <div class="flex items-center justify-center space-x-1.5">
-                                    <button onclick="openMatrixCostModal('${item.id}')" title="Buka / Edit Matrix" class="w-7 h-7 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg flex items-center justify-center transition shadow-xs">
-                                        <i class="fa-solid fa-pen-to-square text-xs"></i>
-                                    </button>
-                                    <button onclick="duplicateMatrixCost('${item.id}')" title="Duplikat Model" class="w-7 h-7 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg flex items-center justify-center transition shadow-xs">
-                                        <i class="fa-solid fa-copy text-xs"></i>
-                                    </button>
+                                    ${canEdit ? `
+                                        <button onclick="openMatrixCostModal('${item.id}')" title="Buka / Edit Matrix" class="w-7 h-7 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg flex items-center justify-center transition shadow-xs">
+                                            <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                        </button>
+                                        <button onclick="duplicateMatrixCost('${item.id}')" title="Duplikat Model" class="w-7 h-7 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg flex items-center justify-center transition shadow-xs">
+                                            <i class="fa-solid fa-copy text-xs"></i>
+                                        </button>
+                                    ` : `
+                                        <button onclick="openMatrixCostModal('${item.id}', false, true)" title="Lihat Detail Matrix" class="w-7 h-7 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg flex items-center justify-center transition shadow-xs">
+                                            <i class="fa-solid fa-eye text-xs"></i>
+                                        </button>
+                                    `}
                                     <button onclick="printMatrixCost('${item.id}')" title="Cetak Sheet" class="w-7 h-7 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg flex items-center justify-center transition shadow-xs">
                                         <i class="fa-solid fa-print text-xs"></i>
                                     </button>
-                                    <button onclick="deleteMatrixCost('${item.id}')" title="Hapus" class="w-7 h-7 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg flex items-center justify-center transition shadow-xs">
-                                        <i class="fa-solid fa-trash text-xs"></i>
-                                    </button>
+                                    ${canEdit ? `
+                                        <button onclick="deleteMatrixCost('${item.id}')" title="Hapus" class="w-7 h-7 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg flex items-center justify-center transition shadow-xs">
+                                            <i class="fa-solid fa-trash text-xs"></i>
+                                        </button>
+                                    ` : ''}
                                 </div>
-                            </td>` : ''}
+                            </td>
                         </tr>
                     `;
                 });
@@ -13909,10 +13939,23 @@
         // ==========================================
         // MATRIX COST SHEET EDITOR (CORE ENGINE)
         // ==========================================
+        let isMatrixReadOnly = false;
 
-        function openMatrixCostModal(id = null, isDuplicate = false) {
+        function openMatrixCostModal(id = null, isDuplicate = false, readOnly = false) {
             const modal = document.getElementById('modal-matrix-cost');
             if (!modal) return;
+
+            // Cek Hak Akses
+            const uName = (localStorage.getItem('davclar_user') || '').toUpperCase();
+            const access = (window.currentUserAccess && window.currentUserAccess['tab-makloon-cost']) ? window.currentUserAccess['tab-makloon-cost'] : (uName === 'ADMIN' ? 'FULL' : 'READ');
+            const canEdit = (access === 'FULL');
+
+            if (isDuplicate && !canEdit) {
+                if (typeof showToast === 'function') showToast("Akses Ditolak: Anda hanya memiliki akses LIHAT!", "warning");
+                return;
+            }
+
+            isMatrixReadOnly = readOnly || (!canEdit && !isDuplicate);
 
             // Populate vendor suggestions
             const datalist = document.getElementById('listVendorSuggestionsCost');
@@ -13975,9 +14018,34 @@
             document.getElementById('matrixInpKategori').value = currentMatrixData.kategori || "";
             document.getElementById('matrixInpCatatan').value = currentMatrixData.catatan || "";
 
-            document.getElementById('matrixModalTitle').innerText = isDuplicate
-                ? "Duplikat Cost Sheet & BOM"
-                : (currentMatrixData.id ? "Edit Cost Sheet & BOM Matrix" : "Buat Cost Sheet & BOM Baru");
+            // Disable / Enable Inputs if read-only
+            ['matrixInpModel', 'matrixInpMerk', 'matrixInpMerkCustom', 'matrixInpVendor', 'matrixInpKategori', 'matrixInpCatatan'].forEach(inpId => {
+                const el = document.getElementById(inpId);
+                if (el) el.disabled = isMatrixReadOnly;
+            });
+
+            // Adjust Title & Action Buttons
+            const titleEl = document.getElementById('matrixModalTitle');
+            if (titleEl) {
+                if (isDuplicate) titleEl.innerText = "Duplikat Cost Sheet & BOM";
+                else if (isMatrixReadOnly) titleEl.innerHTML = `<i class="fa-solid fa-eye text-blue-400 mr-2"></i> Detail Cost Sheet & BOM Seri ${currentMatrixData.model || currentMatrixData.artikel || ''} (Hanya Lihat)`;
+                else titleEl.innerText = currentMatrixData.id ? "Edit Cost Sheet & BOM Matrix" : "Buat Cost Sheet & BOM Baru";
+            }
+
+            const btnSave = document.getElementById('btnSaveMatrixCost');
+            if (btnSave) btnSave.style.display = isMatrixReadOnly ? 'none' : 'flex';
+
+            const quickBtns = document.getElementById('matrixQuickActionBtns');
+            if (quickBtns) quickBtns.style.display = isMatrixReadOnly ? 'none' : 'flex';
+
+            const btnAddCol = document.getElementById('btnAddMatrixCol');
+            if (btnAddCol) btnAddCol.style.display = isMatrixReadOnly ? 'none' : 'flex';
+
+            const noticeReadOnly = document.getElementById('matrixReadOnlyNotice');
+            if (noticeReadOnly) {
+                if (isMatrixReadOnly) noticeReadOnly.classList.remove('hidden');
+                else noticeReadOnly.classList.add('hidden');
+            }
 
             renderMatrixArticleChips();
             renderMatrixTable();
@@ -13999,6 +14067,12 @@
             if (box) box.classList.add('scale-95');
             setTimeout(() => {
                 modal.classList.add('hidden');
+                // Re-enable inputs
+                ['matrixInpModel', 'matrixInpMerk', 'matrixInpMerkCustom', 'matrixInpVendor', 'matrixInpKategori', 'matrixInpCatatan'].forEach(inpId => {
+                    const el = document.getElementById(inpId);
+                    if (el) el.disabled = false;
+                });
+                isMatrixReadOnly = false;
                 currentMatrixData = null;
             }, 300);
         }
@@ -14013,8 +14087,8 @@
                 html += `
                     <div class="flex items-center bg-white border border-indigo-200 rounded-lg shadow-xs overflow-hidden">
                         <span class="bg-indigo-600 text-white font-black text-[10px] px-2 py-1 uppercase">B${idx + 1}</span>
-                        <input type="text" value="${art}" oninput="updateMatrixArticleCode(${idx}, this.value)" placeholder="Kode" class="w-16 px-2 py-1 text-xs font-bold uppercase text-gray-800 focus:outline-none">
-                        ${currentMatrixData.articles.length > 1 ? `
+                        <input type="text" value="${art}" ${isMatrixReadOnly ? 'disabled' : ''} oninput="updateMatrixArticleCode(${idx}, this.value)" placeholder="Kode" class="w-16 px-2 py-1 text-xs font-bold uppercase text-gray-800 focus:outline-none ${isMatrixReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}">
+                        ${(!isMatrixReadOnly && currentMatrixData.articles.length > 1) ? `
                             <button type="button" onclick="removeMatrixArticleColumn(${idx})" title="Hapus Kolom Artikel" class="px-1.5 py-1 text-gray-400 hover:text-red-500 hover:bg-red-50 transition">
                                 <i class="fa-solid fa-xmark text-xs"></i>
                             </button>
@@ -14149,7 +14223,10 @@
                 `;
             });
 
-            thHtml += `<th class="py-2.5 px-2 text-center w-20">Aksi</th></tr>`;
+            if (!isMatrixReadOnly) {
+                thHtml += `<th class="py-2.5 px-2 text-center w-20">Aksi</th>`;
+            }
+            thHtml += `</tr>`;
             thead.innerHTML = thHtml;
 
             // 2. Build Rows
@@ -14161,30 +14238,34 @@
 
                 trHtml += `
                     <tr class="hover:bg-amber-50/20 transition border-b border-gray-200 ${isMakloonRow ? 'bg-amber-50/40 font-semibold' : ''}"
-                        draggable="true"
-                        data-row-index="${rowIdx}"
-                        ondragstart="handleMatrixRowDragStart(event, ${rowIdx})"
-                        ondragover="handleMatrixRowDragOver(event, ${rowIdx})"
-                        ondragleave="handleMatrixRowDragLeave(event, ${rowIdx})"
-                        ondrop="handleMatrixRowDrop(event, ${rowIdx})"
-                        ondragend="handleMatrixRowDragEnd(event)">
+                        ${!isMatrixReadOnly ? `
+                            draggable="true"
+                            data-row-index="${rowIdx}"
+                            ondragstart="handleMatrixRowDragStart(event, ${rowIdx})"
+                            ondragover="handleMatrixRowDragOver(event, ${rowIdx})"
+                            ondragleave="handleMatrixRowDragLeave(event, ${rowIdx})"
+                            ondrop="handleMatrixRowDrop(event, ${rowIdx})"
+                            ondragend="handleMatrixRowDragEnd(event)"
+                        ` : ''}>
                         <td class="py-2 px-1 text-center font-bold text-gray-400 border-r border-gray-200 select-none">
                             <div class="flex items-center justify-center gap-1">
-                                <span class="text-gray-400 hover:text-indigo-600 cursor-grab active:cursor-grabbing text-xs px-0.5" title="Klik & geser baris ini ke atas/bawah">
-                                    <i class="fa-solid fa-grip-vertical"></i>
-                                </span>
+                                ${!isMatrixReadOnly ? `
+                                    <span class="text-gray-400 hover:text-indigo-600 cursor-grab active:cursor-grabbing text-xs px-0.5" title="Klik & geser baris ini ke atas/bawah">
+                                        <i class="fa-solid fa-grip-vertical"></i>
+                                    </span>
+                                ` : ''}
                                 <span class="text-[11px] font-bold text-gray-500">${no}</span>
                             </div>
                         </td>
                         
                         <!-- Nama Bahan -->
                         <td class="py-1.5 px-2 border-r border-gray-200">
-                            <input type="text" value="${(row.bahan || '').replace(/"/g, '&quot;')}" oninput="handleMatrixBahanInput(this, ${rowIdx})" placeholder="Nama komponen..." class="w-full px-2 py-1 border border-gray-300 rounded text-xs font-bold uppercase text-gray-800 focus:ring-1 focus:ring-indigo-500 outline-none">
+                            <input type="text" value="${(row.bahan || '').replace(/"/g, '&quot;')}" ${isMatrixReadOnly ? 'disabled' : ''} oninput="handleMatrixBahanInput(this, ${rowIdx})" placeholder="Nama komponen..." class="w-full px-2 py-1 border border-gray-300 rounded text-xs font-bold uppercase text-gray-800 focus:ring-1 focus:ring-indigo-500 outline-none ${isMatrixReadOnly ? 'bg-gray-50 cursor-not-allowed' : ''}">
                         </td>
                         
                         <!-- Warna -->
                         <td class="py-1.5 px-2 border-r border-gray-200">
-                            <input type="text" value="${(row.warna || '').replace(/"/g, '&quot;')}" oninput="handleMatrixWarnaInput(this, ${rowIdx})" placeholder="Cth: GOLD / HITAM" class="w-full px-2 py-1 border border-gray-300 rounded text-xs uppercase text-gray-700 focus:ring-1 focus:ring-indigo-500 outline-none">
+                            <input type="text" value="${(row.warna || '').replace(/"/g, '&quot;')}" ${isMatrixReadOnly ? 'disabled' : ''} oninput="handleMatrixWarnaInput(this, ${rowIdx})" placeholder="Cth: GOLD / HITAM" class="w-full px-2 py-1 border border-gray-300 rounded text-xs uppercase text-gray-700 focus:ring-1 focus:ring-indigo-500 outline-none ${isMatrixReadOnly ? 'bg-gray-50 cursor-not-allowed' : ''}">
                         </td>
                 `;
 
@@ -14201,11 +14282,12 @@
                                    value="${dispVal}"
                                    data-raw="${rawVal}"
                                    title="${toolTip}"
+                                   ${isMatrixReadOnly ? 'disabled' : ''}
                                    oninput="handleMatrixCellInput(this, ${rowIdx}, ${artIdx})"
                                    onblur="handleMatrixCellBlur(this, ${rowIdx}, ${artIdx})"
                                    onfocus="handleMatrixCellFocus(this, ${rowIdx}, ${artIdx})"
                                    placeholder="0 atau 1/18"
-                                   class="w-full px-1.5 py-1 border border-amber-300 rounded text-xs font-bold text-amber-950 text-right focus:bg-amber-100 focus:ring-1 focus:ring-amber-500 outline-none transition">
+                                   class="w-full px-1.5 py-1 border border-amber-300 rounded text-xs font-bold text-amber-950 text-right focus:bg-amber-100 focus:ring-1 focus:ring-amber-500 outline-none transition ${isMatrixReadOnly ? 'bg-gray-50 cursor-not-allowed' : ''}">
                         </td>
                     `;
                 });
@@ -14213,7 +14295,7 @@
                 // Satuan
                 trHtml += `
                     <td class="py-1.5 px-1 border-r border-gray-200 text-center">
-                        <select onchange="handleMatrixSatuanInput(this, ${rowIdx})" class="w-full px-1 py-1 border border-gray-300 rounded text-[11px] font-bold text-gray-700 bg-white focus:outline-none">
+                        <select ${isMatrixReadOnly ? 'disabled' : ''} onchange="handleMatrixSatuanInput(this, ${rowIdx})" class="w-full px-1 py-1 border border-gray-300 rounded text-[11px] font-bold text-gray-700 bg-white focus:outline-none ${isMatrixReadOnly ? 'bg-gray-50 cursor-not-allowed' : ''}">
                             <option value="PSG" ${row.satuan === 'PSG' ? 'selected' : ''}>PSG</option>
                             <option value="M" ${row.satuan === 'M' ? 'selected' : ''}>M</option>
                             <option value="YARD" ${row.satuan === 'YARD' ? 'selected' : ''}>YARD</option>
@@ -14227,7 +14309,7 @@
                     
                     <!-- Harga Satuan -->
                     <td class="py-1.5 px-2 border-r border-gray-200 bg-gray-50/50">
-                        <input type="number" min="0" step="any" value="${harga || ''}" oninput="handleMatrixHargaInput(this, ${rowIdx})" placeholder="0" class="w-full px-2 py-1 border border-gray-300 rounded text-xs font-bold text-gray-900 text-right focus:ring-1 focus:ring-indigo-500 outline-none">
+                        <input type="number" min="0" step="any" value="${harga || ''}" ${isMatrixReadOnly ? 'disabled' : ''} oninput="handleMatrixHargaInput(this, ${rowIdx})" placeholder="0" class="w-full px-2 py-1 border border-gray-300 rounded text-xs font-bold text-gray-900 text-right focus:ring-1 focus:ring-indigo-500 outline-none ${isMatrixReadOnly ? 'bg-gray-50 cursor-not-allowed' : ''}">
                     </td>
                 `;
 
@@ -14244,26 +14326,28 @@
                 });
 
                 // Aksi (Delete Row & Move)
-                trHtml += `
-                    <td class="py-1.5 px-1 text-center whitespace-nowrap">
-                        <div class="flex items-center justify-center space-x-1">
-                            ${rowIdx > 0 ? `
-                                <button type="button" onclick="moveMatrixRow(${rowIdx}, -1)" title="Geser ke Atas" class="w-5 h-5 text-gray-400 hover:text-indigo-600 rounded flex items-center justify-center transition">
-                                    <i class="fa-solid fa-arrow-up text-[10px]"></i>
+                if (!isMatrixReadOnly) {
+                    trHtml += `
+                        <td class="py-1.5 px-1 text-center whitespace-nowrap">
+                            <div class="flex items-center justify-center space-x-1">
+                                ${rowIdx > 0 ? `
+                                    <button type="button" onclick="moveMatrixRow(${rowIdx}, -1)" title="Geser ke Atas" class="w-5 h-5 text-gray-400 hover:text-indigo-600 rounded flex items-center justify-center transition">
+                                        <i class="fa-solid fa-arrow-up text-[10px]"></i>
+                                    </button>
+                                ` : `<span class="w-5 inline-block"></span>`}
+                                ${rowIdx < currentMatrixData.rows.length - 1 ? `
+                                    <button type="button" onclick="moveMatrixRow(${rowIdx}, 1)" title="Geser ke Bawah" class="w-5 h-5 text-gray-400 hover:text-indigo-600 rounded flex items-center justify-center transition">
+                                        <i class="fa-solid fa-arrow-down text-[10px]"></i>
+                                    </button>
+                                ` : `<span class="w-5 inline-block"></span>`}
+                                <button type="button" onclick="deleteMatrixRow(${rowIdx})" title="Hapus Baris" class="w-5 h-5 text-gray-400 hover:text-red-600 rounded flex items-center justify-center transition">
+                                    <i class="fa-solid fa-trash text-xs"></i>
                                 </button>
-                            ` : `<span class="w-5 inline-block"></span>`}
-                            ${rowIdx < currentMatrixData.rows.length - 1 ? `
-                                <button type="button" onclick="moveMatrixRow(${rowIdx}, 1)" title="Geser ke Bawah" class="w-5 h-5 text-gray-400 hover:text-indigo-600 rounded flex items-center justify-center transition">
-                                    <i class="fa-solid fa-arrow-down text-[10px]"></i>
-                                </button>
-                            ` : `<span class="w-5 inline-block"></span>`}
-                            <button type="button" onclick="deleteMatrixRow(${rowIdx})" title="Hapus Baris" class="w-5 h-5 text-gray-400 hover:text-red-600 rounded flex items-center justify-center transition">
-                                <i class="fa-solid fa-trash text-xs"></i>
-                            </button>
-                        </div>
-                    </td>
-                    </tr>
-                `;
+                            </div>
+                        </td>
+                    `;
+                }
+                trHtml += `</tr>`;
             });
             tbody.innerHTML = trHtml;
 
@@ -14291,7 +14375,8 @@
                 `;
             });
 
-            footHtml += `<td class="bg-slate-200"></td></tr>`;
+            if (!isMatrixReadOnly) footHtml += `<td class="bg-slate-200"></td>`;
+            footHtml += `</tr>`;
             tfoot.innerHTML = footHtml;
 
             updateMatrixLiveTotals();
@@ -14541,6 +14626,13 @@
         function saveMatrixCost() {
             if (!currentMatrixData) return;
 
+            const uName = (localStorage.getItem('davclar_user') || '').toUpperCase();
+            const access = (window.currentUserAccess && window.currentUserAccess['tab-makloon-cost']) ? window.currentUserAccess['tab-makloon-cost'] : (uName === 'ADMIN' ? 'FULL' : 'READ');
+            if (access !== 'FULL') {
+                if (typeof showToast === 'function') showToast("Akses Ditolak: Anda hanya memiliki akses LIHAT!", "error");
+                return;
+            }
+
             const modelVal = document.getElementById('matrixInpModel').value.trim().toUpperCase();
             const rawMerkSel = document.getElementById('matrixInpMerk') ? document.getElementById('matrixInpMerk').value : 'DAVCLAR';
             const merkVal = getActiveMatrixMerk();
@@ -14622,11 +14714,24 @@
 
         // Duplicate Model
         function duplicateMatrixCost(id) {
+            const uName = (localStorage.getItem('davclar_user') || '').toUpperCase();
+            const access = (window.currentUserAccess && window.currentUserAccess['tab-makloon-cost']) ? window.currentUserAccess['tab-makloon-cost'] : (uName === 'ADMIN' ? 'FULL' : 'READ');
+            if (access !== 'FULL') {
+                if (typeof showToast === 'function') showToast("Akses Ditolak: Anda hanya memiliki akses LIHAT!", "warning");
+                return;
+            }
             openMatrixCostModal(id, true);
         }
 
         // Delete Cost Sheet
         function deleteMatrixCost(id) {
+            const uName = (localStorage.getItem('davclar_user') || '').toUpperCase();
+            const access = (window.currentUserAccess && window.currentUserAccess['tab-makloon-cost']) ? window.currentUserAccess['tab-makloon-cost'] : (uName === 'ADMIN' ? 'FULL' : 'READ');
+            if (access !== 'FULL') {
+                if (typeof showToast === 'function') showToast("Akses Ditolak: Anda hanya memiliki akses LIHAT!", "warning");
+                return;
+            }
+
             const item = db_makloon_cost.find(c => c.id === id);
             if (!item) return;
 
