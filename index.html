@@ -3005,14 +3005,252 @@
                 <!-- ========================================== -->
                 
                 <!-- TAB: KIRIM BAHAN BAKU -->
-                <section id="tab-makloon-bahan" class="tab-content hidden-tab p-2 h-full">
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col items-center justify-center h-full p-8 text-center">
-                        <div class="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mb-6 border border-gray-100 shadow-inner">
-                            <i class="fa-solid fa-truck-ramp-box text-4xl text-gray-400"></i>
+                <section id="tab-makloon-bahan" class="tab-content hidden-tab p-2 md:p-4 h-full flex flex-col overflow-hidden">
+                    <!-- Sub Header Nav & Title -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-3 flex flex-col md:flex-row md:items-center justify-between gap-3 shrink-0">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg shadow-sm">
+                                <i class="fa-solid fa-truck-ramp-box"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                                    Kirim Bahan Baku ke Makloon
+                                    <span class="text-[11px] bg-blue-100 text-blue-800 font-semibold px-2 py-0.5 rounded-full">MRP & SJ Makloon</span>
+                                </h2>
+                                <p class="text-xs text-gray-500">Hitung otomatis kebutuhan bahan baku berdasarkan PO & Setting Cost, pantau pengiriman, dan kelola surat jalan ke pabrik makloon.</p>
+                            </div>
                         </div>
-                        <h2 class="text-2xl font-bold text-gray-800">Kirim Bahan Baku ke Makloon</h2>
-                        <p class="text-sm text-gray-500 mt-2 max-w-md">Catat dan pantau surat jalan bahan baku (upper, sol, dus, aksesoris) yang dikirim ke pengrajin makloon luar.</p>
-                        <span class="mt-6 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-2 rounded-full text-xs font-bold tracking-wider uppercase shadow-sm"><i class="fa-solid fa-person-digging mr-2"></i>Tahap Pengembangan</span>
+
+                        <!-- Sub Tabs Switcher -->
+                        <div class="flex items-center bg-gray-100 p-1 rounded-xl self-start md:self-auto">
+                            <button id="subtab-btn-mrp" onclick="switchMakloonBahanSubTab('mrp')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition shadow-sm bg-white text-blue-600 flex items-center gap-1.5">
+                                <i class="fa-solid fa-calculator"></i> Kalkulator Bahan PO
+                            </button>
+                            <button id="subtab-btn-sj" onclick="switchMakloonBahanSubTab('sj')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-gray-600 hover:text-gray-900 flex items-center gap-1.5">
+                                <i class="fa-solid fa-file-invoice text-indigo-500"></i> Riwayat Surat Jalan
+                                <span id="badgeCountSJ" class="bg-indigo-100 text-indigo-700 text-[10px] px-1.5 py-0.2 rounded-full font-bold">0</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- SUB-TAB 1: KALKULATOR BAHAN PO (MRP) -->
+                    <div id="subtab-content-mrp" class="flex-1 flex flex-col min-h-0 overflow-y-auto space-y-3 pb-8">
+                        <!-- PO Filter & Action Card -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 shrink-0">
+                            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                                <!-- Dropdown PO Selector -->
+                                <div class="flex-1">
+                                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-list-check text-blue-600"></i> Pilih Purchase Order (PO Produksi)
+                                    </label>
+                                    <div class="relative">
+                                        <select id="selectPOBahan" onchange="onSelectPOBahan(this.value)" class="w-full bg-blue-50/50 border border-blue-200 rounded-xl px-3 py-2.5 text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition cursor-pointer">
+                                            <!-- Populated dynamically -->
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="flex flex-wrap items-center gap-2 self-end lg:self-center">
+                                    <button onclick="openModalBuatSuratJalan()" class="px-3.5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2">
+                                        <i class="fa-solid fa-truck-fast"></i>
+                                        <span>+ Buat Surat Jalan Kirim</span>
+                                    </button>
+                                    <button onclick="printPOBahanRequirements()" class="px-3.5 py-2.5 bg-gray-800 hover:bg-gray-900 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2">
+                                        <i class="fa-solid fa-print"></i>
+                                        <span>Cetak Rincian Belanja</span>
+                                    </button>
+                                    <button onclick="exportBahanPOExcel()" class="px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2">
+                                        <i class="fa-solid fa-file-excel"></i>
+                                        <span>Export Excel</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Summary Badges & Cards -->
+                            <div id="mrpPOHeaderSummary" class="mt-4 pt-3 border-t border-gray-100 grid grid-cols-2 md:grid-cols-4 gap-3">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Notification Banner if BOM is missing / partial -->
+                        <div id="mrpBOMAlert" class="hidden"></div>
+
+                        <!-- 4 MATERIAL CATEGORY SECTIONS -->
+                        <!-- 1. SOLE & INSOLE SIZED (PSG) -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                            <div class="bg-gradient-to-r from-orange-50 to-amber-50 px-4 py-3 border-b border-orange-100 flex items-center justify-between">
+                                <div class="flex items-center space-x-2">
+                                    <span class="w-7 h-7 rounded-lg bg-orange-600 text-white flex items-center justify-center text-xs font-bold shadow-sm">
+                                        <i class="fa-solid fa-shoe-prints"></i>
+                                    </span>
+                                    <div>
+                                        <h3 class="text-sm font-bold text-gray-800">1. Sole & Insole Sized (Pasang / PSG)</h3>
+                                        <p class="text-[11px] text-gray-500">Pemesanan sol/insole dicetak per-ukuran pasang sepatu sesuai detail PO & warna sol.</p>
+                                    </div>
+                                </div>
+                                <span id="badgeCountSole" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-800 border border-orange-200">0 Item</span>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs">
+                                    <thead id="headSoleTable" class="bg-gray-50 border-b border-gray-200 text-gray-600 font-bold uppercase tracking-wider text-[11px]">
+                                        <!-- Dynamic Size Headers -->
+                                    </thead>
+                                    <tbody id="bodySoleTable" class="divide-y divide-gray-100">
+                                        <tr><td colspan="12" class="p-6 text-center text-gray-400">Pilih PO untuk melihat kebutuhan sole & insole</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- 2. BAHAN METERAN & GULUNGAN (M / YARD / ROLL) -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-4 py-3 border-b border-blue-100 flex items-center justify-between">
+                                <div class="flex items-center space-x-2">
+                                    <span class="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center text-xs font-bold shadow-sm">
+                                        <i class="fa-solid fa-tape"></i>
+                                    </span>
+                                    <div>
+                                        <h3 class="text-sm font-bold text-gray-800">2. Bahan Meteran & Gulungan (M / YARD / ROLL)</h3>
+                                        <p class="text-[11px] text-gray-500">Upper Sintetis, Lining, Webbing, Spandek, Tali, Velcro - Warna diselaraskan dengan aturan mapping Setting Cost.</p>
+                                    </div>
+                                </div>
+                                <span id="badgeCountMeteran" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200">0 Item</span>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs">
+                                    <thead class="bg-gray-50 border-b border-gray-200 text-gray-600 font-bold uppercase tracking-wider text-[11px]">
+                                        <tr>
+                                            <th class="p-3 text-center w-12">No</th>
+                                            <th class="p-3">Bagian</th>
+                                            <th class="p-3">Nama Bahan Baku</th>
+                                            <th class="p-3">Warna / Corak</th>
+                                            <th class="p-3 text-center">Satuan</th>
+                                            <th class="p-3 text-right">Kebutuhan PO</th>
+                                            <th class="p-3 text-right">Sudah Kirim</th>
+                                            <th class="p-3 text-right">Sisa Kirim</th>
+                                            <th class="p-3 text-center">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="bodyMeteranTable" class="divide-y divide-gray-100">
+                                        <tr><td colspan="9" class="p-6 text-center text-gray-400">Pilih PO untuk melihat kebutuhan bahan meteran</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- 3. AKSESORIS, LEM & KEMASAN (PCS / SET / DUS / LEM) -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                            <div class="bg-gradient-to-r from-emerald-50 to-teal-50 px-4 py-3 border-b border-emerald-100 flex items-center justify-between">
+                                <div class="flex items-center space-x-2">
+                                    <span class="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-xs font-bold shadow-sm">
+                                        <i class="fa-solid fa-box-open"></i>
+                                    </span>
+                                    <div>
+                                        <h3 class="text-sm font-bold text-gray-800">3. Aksesoris, Kemasan & Pendukung (PCS / SET / DUS / LEM)</h3>
+                                        <p class="text-[11px] text-gray-500">Ring buckle, kancing, boneka/ornamen, lem, hangtag, dus sepatu Davclar.</p>
+                                    </div>
+                                </div>
+                                <span id="badgeCountAksesoris" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">0 Item</span>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs">
+                                    <thead class="bg-gray-50 border-b border-gray-200 text-gray-600 font-bold uppercase tracking-wider text-[11px]">
+                                        <tr>
+                                            <th class="p-3 text-center w-12">No</th>
+                                            <th class="p-3">Bagian</th>
+                                            <th class="p-3">Nama Bahan Baku / Aksesoris</th>
+                                            <th class="p-3">Warna / Spek</th>
+                                            <th class="p-3 text-center">Satuan</th>
+                                            <th class="p-3 text-right">Kebutuhan PO</th>
+                                            <th class="p-3 text-right">Sudah Kirim</th>
+                                            <th class="p-3 text-right">Sisa Kirim</th>
+                                            <th class="p-3 text-center">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="bodyAksesorisTable" class="divide-y divide-gray-100">
+                                        <tr><td colspan="9" class="p-6 text-center text-gray-400">Pilih PO untuk melihat kebutuhan aksesoris & kemasan</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- 4. BAHAN LEMBARAN (LBR) -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                            <div class="bg-gradient-to-r from-purple-50 to-pink-50 px-4 py-3 border-b border-purple-100 flex items-center justify-between">
+                                <div class="flex items-center space-x-2">
+                                    <span class="w-7 h-7 rounded-lg bg-purple-600 text-white flex items-center justify-center text-xs font-bold shadow-sm">
+                                        <i class="fa-solid fa-layer-group"></i>
+                                    </span>
+                                    <div>
+                                        <h3 class="text-sm font-bold text-gray-800">4. Bahan Lembaran (LBR) - Cetak Pond</h3>
+                                        <p class="text-[11px] text-gray-500">Sole / Tatak / Insole / Spons berbentuk lembaran yang dicetak/dipond (tidak dipecah per ukuran).</p>
+                                    </div>
+                                </div>
+                                <span id="badgeCountLembaran" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200">0 Item</span>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs">
+                                    <thead class="bg-gray-50 border-b border-gray-200 text-gray-600 font-bold uppercase tracking-wider text-[11px]">
+                                        <tr>
+                                            <th class="p-3 text-center w-12">No</th>
+                                            <th class="p-3">Bagian</th>
+                                            <th class="p-3">Nama Bahan Baku</th>
+                                            <th class="p-3">Warna / Tipe</th>
+                                            <th class="p-3 text-center">Satuan</th>
+                                            <th class="p-3 text-right">Kebutuhan PO</th>
+                                            <th class="p-3 text-right">Sudah Kirim</th>
+                                            <th class="p-3 text-right">Sisa Kirim</th>
+                                            <th class="p-3 text-center">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="bodyLembaranTable" class="divide-y divide-gray-100">
+                                        <tr><td colspan="9" class="p-6 text-center text-gray-400">Pilih PO untuk melihat kebutuhan bahan lembaran</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SUB-TAB 2: RIWAYAT SURAT JALAN -->
+                    <div id="subtab-content-sj" class="hidden flex-1 flex flex-col min-h-0 bg-white rounded-xl shadow-sm border border-gray-100 p-4 overflow-hidden">
+                        <!-- Filter bar -->
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 shrink-0">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <div class="relative">
+                                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-400 text-xs"></i>
+                                    <input type="text" id="filterSJCari" oninput="renderSuratJalanTable()" placeholder="Cari No SJ / PO / Sopir..." class="pl-8 pr-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:ring-1 focus:ring-blue-500 w-48 md:w-64">
+                                </div>
+                                <select id="filterSJMakloon" onchange="renderSuratJalanTable()" class="py-1.5 px-3 border border-gray-200 rounded-lg text-xs focus:ring-1 focus:ring-blue-500 bg-white">
+                                    <option value="">Semua Vendor Makloon</option>
+                                </select>
+                            </div>
+                            <button onclick="openModalBuatSuratJalan()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-sm transition flex items-center gap-1.5 self-start md:self-auto">
+                                <i class="fa-solid fa-plus"></i> Surat Jalan Baru
+                            </button>
+                        </div>
+
+                        <!-- Table Surat Jalan -->
+                        <div class="flex-1 overflow-y-auto border border-gray-100 rounded-xl">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-gray-50 border-b border-gray-200 text-gray-600 font-bold uppercase tracking-wider text-[11px] sticky top-0 z-10">
+                                    <tr>
+                                        <th class="p-3 text-center w-12">No</th>
+                                        <th class="p-3">No. Surat Jalan</th>
+                                        <th class="p-3">Tanggal</th>
+                                        <th class="p-3">No. PO Reff</th>
+                                        <th class="p-3">Makloon Tujuan</th>
+                                        <th class="p-3">Sopir / Kurir</th>
+                                        <th class="p-3 text-center">Total Item</th>
+                                        <th class="p-3">Catatan</th>
+                                        <th class="p-3 text-center w-36">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bodySJTable" class="divide-y divide-gray-100">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </section>
 
@@ -3335,6 +3573,150 @@
             </div>
         </div>
     </div>
+    <!-- ========================================== -->
+    <!-- MODAL POP-UP: BUAT / EDIT SURAT JALAN BAHAN MAKLOON -->
+    <!-- ========================================== -->
+    <div id="modal-makloon-sj-form" class="fixed inset-0 z-[9999] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm" onclick="closeMakloonSJModal()"></div>
+        <div class="bg-white rounded-2xl shadow-2xl z-10 w-11/12 max-w-5xl transform scale-95 transition-transform duration-300 flex flex-col max-h-[95vh]">
+            <!-- Header -->
+            <div class="p-4 md:p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-2xl shrink-0">
+                <div class="flex items-center space-x-3">
+                    <span class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-lg shadow-sm">
+                        <i class="fa-solid fa-truck-ramp-box"></i>
+                    </span>
+                    <div>
+                        <h3 class="text-base md:text-lg font-bold text-gray-800" id="sjModalTitle">Buat Surat Jalan Kirim Bahan Baku</h3>
+                        <p class="text-xs text-gray-500">Kirim bahan baku upper, sol, aksesoris, & lembaran ke pengrajin makloon.</p>
+                    </div>
+                </div>
+                <button onclick="closeMakloonSJModal()" class="text-gray-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+
+            <!-- Body Scrollable -->
+            <div class="p-4 md:p-6 overflow-y-auto flex-1 space-y-4">
+                <input type="hidden" id="sjEditId">
+
+                <!-- Informasi Header Surat Jalan -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">No. Surat Jalan</label>
+                        <input type="text" id="sjNoInput" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs font-bold text-blue-700 focus:ring-1 focus:ring-blue-500 uppercase" placeholder="SJ-BB-XXXX">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Tanggal Pengiriman</label>
+                        <input type="date" id="sjTglInput" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Nomor PO Reff</label>
+                        <select id="sjPOSelect" onchange="onSJPODropdownChange(this.value)" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs font-semibold focus:ring-1 focus:ring-blue-500">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Makloon / Vendor Tujuan</label>
+                        <input type="text" id="sjMakloonInput" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs font-bold text-gray-800 uppercase focus:ring-1 focus:ring-blue-500" placeholder="Pabrik / Vendor">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Sopir / Ekspedisi / Pengantar</label>
+                        <input type="text" id="sjDriverInput" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500" placeholder="Nama sopir atau nama kurir...">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Catatan Pengiriman</label>
+                        <input type="text" id="sjCatatanInput" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500" placeholder="Catatan tambahan (misal: pengiriman tahap 1)">
+                    </div>
+                </div>
+
+                <!-- Section Items Table -->
+                <div class="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                    <div class="bg-gray-100 px-4 py-2.5 flex items-center justify-between border-b border-gray-200">
+                        <span class="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-boxes-stacked text-blue-600"></i> Rincian Bahan yang Dikirim
+                        </span>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="autoFillSJRemaingItems()" class="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold transition shadow-xs flex items-center gap-1">
+                                <i class="fa-solid fa-bolt"></i> Tarik Otomatis Sisa Bahan PO
+                            </button>
+                            <button type="button" onclick="addManualSJRow()" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow-xs flex items-center gap-1">
+                                <i class="fa-solid fa-plus"></i> Tambah Baris
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto max-h-[45vh]">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-gray-50 border-b border-gray-200 text-gray-600 font-bold uppercase tracking-wider text-[11px] sticky top-0 z-10">
+                                <tr>
+                                    <th class="p-2.5 text-center w-10">No</th>
+                                    <th class="p-2.5 w-32">Kategori</th>
+                                    <th class="p-2.5">Nama Bahan</th>
+                                    <th class="p-2.5 w-36">Warna / Spek</th>
+                                    <th class="p-2.5 text-center w-40">Jumlah / Qty</th>
+                                    <th class="p-2.5 text-center w-20">Satuan</th>
+                                    <th class="p-2.5">Keterangan</th>
+                                    <th class="p-2.5 text-center w-12"><i class="fa-solid fa-trash"></i></th>
+                                </tr>
+                            </thead>
+                            <tbody id="sjFormItemsBody" class="divide-y divide-gray-100">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="p-4 md:p-5 border-t border-gray-100 flex flex-wrap justify-between items-center gap-3 bg-gray-50 rounded-b-2xl shrink-0">
+                <button type="button" onclick="closeMakloonSJModal()" class="px-4 py-2 border border-gray-300 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-100 transition">
+                    Batal
+                </button>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="saveSuratJalanMakloon(false)" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span>Simpan Surat Jalan</span>
+                    </button>
+                    <button type="button" onclick="saveSuratJalanMakloon(true)" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2">
+                        <i class="fa-solid fa-print"></i>
+                        <span>Simpan & Cetak</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL POP-UP: DETAIL SURAT JALAN -->
+    <!-- ========================================== -->
+    <div id="modal-makloon-sj-detail" class="fixed inset-0 z-[9999] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm" onclick="closeMakloonSJDetailModal()"></div>
+        <div class="bg-white rounded-2xl shadow-2xl z-10 w-11/12 max-w-4xl transform scale-95 transition-transform duration-300 flex flex-col max-h-[92vh]">
+            <div class="p-4 md:p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-2xl shrink-0">
+                <div class="flex items-center space-x-3">
+                    <span class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-lg shadow-sm">
+                        <i class="fa-solid fa-file-invoice"></i>
+                    </span>
+                    <div>
+                        <h3 class="text-base md:text-lg font-bold text-gray-800" id="sjDetTitle">Detail Surat Jalan Kirim Bahan</h3>
+                        <p class="text-xs text-gray-500" id="sjDetSubTitle">-</p>
+                    </div>
+                </div>
+                <button onclick="closeMakloonSJDetailModal()" class="text-gray-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+
+            <div class="p-4 md:p-6 overflow-y-auto flex-1 space-y-4" id="sjDetContent">
+                <!-- Injected dynamically -->
+            </div>
+
+            <div class="p-4 md:p-5 border-t border-gray-100 flex justify-between items-center bg-gray-50 rounded-b-2xl shrink-0">
+                <button type="button" onclick="closeMakloonSJDetailModal()" class="px-4 py-2 border border-gray-300 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-100 transition">
+                    Tutup
+                </button>
+                <div class="flex items-center gap-2" id="sjDetActions">
+                    <!-- Injected dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- JAVASCRIPT -->
     <script>
@@ -3360,6 +3742,7 @@
         let db_kasbon     = getSafeArray('davclar_kasbon');
         let db_users      = getSafeArray('davclar_users');
         let db_makloon_cost = getSafeArray('davclar_makloon_cost');
+        let db_makloon_kirim = getSafeArray('davclar_makloon_kirim');
 
         // ==========================================
         // FITUR RESPONSIVE (SIDEBAR TOGGLE MOBILE & PC)
@@ -3486,7 +3869,7 @@
         };
 
         // 3. Definisikan dbKeys & Listener Firebase
-        const dbKeys = ['davclar_barang', 'davclar_customer', 'davclar_po', 'davclar_so', 'davclar_invoice', 'davclar_payment', 'davclar_kontrabon', 'davclar_sales_cp', 'davclar_kasbon', 'davclar_users', 'davclar_makloon_cost'];
+        const dbKeys = ['davclar_barang', 'davclar_customer', 'davclar_po', 'davclar_so', 'davclar_invoice', 'davclar_payment', 'davclar_kontrabon', 'davclar_sales_cp', 'davclar_kasbon', 'davclar_users', 'davclar_makloon_cost', 'davclar_makloon_kirim'];
 
         if (window.firebaseDB) {
             // Debounce render — UI auto-refresh 1x setelah semua key Firebase selesai diupdate
@@ -3504,6 +3887,7 @@
                     if (typeof renderSalesLedger === 'function') renderSalesLedger();
                     if (typeof renderDashboard === 'function') renderDashboard();
                     if (typeof renderMakloonCostTable === 'function') renderMakloonCostTable();
+                    if (typeof renderMakloonBahanModule === 'function') renderMakloonBahanModule();
                 }, 500);
             }
 
@@ -3541,7 +3925,7 @@
                         return;
                     }
 
-                    // Untuk seluruh data operasional (kontrabon, invoice, barang, customer, po, so, payment, sales_cp, kasbon, makloon_cost):
+                    // Untuk seluruh data operasional (kontrabon, invoice, barang, customer, po, so, payment, sales_cp, kasbon, makloon_cost, makloon_kirim):
                     // Jika di server null (karena sudah dihapus), cleanData = [] sehingga data lama di localStorage TERHAPUS!
                     const cleanData = toCleanArray(rawData);
 
@@ -3555,6 +3939,7 @@
                     if(key === 'davclar_sales_cp') db_sales_cp = cleanData;
                     if(key === 'davclar_kasbon') db_kasbon = cleanData;
                     if(key === 'davclar_makloon_cost') db_makloon_cost = cleanData;
+                    if(key === 'davclar_makloon_kirim') db_makloon_kirim = cleanData;
                     
                     // Tulis ke localStorage TANPA memicu Firebase sync (pakai originalSetItem)
                     window.originalSetItem.call(window.localStorage, key, JSON.stringify(cleanData));
@@ -3921,6 +4306,10 @@
 
             if(tabId === 'tab-makloon-cost') { 
                 if(typeof renderMakloonCostTable === 'function') renderMakloonCostTable();
+            }
+
+            if(tabId === 'tab-makloon-bahan') { 
+                if(typeof renderMakloonBahanModule === 'function') renderMakloonBahanModule();
             }
         }
 
@@ -9746,7 +10135,8 @@
                 davclar_sales_cp: db_sales_cp,
                 davclar_kasbon: db_kasbon,
                 davclar_users: db_users,
-                davclar_makloon_cost: typeof db_makloon_cost !== 'undefined' ? db_makloon_cost : []
+                davclar_makloon_cost: typeof db_makloon_cost !== 'undefined' ? db_makloon_cost : [],
+                davclar_makloon_kirim: typeof db_makloon_kirim !== 'undefined' ? db_makloon_kirim : []
             };
 
             // 2. Ubah jadi format JSON Text yang rapi
@@ -9820,6 +10210,8 @@
             window.firebaseWrite('davclar_users', data.davclar_users);
                         if(data.davclar_makloon_cost) localStorage.setItem('davclar_makloon_cost', JSON.stringify(data.davclar_makloon_cost));
             window.firebaseWrite('davclar_makloon_cost', data.davclar_makloon_cost);
+                        if(data.davclar_makloon_kirim) localStorage.setItem('davclar_makloon_kirim', JSON.stringify(data.davclar_makloon_kirim));
+            window.firebaseWrite('davclar_makloon_kirim', data.davclar_makloon_kirim);
 
                         if(typeof showToast === "function") showToast("Restore Berhasil! Memuat ulang sistem...", "success");
                         
@@ -9859,7 +10251,8 @@
                 "Kasbon_Sales": typeof db_kasbon !== 'undefined' ? db_kasbon : [],
                 "Riwayat_Komisi_CP": typeof db_payment !== 'undefined' ? db_payment : [],
                 "Akun_User": typeof db_users !== 'undefined' ? db_users : [],
-                "Setting_Cost_Makloon": typeof db_makloon_cost !== 'undefined' ? db_makloon_cost : []
+                "Setting_Cost_Makloon": typeof db_makloon_cost !== 'undefined' ? db_makloon_cost : [],
+                "Kirim_Bahan_Makloon": typeof db_makloon_kirim !== 'undefined' ? db_makloon_kirim : []
             };
 
             // 2. Blueprint Urutan Kolom Baku (Sesuai struktur asli Kontra Bon)
@@ -9875,7 +10268,8 @@
                 "Kasbon_Sales": ["id", "tanggal", "sales", "tipe", "nominal"],
                 "Riwayat_Komisi_CP": ["no_cp", "tanggal", "sales", "total_komisi", "keterangan"],
                 "Akun_User": ["username", "password", "role", "access"],
-                "Setting_Cost_Makloon": ["id", "model", "merk", "vendor", "kategori", "articles", "catatan", "createdAt", "updatedAt"]
+                "Setting_Cost_Makloon": ["id", "model", "merk", "vendor", "kategori", "articles", "catatan", "createdAt", "updatedAt"],
+                "Kirim_Bahan_Makloon": ["id", "tanggal", "noPO", "makloon", "driver", "catatan", "createdAt"]
             };
 
             // 3. Mesin Pemecah & Penyelaras Data
@@ -14928,6 +15322,1469 @@
             }
         }
 
+        // =================================================================
+        // MODUL: KIRIM BAHAN BAKU KE MAKLOON (MRP & SURAT JALAN)
+        // =================================================================
+        let currentMakloonBahanPOId = null;
+        let tempSJItems = [];
+
+        // 1. Switch Sub Tabs (Kalkulator vs Riwayat SJ)
+        function switchMakloonBahanSubTab(tab) {
+            const btnMrp = document.getElementById('subtab-btn-mrp');
+            const btnSj  = document.getElementById('subtab-btn-sj');
+            const secMrp = document.getElementById('subtab-content-mrp');
+            const secSj  = document.getElementById('subtab-content-sj');
+
+            if (tab === 'mrp') {
+                if (btnMrp) {
+                    btnMrp.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition shadow-sm bg-white text-blue-600 flex items-center gap-1.5";
+                }
+                if (btnSj) {
+                    btnSj.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-gray-600 hover:text-gray-900 flex items-center gap-1.5";
+                }
+                if (secMrp) secMrp.classList.remove('hidden');
+                if (secSj)  secSj.classList.add('hidden');
+            } else {
+                if (btnSj) {
+                    btnSj.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition shadow-sm bg-white text-indigo-600 flex items-center gap-1.5";
+                }
+                if (btnMrp) {
+                    btnMrp.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-gray-600 hover:text-gray-900 flex items-center gap-1.5";
+                }
+                if (secMrp) secMrp.classList.add('hidden');
+                if (secSj)  secSj.classList.remove('hidden');
+                renderSuratJalanTable();
+            }
+        }
+
+        // 2. Mesin Resolusi Warna Bahan berdasarkan Setting Cost & PO
+        function resolveBOMMaterialColor(poColor, bomColorStr) {
+            poColor = (poColor || '').trim();
+            bomColorStr = (bomColorStr || '').trim();
+            
+            if (!bomColorStr || bomColorStr === '-' || bomColorStr.toUpperCase() === 'SEMUA WARNA' || bomColorStr.toUpperCase() === 'NETRAL') {
+                return '-';
+            }
+            if (bomColorStr.toUpperCase().includes('SESUAI')) {
+                return poColor || '-';
+            }
+            
+            // Cek pemetaan panah (contoh: "KREM->KUNING; MERAH MUDA->BIRU MUDA")
+            if (bomColorStr.includes('->') || bomColorStr.includes('=>')) {
+                const pairs = bomColorStr.split(/[;,\n\/]+/);
+                for (let pair of pairs) {
+                    const parts = pair.split(/->|=>/);
+                    if (parts.length === 2) {
+                        const src = parts[0].trim().toUpperCase();
+                        const tgt = parts[1].trim();
+                        if (src === poColor.toUpperCase()) {
+                            return tgt.toUpperCase();
+                        }
+                    }
+                }
+                // Partial match fallback
+                for (let pair of pairs) {
+                    const parts = pair.split(/->|=>/);
+                    if (parts.length === 2) {
+                        const src = parts[0].trim().toUpperCase();
+                        const tgt = parts[1].trim();
+                        if (poColor.toUpperCase().includes(src) || src.includes(poColor.toUpperCase())) {
+                            return tgt.toUpperCase();
+                        }
+                    }
+                }
+                // Jika tidak terdaftar di mapping, kembalikan warna PO asli
+                return poColor || '-';
+            }
+            
+            // Warna statis (contoh: BLACK NIKEL, NATURAL, PUTIH, dll)
+            return bomColorStr.toUpperCase();
+        }
+
+        // 3. Deteksi Komponen Sol Berukuran (Size-Specific Component)
+        function isSizedComponent(bagian, bahan, satuan) {
+            const sat = (satuan || '').trim().toUpperCase();
+            const bg  = (bagian || '').trim().toUpperCase();
+            const bh  = (bahan || '').trim().toUpperCase();
+
+            // Pengecualian mutlak: Jika satuan LBR (lembaran dipond), TIDAK dipecah per ukuran!
+            if (sat === 'LBR') return false;
+
+            // Jika satuan Pasang (PSG / PASANG) dan komponen merupakan Sole/Insole
+            if (sat === 'PSG' || sat === 'PASANG') {
+                if (bg.includes('SOL') || bh.includes('SOL') || bg.includes('SOLE') || bh.includes('SOLE') || bh.includes('INSOLE') || bh.includes('OUTSOLE')) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // 4. Kategori Bahan Baku
+        function categorizeMaterial(bagian, bahan, satuan) {
+            if (isSizedComponent(bagian, bahan, satuan)) return 'SOLE_SIZED';
+            const sat = (satuan || '').trim().toUpperCase();
+            if (sat === 'LBR') return 'LEMBARAN';
+            if (['M', 'METER', 'YARD', 'YD', 'ROLL', 'ROL'].includes(sat)) return 'METERAN';
+            return 'AKSESORIS';
+        }
+
+        // 5. Mesin Kalkulator Kebutuhan Bahan PO (BOM x PO Produksi)
+        function calculatePORequiredMaterials(poId) {
+            const po = (db_po || []).find(p => p.id === poId);
+            if (!po) return null;
+
+            const sizeLabels = (po.sizeLabels && po.sizeLabels.length >= 6) 
+                ? po.sizeLabels.slice(0, 6) 
+                : ['38', '39', '40', '41', '42', '-'];
+
+            const soleMap = {};
+            const meteranMap = {};
+            const aksesorisMap = {};
+            const lembaranMap = {};
+
+            let totalPairs = 0;
+            let bomMatchedArticles = new Set();
+            let missingBomArticles = new Set();
+
+            const items = po.items || [];
+            items.forEach(item => {
+                const art = (item.artikel || '').trim().toUpperCase();
+                const poColor = (item.warna || '').trim().toUpperCase();
+                const s = [
+                    parseInt(item.s1) || 0,
+                    parseInt(item.s2) || 0,
+                    parseInt(item.s3) || 0,
+                    parseInt(item.s4) || 0,
+                    parseInt(item.s5) || 0,
+                    parseInt(item.s6) || 0
+                ];
+                const itemTotal = parseInt(item.total) || s.reduce((a, b) => a + b, 0);
+                totalPairs += itemTotal;
+
+                // Cari Setting Cost / BOM yang cocok untuk artikel ini
+                let bom = (db_makloon_cost || []).find(c => {
+                    if (Array.isArray(c.articles) && c.articles.some(a => a.trim().toUpperCase() === art)) return true;
+                    if ((c.model || '').trim().toUpperCase() === art) return true;
+                    if ((c.artikel || '').trim().toUpperCase() === art) return true;
+                    if (c.model && art.startsWith(c.model.trim().toUpperCase())) return true;
+                    return false;
+                });
+
+                if (!bom) {
+                    missingBomArticles.add(art || 'Tanpa Artikel');
+                    return;
+                }
+
+                bomMatchedArticles.add(art);
+
+                // Tentukan index kolom artikel dalam BOM
+                let colIdx = 0;
+                if (Array.isArray(bom.articles) && bom.articles.length > 0) {
+                    const foundIdx = bom.articles.findIndex(a => a.trim().toUpperCase() === art);
+                    if (foundIdx !== -1) colIdx = foundIdx;
+                }
+
+                // Iterasi setiap baris BOM
+                const rows = bom.rows || [];
+                rows.forEach(r => {
+                    const bgUpper = (r.bagian || '').trim().toUpperCase();
+                    const bhUpper = (r.bahan || '').trim().toUpperCase();
+
+                    // Abaikan baris ongkos/jasa makloon
+                    if (bgUpper.includes('JASA') || bgUpper.includes('ONGKOS') || bgUpper.includes('UPAH') || bhUpper.includes('JASA') || bhUpper.includes('ONGKOS')) {
+                        return;
+                    }
+
+                    const rawU = (r.rawUsage && r.rawUsage[colIdx]) || (r.usage && r.usage[colIdx]) || 0;
+                    const u = parseFractionOrNumber(rawU);
+                    if (!r.bahan && u === 0) return;
+
+                    const satuan = (r.satuan || 'PSG').trim().toUpperCase();
+                    const bahan = (r.bahan || '-').trim().toUpperCase();
+                    const resolvedColor = resolveBOMMaterialColor(poColor, r.warna);
+                    const cat = categorizeMaterial(r.bagian, r.bahan, satuan);
+
+                    if (cat === 'SOLE_SIZED') {
+                        const key = `${bahan}|${resolvedColor}`;
+                        if (!soleMap[key]) {
+                            soleMap[key] = {
+                                key: key,
+                                bagian: r.bagian || 'SOLE',
+                                bahan: bahan,
+                                warna: resolvedColor,
+                                satuan: 'PSG',
+                                sizes: [0, 0, 0, 0, 0, 0],
+                                totalPasang: 0,
+                                articles: new Set(),
+                                sudahKirim: 0,
+                                sisaKirim: 0,
+                                sizesKirim: [0, 0, 0, 0, 0, 0]
+                            };
+                        }
+                        for (let i = 0; i < 6; i++) {
+                            soleMap[key].sizes[i] += Math.round(s[i] * u);
+                        }
+                        soleMap[key].totalPasang += Math.round(itemTotal * u);
+                        soleMap[key].articles.add(art);
+
+                    } else if (cat === 'LEMBARAN') {
+                        const key = `${bahan}|${resolvedColor}|LBR|${bgUpper}`;
+                        if (!lembaranMap[key]) {
+                            lembaranMap[key] = {
+                                key: key,
+                                bagian: r.bagian || 'LEMBARAN',
+                                bahan: bahan,
+                                warna: resolvedColor,
+                                satuan: 'LBR',
+                                totalKebutuhan: 0,
+                                articles: new Set(),
+                                sudahKirim: 0,
+                                sisaKirim: 0
+                            };
+                        }
+                        lembaranMap[key].totalKebutuhan += (itemTotal * u);
+                        lembaranMap[key].articles.add(art);
+
+                    } else if (cat === 'METERAN') {
+                        const key = `${bahan}|${resolvedColor}|${satuan}|${bgUpper}`;
+                        if (!meteranMap[key]) {
+                            meteranMap[key] = {
+                                key: key,
+                                bagian: r.bagian || 'UPPER',
+                                bahan: bahan,
+                                warna: resolvedColor,
+                                satuan: satuan,
+                                totalKebutuhan: 0,
+                                articles: new Set(),
+                                sudahKirim: 0,
+                                sisaKirim: 0
+                            };
+                        }
+                        meteranMap[key].totalKebutuhan += (itemTotal * u);
+                        meteranMap[key].articles.add(art);
+
+                    } else {
+                        // AKSESORIS / KEMASAN / DUS / LEM
+                        const key = `${bahan}|${resolvedColor}|${satuan}|${bgUpper}`;
+                        if (!aksesorisMap[key]) {
+                            aksesorisMap[key] = {
+                                key: key,
+                                bagian: r.bagian || 'AKSESORIS',
+                                bahan: bahan,
+                                warna: resolvedColor,
+                                satuan: satuan,
+                                totalKebutuhan: 0,
+                                articles: new Set(),
+                                sudahKirim: 0,
+                                sisaKirim: 0
+                            };
+                        }
+                        aksesorisMap[key].totalKebutuhan += (itemTotal * u);
+                        aksesorisMap[key].articles.add(art);
+                    }
+                });
+            });
+
+            // Akumulasi pengiriman dari Riwayat Surat Jalan (db_makloon_kirim)
+            const shipments = (db_makloon_kirim || []).filter(k => k.noPO === poId);
+            shipments.forEach(sj => {
+                const sItems = sj.items || [];
+                sItems.forEach(it => {
+                    const itBahan = (it.bahan || '').trim().toUpperCase();
+                    const itWarna = (it.warna || '-').trim().toUpperCase();
+                    const itSatuan = (it.satuan || '').trim().toUpperCase();
+                    const itCat = it.kategori || categorizeMaterial(it.bagian, it.bahan, it.satuan);
+                    const itQty = parseFloat(it.qty) || 0;
+
+                    if (itCat === 'SOLE_SIZED') {
+                        const key = `${itBahan}|${itWarna}`;
+                        if (soleMap[key]) {
+                            soleMap[key].sudahKirim += itQty;
+                            if (Array.isArray(it.sizes)) {
+                                for (let i = 0; i < 6; i++) {
+                                    soleMap[key].sizesKirim[i] += (parseInt(it.sizes[i]) || 0);
+                                }
+                            }
+                        }
+                    } else if (itCat === 'LEMBARAN') {
+                        // Match by bahan & warna
+                        const found = Object.values(lembaranMap).find(x => x.bahan === itBahan && (x.warna === itWarna || x.warna === '-' || itWarna === '-'));
+                        if (found) found.sudahKirim += itQty;
+                    } else if (itCat === 'METERAN') {
+                        const found = Object.values(meteranMap).find(x => x.bahan === itBahan && (x.warna === itWarna || x.warna === '-' || itWarna === '-'));
+                        if (found) found.sudahKirim += itQty;
+                    } else {
+                        const found = Object.values(aksesorisMap).find(x => x.bahan === itBahan && (x.warna === itWarna || x.warna === '-' || itWarna === '-'));
+                        if (found) found.sudahKirim += itQty;
+                    }
+                });
+            });
+
+            // Hitung sisa kebutuhan
+            const soleList = Object.values(soleMap).map(item => {
+                item.sisaKirim = Math.max(0, item.totalPasang - item.sudahKirim);
+                return item;
+            });
+            const meteranList = Object.values(meteranMap).map(item => {
+                item.sisaKirim = Math.max(0, parseFloat((item.totalKebutuhan - item.sudahKirim).toFixed(2)));
+                return item;
+            });
+            const aksesorisList = Object.values(aksesorisMap).map(item => {
+                item.sisaKirim = Math.max(0, parseFloat((item.totalKebutuhan - item.sudahKirim).toFixed(2)));
+                return item;
+            });
+            const lembaranList = Object.values(lembaranMap).map(item => {
+                item.sisaKirim = Math.max(0, parseFloat((item.totalKebutuhan - item.sudahKirim).toFixed(2)));
+                return item;
+            });
+
+            // Hitung progress keseluruhan
+            let grandTotalReq = 0;
+            let grandTotalSent = 0;
+            [...soleList, ...meteranList, ...aksesorisList, ...lembaranList].forEach(i => {
+                const req = i.totalPasang !== undefined ? i.totalPasang : i.totalKebutuhan;
+                grandTotalReq += (req || 0);
+                grandTotalSent += (i.sudahKirim || 0);
+            });
+            const overallPct = grandTotalReq > 0 ? Math.min(100, Math.round((grandTotalSent / grandTotalReq) * 100)) : 0;
+
+            return {
+                po: po,
+                sizeLabels: sizeLabels,
+                totalPairs: totalPairs,
+                soleSized: soleList,
+                meteran: meteranList,
+                aksesoris: aksesorisList,
+                lembaran: lembaranList,
+                bomMatchedArticles: Array.from(bomMatchedArticles),
+                missingBomArticles: Array.from(missingBomArticles),
+                isBomComplete: missingBomArticles.size === 0 && bomMatchedArticles.size > 0,
+                shipmentsCount: shipments.length,
+                overallPct: overallPct
+            };
+        }
+
+        // 6. Inisialisasi & Render Utama Modul Kirim Bahan
+        function renderMakloonBahanModule() {
+            const poSelect = document.getElementById('selectPOBahan');
+            const sjPoSelect = document.getElementById('sjPOSelect');
+            const filterMakloon = document.getElementById('filterSJMakloon');
+            const badgeCountSJ = document.getElementById('badgeCountSJ');
+
+            if (badgeCountSJ) {
+                badgeCountSJ.innerText = (db_makloon_kirim || []).length;
+            }
+
+            // Populate Vendor Filter
+            if (filterMakloon) {
+                const currentVal = filterMakloon.value;
+                const vendors = Array.from(new Set((db_po || []).map(p => (p.makloon || '').trim().toUpperCase()).filter(Boolean)));
+                filterMakloon.innerHTML = '<option value="">Semua Vendor Makloon</option>' + 
+                    vendors.map(v => `<option value="${v}" ${v === currentVal ? 'selected' : ''}>${v}</option>`).join('');
+            }
+
+            // Populate Dropdown PO
+            const sortedPOs = [...(db_po || [])].sort((a, b) => {
+                const da = a.tanggal || '';
+                const db = b.tanggal || '';
+                return db.localeCompare(da);
+            });
+
+            if (poSelect) {
+                if (sortedPOs.length === 0) {
+                    poSelect.innerHTML = '<option value="">(Belum ada data PO Produksi)</option>';
+                } else {
+                    const currentVal = currentMakloonBahanPOId || poSelect.value;
+                    poSelect.innerHTML = sortedPOs.map(p => {
+                        let totalQty = 0;
+                        (p.items || []).forEach(it => { totalQty += (parseInt(it.total) || 0); });
+                        return `<option value="${p.id}" ${p.id === currentVal ? 'selected' : ''}>
+                            PO: ${p.id} • ${p.makloon || 'PABRIK'} • ${totalQty.toLocaleString('id-ID')} Psg • Tgl: ${p.tanggal || '-'}
+                        </option>`;
+                    }).join('');
+
+                    if (!currentMakloonBahanPOId && sortedPOs.length > 0) {
+                        currentMakloonBahanPOId = sortedPOs[0].id;
+                    }
+                }
+            }
+
+            if (sjPoSelect) {
+                sjPoSelect.innerHTML = '<option value="">-- Pilih Nomor PO --</option>' + 
+                    sortedPOs.map(p => `<option value="${p.id}">${p.id} (${p.makloon || 'PABRIK'})</option>`).join('');
+            }
+
+            if (currentMakloonBahanPOId) {
+                renderPOBahanCalculations(currentMakloonBahanPOId);
+            }
+            renderSuratJalanTable();
+        }
+
+        function onSelectPOBahan(poId) {
+            currentMakloonBahanPOId = poId;
+            renderPOBahanCalculations(poId);
+        }
+
+        // 7. Render Seluruh Tabel & Kartu Kalkulasi Bahan PO
+        function renderPOBahanCalculations(poId) {
+            const data = calculatePORequiredMaterials(poId);
+            const containerSummary = document.getElementById('mrpPOHeaderSummary');
+            const alertBox = document.getElementById('mrpBOMAlert');
+
+            if (!data) {
+                if (containerSummary) containerSummary.innerHTML = '';
+                return;
+            }
+
+            // 1. Header Summary Cards
+            if (containerSummary) {
+                containerSummary.innerHTML = `
+                    <div class="bg-blue-50/60 p-3 rounded-xl border border-blue-100">
+                        <div class="text-[10px] uppercase font-bold text-blue-700">Vendor Makloon</div>
+                        <div class="text-sm font-extrabold text-gray-800 truncate">${data.po.makloon || '-'}</div>
+                        <div class="text-[11px] text-gray-500 font-medium">Tgl: ${data.po.tanggal || '-'}</div>
+                    </div>
+                    <div class="bg-amber-50/60 p-3 rounded-xl border border-amber-100">
+                        <div class="text-[10px] uppercase font-bold text-amber-700">Total Pasang Sepatu</div>
+                        <div class="text-sm font-extrabold text-amber-900">${data.totalPairs.toLocaleString('id-ID')} <span class="text-xs font-normal">Pasang</span></div>
+                        <div class="text-[11px] text-gray-500 font-medium">${(data.po.items || []).length} Varian Artikel/Warna</div>
+                    </div>
+                    <div class="bg-emerald-50/60 p-3 rounded-xl border border-emerald-100">
+                        <div class="text-[10px] uppercase font-bold text-emerald-700">Status Setting Cost / BOM</div>
+                        <div class="flex items-center gap-1.5 mt-0.5">
+                            ${data.isBomComplete 
+                                ? `<span class="bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2 py-0.5 rounded-full"><i class="fa-solid fa-circle-check mr-1"></i>BOM Terhubung</span>`
+                                : `<span class="bg-rose-100 text-rose-800 text-[11px] font-bold px-2 py-0.5 rounded-full"><i class="fa-solid fa-triangle-exclamation mr-1"></i>BOM Belum Lengkap</span>`
+                            }
+                        </div>
+                        <div class="text-[11px] text-gray-500 font-medium mt-0.5">${data.bomMatchedArticles.length} terhubung</div>
+                    </div>
+                    <div class="bg-indigo-50/60 p-3 rounded-xl border border-indigo-100">
+                        <div class="text-[10px] uppercase font-bold text-indigo-700 flex justify-between">
+                            <span>Status Pengiriman</span>
+                            <span>${data.overallPct}%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2 mt-1.5 overflow-hidden">
+                            <div class="bg-indigo-600 h-2 rounded-full transition-all duration-500" style="width: ${data.overallPct}%"></div>
+                        </div>
+                        <div class="text-[11px] text-gray-500 font-medium mt-1 flex justify-between">
+                            <span>${data.shipmentsCount} Surat Jalan</span>
+                            <span>${data.overallPct === 100 ? 'Lengkap' : (data.overallPct > 0 ? 'Sebagian' : 'Belum')}</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 2. Alert jika ada artikel tanpa BOM
+            if (alertBox) {
+                if (data.missingBomArticles.length > 0) {
+                    alertBox.className = "p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center justify-between gap-3";
+                    alertBox.innerHTML = `
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-circle-exclamation text-amber-600 text-base"></i>
+                            <div>
+                                <b>Peringatan Setting Cost:</b> Artikel <b>${data.missingBomArticles.join(', ')}</b> belum memiliki data Setting Cost & BOM di menu Setting Cost Makloon. Kebutuhan bahan untuk artikel ini belum terkalkulasi.
+                            </div>
+                        </div>
+                        <button onclick="openTab('tab-makloon-cost')" class="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold text-[11px] whitespace-nowrap shadow-xs">
+                            Buka Setting Cost
+                        </button>
+                    `;
+                } else {
+                    alertBox.className = "hidden";
+                    alertBox.innerHTML = "";
+                }
+            }
+
+            // 3. Render Tabel 1: Sole & Insole Sized (Pasang)
+            const headSole = document.getElementById('headSoleTable');
+            const bodySole = document.getElementById('bodySoleTable');
+            const badgeSole = document.getElementById('badgeCountSole');
+
+            if (badgeSole) badgeSole.innerText = `${data.soleSized.length} Item`;
+
+            if (headSole) {
+                let sizeThs = data.sizeLabels.map((lbl, idx) => `<th class="p-2.5 text-center bg-orange-100/60 text-orange-900 w-14">Sz ${lbl || (idx+1)}</th>`).join('');
+                headSole.innerHTML = `
+                    <tr>
+                        <th class="p-2.5 text-center w-10">No</th>
+                        <th class="p-2.5">Nama Bahan Sol / Insole</th>
+                        <th class="p-2.5">Warna Sol</th>
+                        ${sizeThs}
+                        <th class="p-2.5 text-right bg-orange-100/80 text-orange-950 font-extrabold w-20">Total Psg</th>
+                        <th class="p-2.5 text-right w-20">Terkirim</th>
+                        <th class="p-2.5 text-right w-20 font-bold">Sisa</th>
+                        <th class="p-2.5 text-center w-24">Status</th>
+                    </tr>
+                `;
+            }
+
+            if (bodySole) {
+                if (data.soleSized.length === 0) {
+                    bodySole.innerHTML = `<tr><td colspan="12" class="p-6 text-center text-gray-400">Tidak ada komponen sole / insole pasang (PSG) dalam BOM PO ini.</td></tr>`;
+                } else {
+                    bodySole.innerHTML = data.soleSized.map((row, idx) => {
+                        let sizeTds = row.sizes.map(qty => `<td class="p-2 text-center text-gray-700 font-semibold bg-orange-50/20">${qty > 0 ? qty.toLocaleString('id-ID') : '-'}</td>`).join('');
+                        let statusBadge = getShipmentStatusBadge(row.totalPasang, row.sudahKirim);
+
+                        return `
+                            <tr class="hover:bg-gray-50/80 transition">
+                                <td class="p-2.5 text-center text-gray-400 font-medium">${idx + 1}</td>
+                                <td class="p-2.5 font-bold text-gray-800">
+                                    ${row.bahan}
+                                    <div class="text-[10px] text-gray-400 font-normal">Bagian: ${row.bagian}</div>
+                                </td>
+                                <td class="p-2.5">
+                                    <span class="inline-block px-2 py-0.5 rounded-md text-[11px] font-bold bg-gray-100 text-gray-700 border border-gray-200">
+                                        ${row.warna}
+                                    </span>
+                                </td>
+                                ${sizeTds}
+                                <td class="p-2.5 text-right font-extrabold text-orange-950 bg-orange-50/40">${row.totalPasang.toLocaleString('id-ID')}</td>
+                                <td class="p-2.5 text-right font-semibold text-emerald-600">${row.sudahKirim.toLocaleString('id-ID')}</td>
+                                <td class="p-2.5 text-right font-extrabold ${row.sisaKirim > 0 ? 'text-rose-600' : 'text-gray-400'}">${row.sisaKirim.toLocaleString('id-ID')}</td>
+                                <td class="p-2.5 text-center">${statusBadge}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+            }
+
+            // 4. Render Tabel 2: Bahan Meteran & Gulungan
+            const bodyMeteran = document.getElementById('bodyMeteranTable');
+            const badgeMeteran = document.getElementById('badgeCountMeteran');
+            if (badgeMeteran) badgeMeteran.innerText = `${data.meteran.length} Item`;
+
+            if (bodyMeteran) {
+                if (data.meteran.length === 0) {
+                    bodyMeteran.innerHTML = `<tr><td colspan="9" class="p-6 text-center text-gray-400">Tidak ada komponen bahan meteran dalam BOM PO ini.</td></tr>`;
+                } else {
+                    bodyMeteran.innerHTML = data.meteran.map((row, idx) => {
+                        let statusBadge = getShipmentStatusBadge(row.totalKebutuhan, row.sudahKirim);
+                        return `
+                            <tr class="hover:bg-gray-50/80 transition">
+                                <td class="p-2.5 text-center text-gray-400 font-medium">${idx + 1}</td>
+                                <td class="p-2.5 text-gray-600 font-semibold text-[11px]">${row.bagian}</td>
+                                <td class="p-2.5 font-bold text-gray-800">${row.bahan}</td>
+                                <td class="p-2.5">
+                                    <span class="inline-block px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-50 text-blue-800 border border-blue-100">
+                                        ${row.warna}
+                                    </span>
+                                </td>
+                                <td class="p-2.5 text-center font-bold text-gray-600">${row.satuan}</td>
+                                <td class="p-2.5 text-right font-extrabold text-gray-900">${formatNumberTwoDec(row.totalKebutuhan)}</td>
+                                <td class="p-2.5 text-right font-semibold text-emerald-600">${formatNumberTwoDec(row.sudahKirim)}</td>
+                                <td class="p-2.5 text-right font-extrabold ${row.sisaKirim > 0 ? 'text-rose-600' : 'text-gray-400'}">${formatNumberTwoDec(row.sisaKirim)}</td>
+                                <td class="p-2.5 text-center">${statusBadge}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+            }
+
+            // 5. Render Tabel 3: Aksesoris & Kemasan
+            const bodyAksesoris = document.getElementById('bodyAksesorisTable');
+            const badgeAksesoris = document.getElementById('badgeCountAksesoris');
+            if (badgeAksesoris) badgeAksesoris.innerText = `${data.aksesoris.length} Item`;
+
+            if (bodyAksesoris) {
+                if (data.aksesoris.length === 0) {
+                    bodyAksesoris.innerHTML = `<tr><td colspan="9" class="p-6 text-center text-gray-400">Tidak ada komponen aksesoris atau kemasan dalam BOM PO ini.</td></tr>`;
+                } else {
+                    bodyAksesoris.innerHTML = data.aksesoris.map((row, idx) => {
+                        let statusBadge = getShipmentStatusBadge(row.totalKebutuhan, row.sudahKirim);
+                        return `
+                            <tr class="hover:bg-gray-50/80 transition">
+                                <td class="p-2.5 text-center text-gray-400 font-medium">${idx + 1}</td>
+                                <td class="p-2.5 text-gray-600 font-semibold text-[11px]">${row.bagian}</td>
+                                <td class="p-2.5 font-bold text-gray-800">${row.bahan}</td>
+                                <td class="p-2.5">
+                                    <span class="inline-block px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-100">
+                                        ${row.warna}
+                                    </span>
+                                </td>
+                                <td class="p-2.5 text-center font-bold text-gray-600">${row.satuan}</td>
+                                <td class="p-2.5 text-right font-extrabold text-gray-900">${formatNumberTwoDec(row.totalKebutuhan)}</td>
+                                <td class="p-2.5 text-right font-semibold text-emerald-600">${formatNumberTwoDec(row.sudahKirim)}</td>
+                                <td class="p-2.5 text-right font-extrabold ${row.sisaKirim > 0 ? 'text-rose-600' : 'text-gray-400'}">${formatNumberTwoDec(row.sisaKirim)}</td>
+                                <td class="p-2.5 text-center">${statusBadge}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+            }
+
+            // 6. Render Tabel 4: Bahan Lembaran (LBR)
+            const bodyLembaran = document.getElementById('bodyLembaranTable');
+            const badgeLembaran = document.getElementById('badgeCountLembaran');
+            if (badgeLembaran) badgeLembaran.innerText = `${data.lembaran.length} Item`;
+
+            if (bodyLembaran) {
+                if (data.lembaran.length === 0) {
+                    bodyLembaran.innerHTML = `<tr><td colspan="9" class="p-6 text-center text-gray-400">Tidak ada komponen bahan lembaran (LBR) dalam BOM PO ini.</td></tr>`;
+                } else {
+                    bodyLembaran.innerHTML = data.lembaran.map((row, idx) => {
+                        let statusBadge = getShipmentStatusBadge(row.totalKebutuhan, row.sudahKirim);
+                        return `
+                            <tr class="hover:bg-gray-50/80 transition">
+                                <td class="p-2.5 text-center text-gray-400 font-medium">${idx + 1}</td>
+                                <td class="p-2.5 text-gray-600 font-semibold text-[11px]">${row.bagian}</td>
+                                <td class="p-2.5 font-bold text-gray-800">${row.bahan}</td>
+                                <td class="p-2.5">
+                                    <span class="inline-block px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-50 text-purple-800 border border-purple-100">
+                                        ${row.warna}
+                                    </span>
+                                </td>
+                                <td class="p-2.5 text-center font-bold text-gray-600">LBR</td>
+                                <td class="p-2.5 text-right font-extrabold text-gray-900">${formatNumberTwoDec(row.totalKebutuhan)}</td>
+                                <td class="p-2.5 text-right font-semibold text-emerald-600">${formatNumberTwoDec(row.sudahKirim)}</td>
+                                <td class="p-2.5 text-right font-extrabold ${row.sisaKirim > 0 ? 'text-rose-600' : 'text-gray-400'}">${formatNumberTwoDec(row.sisaKirim)}</td>
+                                <td class="p-2.5 text-center">${statusBadge}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+            }
+        }
+
+        // Helper Badge Status Pengiriman
+        function getShipmentStatusBadge(req, sent) {
+            req = parseFloat(req) || 0;
+            sent = parseFloat(sent) || 0;
+            if (sent === 0) {
+                return `<span class="inline-block px-2 py-0.5 text-[10px] font-bold rounded-full bg-rose-100 text-rose-700">Belum Kirim</span>`;
+            } else if (sent < req) {
+                return `<span class="inline-block px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 text-amber-800">Sebagian</span>`;
+            } else if (sent === req) {
+                return `<span class="inline-block px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-800">Lengkap</span>`;
+            } else {
+                return `<span class="inline-block px-2 py-0.5 text-[10px] font-bold rounded-full bg-blue-100 text-blue-800">Lebih</span>`;
+            }
+        }
+
+        function formatNumberTwoDec(num) {
+            if (num === null || num === undefined) return '0';
+            num = parseFloat(num);
+            if (isNaN(num)) return '0';
+            if (Number.isInteger(num)) return num.toLocaleString('id-ID');
+            return parseFloat(num.toFixed(2)).toLocaleString('id-ID');
+        }
+
+        // =================================================================
+        // MANAJEMEN SURAT JALAN KIRIM BAHAN (CRUD & MODAL)
+        // =================================================================
+        function openModalBuatSuratJalan(editId) {
+            const modal = document.getElementById('modal-makloon-sj-form');
+            if (!modal) return;
+
+            const uName = (localStorage.getItem('davclar_user') || '').toUpperCase();
+            const access = (window.currentUserAccess && window.currentUserAccess['tab-makloon-bahan']) ? window.currentUserAccess['tab-makloon-bahan'] : (uName === 'ADMIN' ? 'FULL' : 'READ');
+            if (access !== 'FULL') {
+                if (typeof showToast === 'function') showToast("Akses Ditolak: Anda hanya memiliki hak akses LIHAT!", "warning");
+                return;
+            }
+
+            const title = document.getElementById('sjModalTitle');
+            const editInp = document.getElementById('sjEditId');
+            const noInp = document.getElementById('sjNoInput');
+            const tglInp = document.getElementById('sjTglInput');
+            const poSelect = document.getElementById('sjPOSelect');
+            const makloonInp = document.getElementById('sjMakloonInput');
+            const driverInp = document.getElementById('sjDriverInput');
+            const catatanInp = document.getElementById('sjCatatanInput');
+
+            tempSJItems = [];
+
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            if (editId) {
+                const sj = (db_makloon_kirim || []).find(x => x.id === editId);
+                if (!sj) return;
+                if (title) title.innerText = "Edit Surat Jalan Kirim Bahan";
+                if (editInp) editInp.value = sj.id;
+                if (noInp) noInp.value = sj.id;
+                if (tglInp) tglInp.value = sj.tanggal || todayStr;
+                if (poSelect) poSelect.value = sj.noPO || '';
+                if (makloonInp) makloonInp.value = sj.makloon || '';
+                if (driverInp) driverInp.value = sj.driver || '';
+                if (catatanInp) catatanInp.value = sj.catatan || '';
+                tempSJItems = JSON.parse(JSON.stringify(sj.items || []));
+            } else {
+                if (title) title.innerText = "Buat Surat Jalan Kirim Bahan Baku";
+                if (editInp) editInp.value = '';
+                
+                // Auto generate No Surat Jalan: SJ-BB-YYMM-XXX
+                const yy = String(new Date().getFullYear()).slice(-2);
+                const mm = String(new Date().getMonth() + 1).padStart(2, '0');
+                const prefix = `SJ-BB-${yy}${mm}-`;
+                const countThisMonth = (db_makloon_kirim || []).filter(s => s.id && s.id.startsWith(prefix)).length + 1;
+                const autoNo = `${prefix}${String(countThisMonth).padStart(3, '0')}`;
+
+                if (noInp) noInp.value = autoNo;
+                if (tglInp) tglInp.value = todayStr;
+                if (poSelect) poSelect.value = currentMakloonBahanPOId || '';
+                if (driverInp) driverInp.value = '';
+                if (catatanInp) catatanInp.value = '';
+
+                // Isi otomatis makloon berdasarkan PO terpilih
+                const activePO = (db_po || []).find(p => p.id === (currentMakloonBahanPOId || (poSelect ? poSelect.value : '')));
+                if (makloonInp) makloonInp.value = activePO ? (activePO.makloon || '') : '';
+
+                // Tarik otomatis item sisa kebutuhan bahan PO
+                autoFillSJRemaingItems();
+            }
+
+            renderSJFormItems();
+
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); }, 10);
+        }
+
+        function closeMakloonSJModal() {
+            const modal = document.getElementById('modal-makloon-sj-form');
+            if (!modal) return;
+            modal.classList.add('opacity-0');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        }
+
+        function onSJPODropdownChange(poId) {
+            const activePO = (db_po || []).find(p => p.id === poId);
+            const makloonInp = document.getElementById('sjMakloonInput');
+            if (makloonInp && activePO) {
+                makloonInp.value = activePO.makloon || '';
+            }
+            autoFillSJRemaingItems();
+        }
+
+        function autoFillSJRemaingItems() {
+            const poSelect = document.getElementById('sjPOSelect');
+            const poId = poSelect ? poSelect.value : currentMakloonBahanPOId;
+            if (!poId) return;
+
+            const calc = calculatePORequiredMaterials(poId);
+            if (!calc) return;
+
+            tempSJItems = [];
+
+            // 1. Sole Sized
+            calc.soleSized.forEach(row => {
+                if (row.sisaKirim > 0) {
+                    tempSJItems.push({
+                        kategori: 'SOLE_SIZED',
+                        bagian: row.bagian,
+                        bahan: row.bahan,
+                        warna: row.warna,
+                        qty: row.sisaKirim,
+                        satuan: 'PSG',
+                        sizes: [...row.sizes],
+                        ket: `Sol Ukuran ${calc.sizeLabels.filter(Boolean).join(',')}`
+                    });
+                }
+            });
+
+            // 2. Meteran
+            calc.meteran.forEach(row => {
+                if (row.sisaKirim > 0) {
+                    tempSJItems.push({
+                        kategori: 'METERAN',
+                        bagian: row.bagian,
+                        bahan: row.bahan,
+                        warna: row.warna,
+                        qty: row.sisaKirim,
+                        satuan: row.satuan,
+                        ket: ''
+                    });
+                }
+            });
+
+            // 3. Aksesoris
+            calc.aksesoris.forEach(row => {
+                if (row.sisaKirim > 0) {
+                    tempSJItems.push({
+                        kategori: 'AKSESORIS',
+                        bagian: row.bagian,
+                        bahan: row.bahan,
+                        warna: row.warna,
+                        qty: row.sisaKirim,
+                        satuan: row.satuan,
+                        ket: ''
+                    });
+                }
+            });
+
+            // 4. Lembaran
+            calc.lembaran.forEach(row => {
+                if (row.sisaKirim > 0) {
+                    tempSJItems.push({
+                        kategori: 'LEMBARAN',
+                        bagian: row.bagian,
+                        bahan: row.bahan,
+                        warna: row.warna,
+                        qty: row.sisaKirim,
+                        satuan: 'LBR',
+                        ket: 'Cetak/Pond Lembaran'
+                    });
+                }
+            });
+
+            renderSJFormItems();
+            if (typeof showToast === 'function') showToast(`Tarik data otomatis: ${tempSJItems.length} item sisa dimuat!`, "info");
+        }
+
+        function addManualSJRow(initData) {
+            tempSJItems.push(initData || {
+                kategori: 'METERAN',
+                bagian: 'UPPER',
+                bahan: '',
+                warna: '',
+                qty: 1,
+                satuan: 'YARD',
+                ket: ''
+            });
+            renderSJFormItems();
+        }
+
+        function removeSJRow(index) {
+            tempSJItems.splice(index, 1);
+            renderSJFormItems();
+        }
+
+        function renderSJFormItems() {
+            const body = document.getElementById('sjFormItemsBody');
+            if (!body) return;
+
+            if (tempSJItems.length === 0) {
+                body.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-gray-400">Belum ada bahan dalam surat jalan ini. Klik tombol "Tarik Otomatis Sisa Bahan PO" atau "Tambah Baris".</td></tr>`;
+                return;
+            }
+
+            body.innerHTML = tempSJItems.map((item, idx) => {
+                return `
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="p-2 text-center text-gray-400 font-medium">${idx + 1}</td>
+                        <td class="p-2">
+                            <select onchange="tempSJItems[${idx}].kategori = this.value; renderSJFormItems();" class="w-full bg-white border border-gray-200 rounded px-2 py-1 text-xs font-semibold">
+                                <option value="SOLE_SIZED" ${item.kategori === 'SOLE_SIZED' ? 'selected' : ''}>Sol / Insole (PSG)</option>
+                                <option value="METERAN" ${item.kategori === 'METERAN' ? 'selected' : ''}>Meteran (M/YARD)</option>
+                                <option value="AKSESORIS" ${item.kategori === 'AKSESORIS' ? 'selected' : ''}>Aksesoris/Dus (PCS)</option>
+                                <option value="LEMBARAN" ${item.kategori === 'LEMBARAN' ? 'selected' : ''}>Lembaran (LBR)</option>
+                            </select>
+                        </td>
+                        <td class="p-2">
+                            <input type="text" value="${item.bahan || ''}" onchange="tempSJItems[${idx}].bahan = this.value.toUpperCase();" placeholder="Nama Bahan..." class="w-full bg-white border border-gray-200 rounded px-2 py-1 text-xs font-bold uppercase">
+                        </td>
+                        <td class="p-2">
+                            <input type="text" value="${item.warna || ''}" onchange="tempSJItems[${idx}].warna = this.value.toUpperCase();" placeholder="Warna..." class="w-full bg-white border border-gray-200 rounded px-2 py-1 text-xs uppercase">
+                        </td>
+                        <td class="p-2 text-center">
+                            <input type="number" step="any" min="0" value="${item.qty || 0}" onchange="tempSJItems[${idx}].qty = parseFloat(this.value) || 0;" class="w-24 text-right bg-white border border-gray-300 font-extrabold text-blue-700 rounded px-2 py-1 text-xs">
+                        </td>
+                        <td class="p-2 text-center">
+                            <input type="text" value="${item.satuan || 'PSG'}" onchange="tempSJItems[${idx}].satuan = this.value.toUpperCase();" class="w-16 text-center bg-white border border-gray-200 rounded px-1 py-1 text-xs uppercase font-bold">
+                        </td>
+                        <td class="p-2">
+                            <input type="text" value="${item.ket || ''}" onchange="tempSJItems[${idx}].ket = this.value;" placeholder="Ket tambahan..." class="w-full bg-white border border-gray-200 rounded px-2 py-1 text-xs">
+                        </td>
+                        <td class="p-2 text-center">
+                            <button type="button" onclick="removeSJRow(${idx})" class="text-gray-400 hover:text-rose-600 transition p-1">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Simpan Surat Jalan
+        function saveSuratJalanMakloon(andPrint) {
+            const editId = (document.getElementById('sjEditId').value || '').trim();
+            const noSj = (document.getElementById('sjNoInput').value || '').trim().toUpperCase();
+            const tgl = document.getElementById('sjTglInput').value;
+            const noPO = (document.getElementById('sjPOSelect').value || '').trim();
+            const makloon = (document.getElementById('sjMakloonInput').value || '').trim().toUpperCase();
+            const driver = (document.getElementById('sjDriverInput').value || '').trim();
+            const catatan = (document.getElementById('sjCatatanInput').value || '').trim();
+
+            if (!noSj) {
+                alert("Nomor Surat Jalan wajib diisi!");
+                return;
+            }
+            if (!noPO) {
+                alert("Nomor PO Reff wajib dipilih!");
+                return;
+            }
+            if (tempSJItems.length === 0) {
+                alert("Daftar bahan yang dikirim masih kosong!");
+                return;
+            }
+
+            const nowStr = new Date().toISOString();
+            const record = {
+                id: noSj,
+                tanggal: tgl,
+                noPO: noPO,
+                makloon: makloon || 'PORTI',
+                driver: driver || '-',
+                catatan: catatan || '',
+                items: JSON.parse(JSON.stringify(tempSJItems)),
+                createdAt: nowStr,
+                updatedAt: nowStr
+            };
+
+            if (editId) {
+                const idx = (db_makloon_kirim || []).findIndex(x => x.id === editId);
+                if (idx !== -1) {
+                    db_makloon_kirim[idx] = record;
+                } else {
+                    db_makloon_kirim.unshift(record);
+                }
+            } else {
+                // Cek duplikasi ID
+                const existIdx = (db_makloon_kirim || []).findIndex(x => x.id === noSj);
+                if (existIdx !== -1) {
+                    if (!confirm(`Nomor Surat Jalan ${noSj} sudah ada! Timpa data yang ada?`)) return;
+                    db_makloon_kirim[existIdx] = record;
+                } else {
+                    db_makloon_kirim.unshift(record);
+                }
+            }
+
+            // Sync LocalStorage & Firebase
+            localStorage.setItem('davclar_makloon_kirim', JSON.stringify(db_makloon_kirim));
+            if (window.firebaseWrite) {
+                window.firebaseWrite('davclar_makloon_kirim', db_makloon_kirim);
+            }
+
+            closeMakloonSJModal();
+            renderMakloonBahanModule();
+
+            if (typeof showToast === 'function') showToast(`Surat Jalan ${noSj} berhasil disimpan!`, "success");
+
+            if (andPrint) {
+                printSuratJalanMakloon(record.id);
+            }
+        }
+
+        // Render Riwayat Surat Jalan
+        function renderSuratJalanTable() {
+            const body = document.getElementById('bodySJTable');
+            const search = (document.getElementById('filterSJCari') ? document.getElementById('filterSJCari').value : '').trim().toUpperCase();
+            const filterMakloon = (document.getElementById('filterSJMakloon') ? document.getElementById('filterSJMakloon').value : '').trim().toUpperCase();
+
+            if (!body) return;
+
+            let list = [...(db_makloon_kirim || [])];
+
+            if (filterMakloon) {
+                list = list.filter(s => (s.makloon || '').toUpperCase() === filterMakloon);
+            }
+            if (search) {
+                list = list.filter(s => 
+                    (s.id || '').toUpperCase().includes(search) || 
+                    (s.noPO || '').toUpperCase().includes(search) || 
+                    (s.makloon || '').toUpperCase().includes(search) || 
+                    (s.driver || '').toUpperCase().includes(search)
+                );
+            }
+
+            if (list.length === 0) {
+                body.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-gray-400">Belum ada riwayat surat jalan pengiriman bahan baku.</td></tr>`;
+                return;
+            }
+
+            body.innerHTML = list.map((sj, idx) => {
+                let totalItemsCount = (sj.items || []).length;
+                let totalQtySum = 0;
+                (sj.items || []).forEach(i => { totalQtySum += (parseFloat(i.qty) || 0); });
+
+                return `
+                    <tr class="hover:bg-gray-50/80 transition">
+                        <td class="p-3 text-center text-gray-400 font-medium">${idx + 1}</td>
+                        <td class="p-3 font-extrabold text-blue-700 cursor-pointer hover:underline" onclick="viewSuratJalanDetail('${sj.id}')">
+                            ${sj.id}
+                        </td>
+                        <td class="p-3 text-gray-600 font-medium">${sj.tanggal || '-'}</td>
+                        <td class="p-3 font-bold text-gray-800">${sj.noPO || '-'}</td>
+                        <td class="p-3 font-bold text-indigo-900">${sj.makloon || '-'}</td>
+                        <td class="p-3 text-gray-600">${sj.driver || '-'}</td>
+                        <td class="p-3 text-center">
+                            <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-800">
+                                ${totalItemsCount} Macam (${formatNumberTwoDec(totalQtySum)})
+                            </span>
+                        </td>
+                        <td class="p-3 text-gray-500 text-xs truncate max-w-xs">${sj.catatan || '-'}</td>
+                        <td class="p-3 text-center">
+                            <div class="flex items-center justify-center gap-1.5">
+                                <button onclick="printSuratJalanMakloon('${sj.id}')" class="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Cetak Surat Jalan">
+                                    <i class="fa-solid fa-print"></i>
+                                </button>
+                                <button onclick="viewSuratJalanDetail('${sj.id}')" class="p-1.5 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition" title="Lihat Detail">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                                <button onclick="openModalBuatSuratJalan('${sj.id}')" class="p-1.5 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition" title="Edit Surat Jalan">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </button>
+                                <button onclick="deleteSuratJalanMakloon('${sj.id}')" class="p-1.5 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition" title="Hapus">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // View Detail Surat Jalan
+        function viewSuratJalanDetail(sjId) {
+            const sj = (db_makloon_kirim || []).find(x => x.id === sjId);
+            if (!sj) return;
+
+            const modal = document.getElementById('modal-makloon-sj-detail');
+            const title = document.getElementById('sjDetTitle');
+            const subTitle = document.getElementById('sjDetSubTitle');
+            const content = document.getElementById('sjDetContent');
+            const actions = document.getElementById('sjDetActions');
+
+            if (!modal) return;
+
+            if (title) title.innerText = `Surat Jalan: ${sj.id}`;
+            if (subTitle) subTitle.innerText = `Makloon: ${sj.makloon} • Tanggal: ${sj.tanggal || '-'} • Reff PO: ${sj.noPO}`;
+
+            let itemsRows = (sj.items || []).map((it, idx) => `
+                <tr class="hover:bg-gray-50">
+                    <td class="p-2 text-center text-gray-400">${idx + 1}</td>
+                    <td class="p-2 text-gray-500">${it.kategori || '-'}</td>
+                    <td class="p-2 font-bold text-gray-800">${it.bahan}</td>
+                    <td class="p-2 font-semibold text-gray-700">${it.warna || '-'}</td>
+                    <td class="p-2 text-right font-extrabold text-blue-700">${formatNumberTwoDec(it.qty)}</td>
+                    <td class="p-2 text-center font-bold text-gray-600">${it.satuan || 'PSG'}</td>
+                    <td class="p-2 text-gray-500 text-xs">${it.ket || '-'}</td>
+                </tr>
+            `).join('');
+
+            if (content) {
+                content.innerHTML = `
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 bg-gray-50 p-3 rounded-xl border border-gray-200 text-xs">
+                        <div><span class="text-gray-400 font-bold block">No. Surat Jalan:</span> <b class="text-blue-700 text-sm">${sj.id}</b></div>
+                        <div><span class="text-gray-400 font-bold block">Tanggal Kirim:</span> <b>${sj.tanggal || '-'}</b></div>
+                        <div><span class="text-gray-400 font-bold block">Nomor PO Reff:</span> <b>${sj.noPO}</b></div>
+                        <div><span class="text-gray-400 font-bold block">Vendor Makloon:</span> <b class="text-indigo-900">${sj.makloon}</b></div>
+                        <div><span class="text-gray-400 font-bold block">Sopir / Kurir:</span> <b>${sj.driver || '-'}</b></div>
+                        <div class="md:col-span-3"><span class="text-gray-400 font-bold block">Catatan:</span> <i>${sj.catatan || '-'}</i></div>
+                    </div>
+
+                    <div class="border border-gray-200 rounded-xl overflow-hidden shadow-xs mt-3">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-gray-100 text-gray-700 font-bold uppercase tracking-wider text-[11px]">
+                                <tr>
+                                    <th class="p-2.5 text-center w-10">No</th>
+                                    <th class="p-2.5">Kategori</th>
+                                    <th class="p-2.5">Nama Bahan</th>
+                                    <th class="p-2.5">Warna</th>
+                                    <th class="p-2.5 text-right">Jumlah</th>
+                                    <th class="p-2.5 text-center">Satuan</th>
+                                    <th class="p-2.5">Keterangan</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                ${itemsRows}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+
+            if (actions) {
+                actions.innerHTML = `
+                    <button onclick="printSuratJalanMakloon('${sj.id}')" class="px-4 py-2 bg-gray-800 hover:bg-gray-900 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-print"></i> Cetak Surat Jalan
+                    </button>
+                    <button onclick="closeMakloonSJDetailModal(); openModalBuatSuratJalan('${sj.id}')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-pen-to-square"></i> Edit
+                    </button>
+                `;
+            }
+
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); }, 10);
+        }
+
+        function closeMakloonSJDetailModal() {
+            const modal = document.getElementById('modal-makloon-sj-detail');
+            if (!modal) return;
+            modal.classList.add('opacity-0');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        }
+
+        async function deleteSuratJalanMakloon(sjId) {
+            const uName = (localStorage.getItem('davclar_user') || '').toUpperCase();
+            const access = (window.currentUserAccess && window.currentUserAccess['tab-makloon-bahan']) ? window.currentUserAccess['tab-makloon-bahan'] : (uName === 'ADMIN' ? 'FULL' : 'READ');
+            if (access !== 'FULL') {
+                if (typeof showToast === 'function') showToast("Akses Ditolak: Anda hanya memiliki hak akses LIHAT!", "warning");
+                return;
+            }
+
+            const isConfirmed = await showConfirm(
+                "Hapus Surat Jalan", 
+                `Yakin ingin menghapus Surat Jalan <b>${sjId}</b>? Data pengiriman bahan pada PO terkait akan disesuaikan kembali.`, 
+                "danger"
+            );
+
+            if (isConfirmed) {
+                db_makloon_kirim = (db_makloon_kirim || []).filter(s => s.id !== sjId);
+                localStorage.setItem('davclar_makloon_kirim', JSON.stringify(db_makloon_kirim));
+                if (window.firebaseWrite) {
+                    window.firebaseWrite('davclar_makloon_kirim', db_makloon_kirim);
+                }
+                renderMakloonBahanModule();
+                if (typeof showToast === 'function') showToast(`Surat Jalan ${sjId} berhasil dihapus!`, "success");
+            }
+        }
+
+        // =================================================================
+        // PRINT TEMPLATES: SURAT JALAN & REKAP KEBUTUHAN BAHAN PO
+        // =================================================================
+        function printSuratJalanMakloon(sjId) {
+            const sj = (db_makloon_kirim || []).find(x => x.id === sjId);
+            if (!sj) return;
+
+            let rowsHtml = (sj.items || []).map((it, idx) => `
+                <tr>
+                    <td style="padding:6px; border:1px solid #333; text-align:center;">${idx + 1}</td>
+                    <td style="padding:6px; border:1px solid #333; font-weight:bold;">${it.bahan}</td>
+                    <td style="padding:6px; border:1px solid #333; text-align:center;">${it.warna || '-'}</td>
+                    <td style="padding:6px; border:1px solid #333; text-align:right; font-weight:bold; font-size:12px;">${formatNumberTwoDec(it.qty)}</td>
+                    <td style="padding:6px; border:1px solid #333; text-align:center; font-weight:bold;">${it.satuan || 'PSG'}</td>
+                    <td style="padding:6px; border:1px solid #333;">${it.ket || '-'}</td>
+                </tr>
+            `).join('');
+
+            const printContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Surat Jalan Pengiriman Bahan - ${sj.id}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; font-size: 11px; margin: 20px; color: #111; line-height: 1.4; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+                        th { background: #f0f0f0; font-weight: bold; border: 1px solid #333; padding: 6px; }
+                        td { border: 1px solid #333; padding: 6px; }
+                        .header { display: flex; justify-content: space-between; border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 12px; }
+                        .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; font-size: 11px; }
+                        .signature-container { display: flex; justify-content: space-between; margin-top: 45px; text-align: center; }
+                        .signature-box { width: 180px; }
+                        @media print { body { margin: 10mm; } }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <div>
+                            <h2 style="margin:0; font-size:18px; text-transform:uppercase;">DAVCLAR FOOTWEAR INDUSTRY</h2>
+                            <p style="margin:2px 0 0 0; font-size:11px; color:#444;">SURAT JALAN PENGIRIMAN BAHAN BAKU KE MAKLOON</p>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:16px; font-weight:bold; color:#1e3a8a;">${sj.id}</div>
+                            <div style="font-size:11px; color:#555;">Tanggal: ${sj.tanggal || '-'}</div>
+                        </div>
+                    </div>
+
+                    <div class="meta-grid">
+                        <div>
+                            <table style="border:none; margin:0;">
+                                <tr style="border:none;"><td style="border:none; padding:2px; width:100px; font-weight:bold;">Kepada Yth:</td><td style="border:none; padding:2px; font-weight:bold; font-size:13px;">${sj.makloon}</td></tr>
+                                <tr style="border:none;"><td style="border:none; padding:2px; font-weight:bold;">Reff PO:</td><td style="border:none; padding:2px; font-weight:bold;">${sj.noPO}</td></tr>
+                            </table>
+                        </div>
+                        <div>
+                            <table style="border:none; margin:0;">
+                                <tr style="border:none;"><td style="border:none; padding:2px; width:100px; font-weight:bold;">Sopir / Kurir:</td><td style="border:none; padding:2px;">${sj.driver || '-'}</td></tr>
+                                <tr style="border:none;"><td style="border:none; padding:2px; font-weight:bold;">Catatan:</td><td style="border:none; padding:2px;">${sj.catatan || '-'}</td></tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width:30px; text-align:center;">No</th>
+                                <th style="text-align:left;">Nama Bahan Baku & Komponen</th>
+                                <th style="width:120px; text-align:center;">Warna / Spek</th>
+                                <th style="width:90px; text-align:right;">Qty Kirim</th>
+                                <th style="width:70px; text-align:center;">Satuan</th>
+                                <th style="text-align:left;">Keterangan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHtml}
+                        </tbody>
+                    </table>
+
+                    <div style="margin-top:12px; font-size:10px; color:#666;">
+                        * Harap barang diperiksa & dihitung saat serah terima. Komplain selisih fisik maksimal 1x24 jam sejak surat jalan diterima.
+                    </div>
+
+                    <div class="signature-container">
+                        <div class="signature-box">
+                            <p style="margin-bottom:50px;">Diserahkan Oleh,</p>
+                            <p><b>( _________________ )</b><br>Bagian Gudang Davclar</p>
+                        </div>
+                        <div class="signature-box">
+                            <p style="margin-bottom:50px;">Dibawa / Dikirim Oleh,</p>
+                            <p><b>( _________________ )</b><br>Sopir / Ekspedisi</p>
+                        </div>
+                        <div class="signature-box">
+                            <p style="margin-bottom:50px;">Diterima Oleh,</p>
+                            <p><b>( _________________ )</b><br>${sj.makloon || 'Pihak Makloon'}</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `;
+
+            const printWin = window.open('', '_blank', 'width=900,height=700');
+            if (printWin) {
+                printWin.document.write(printContent);
+                printWin.document.close();
+                printWin.focus();
+                setTimeout(() => { printWin.print(); }, 500);
+            }
+        }
+
+        // Print Rekap Kebutuhan PO (BOM Order Sheet)
+        function printPOBahanRequirements(poId) {
+            poId = poId || currentMakloonBahanPOId;
+            const data = calculatePORequiredMaterials(poId);
+            if (!data) return;
+
+            let sizeColsTh = data.sizeLabels.map(l => `<th style="padding:4px; border:1px solid #333; text-align:center;">${l}</th>`).join('');
+
+            let soleRows = data.soleSized.map((row, idx) => {
+                let szCells = row.sizes.map(q => `<td style="padding:4px; border:1px solid #333; text-align:center;">${q > 0 ? q : '-'}</td>`).join('');
+                return `
+                    <tr>
+                        <td style="padding:4px; border:1px solid #333; text-align:center;">${idx + 1}</td>
+                        <td style="padding:4px; border:1px solid #333; font-weight:bold;">${row.bahan}</td>
+                        <td style="padding:4px; border:1px solid #333; text-align:center;">${row.warna}</td>
+                        ${szCells}
+                        <td style="padding:4px; border:1px solid #333; text-align:right; font-weight:bold;">${row.totalPasang.toLocaleString('id-ID')} Psg</td>
+                    </tr>
+                `;
+            }).join('');
+
+            let meteranRows = data.meteran.map((row, idx) => `
+                <tr>
+                    <td style="padding:4px; border:1px solid #333; text-align:center;">${idx + 1}</td>
+                    <td style="padding:4px; border:1px solid #333;">${row.bagian}</td>
+                    <td style="padding:4px; border:1px solid #333; font-weight:bold;">${row.bahan}</td>
+                    <td style="padding:4px; border:1px solid #333; text-align:center;">${row.warna}</td>
+                    <td style="padding:4px; border:1px solid #333; text-align:right; font-weight:bold;">${formatNumberTwoDec(row.totalKebutuhan)}</td>
+                    <td style="padding:4px; border:1px solid #333; text-align:center;">${row.satuan}</td>
+                </tr>
+            `).join('');
+
+            let aksesorisRows = data.aksesoris.map((row, idx) => `
+                <tr>
+                    <td style="padding:4px; border:1px solid #333; text-align:center;">${idx + 1}</td>
+                    <td style="padding:4px; border:1px solid #333;">${row.bagian}</td>
+                    <td style="padding:4px; border:1px solid #333; font-weight:bold;">${row.bahan}</td>
+                    <td style="padding:4px; border:1px solid #333; text-align:center;">${row.warna}</td>
+                    <td style="padding:4px; border:1px solid #333; text-align:right; font-weight:bold;">${formatNumberTwoDec(row.totalKebutuhan)}</td>
+                    <td style="padding:4px; border:1px solid #333; text-align:center;">${row.satuan}</td>
+                </tr>
+            `).join('');
+
+            let lembaranRows = data.lembaran.map((row, idx) => `
+                <tr>
+                    <td style="padding:4px; border:1px solid #333; text-align:center;">${idx + 1}</td>
+                    <td style="padding:4px; border:1px solid #333;">${row.bagian}</td>
+                    <td style="padding:4px; border:1px solid #333; font-weight:bold;">${row.bahan}</td>
+                    <td style="padding:4px; border:1px solid #333; text-align:center;">${row.warna}</td>
+                    <td style="padding:4px; border:1px solid #333; text-align:right; font-weight:bold;">${formatNumberTwoDec(row.totalKebutuhan)}</td>
+                    <td style="padding:4px; border:1px solid #333; text-align:center;">LBR</td>
+                </tr>
+            `).join('');
+
+            const printContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Rincian Kebutuhan Bahan PO ${data.po.id}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; font-size: 11px; margin: 20px; color: #111; line-height: 1.3; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 8px; margin-bottom: 14px; }
+                        th { background: #f0f0f0; font-weight: bold; border: 1px solid #333; padding: 5px; font-size: 10px; }
+                        td { border: 1px solid #333; padding: 4px; font-size: 10px; }
+                        .section-title { font-size: 12px; font-weight: bold; margin-top: 14px; margin-bottom: 2px; text-transform: uppercase; color: #1e3a8a; }
+                    </style>
+                </head>
+                <body>
+                    <div style="display:flex; justify-content:space-between; border-bottom:2px solid #333; padding-bottom:8px;">
+                        <div>
+                            <h2 style="margin:0; font-size:16px;">DAVCLAR - REKAP KEBUTUHAN BAHAN PRODUKSI (MRP)</h2>
+                            <p style="margin:2px 0 0 0; font-size:11px; color:#555;">Daftar Pesanan & Alokasi Bahan Baku Berdasarkan PO & Setting Cost</p>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:14px; font-weight:bold;">PO: ${data.po.id}</div>
+                            <div style="font-size:11px;">Vendor: <b>${data.po.makloon}</b> • ${data.totalPairs.toLocaleString('id-ID')} Pasang</div>
+                        </div>
+                    </div>
+
+                    <div class="section-title">1. SOLE & INSOLE SIZED (PASANG / PSG)</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width:25px;">No</th>
+                                <th style="text-align:left;">Nama Sol / Insole</th>
+                                <th style="width:100px;">Warna Sol</th>
+                                ${sizeColsTh}
+                                <th style="width:90px; text-align:right;">Total Pasang</th>
+                            </tr>
+                        </thead>
+                        <tbody>${soleRows || '<tr><td colspan="10" style="text-align:center;">Tidak ada komponen sol ukuran</td></tr>'}</tbody>
+                    </table>
+
+                    <div class="section-title">2. BAHAN METERAN & GULUNGAN (M / YARD / ROLL)</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width:25px;">No</th>
+                                <th style="width:80px; text-align:left;">Bagian</th>
+                                <th style="text-align:left;">Nama Bahan</th>
+                                <th style="width:120px;">Warna Bahan</th>
+                                <th style="width:90px; text-align:right;">Kebutuhan</th>
+                                <th style="width:60px;">Satuan</th>
+                            </tr>
+                        </thead>
+                        <tbody>${meteranRows || '<tr><td colspan="6" style="text-align:center;">Tidak ada bahan meteran</td></tr>'}</tbody>
+                    </table>
+
+                    <div class="section-title">3. AKSESORIS, KEMASAN & PENDUKUNG (PCS / SET / DUS)</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width:25px;">No</th>
+                                <th style="width:80px; text-align:left;">Bagian</th>
+                                <th style="text-align:left;">Nama Bahan / Aksesoris</th>
+                                <th style="width:120px;">Warna / Spek</th>
+                                <th style="width:90px; text-align:right;">Kebutuhan</th>
+                                <th style="width:60px;">Satuan</th>
+                            </tr>
+                        </thead>
+                        <tbody>${aksesorisRows || '<tr><td colspan="6" style="text-align:center;">Tidak ada aksesoris</td></tr>'}</tbody>
+                    </table>
+
+                    <div class="section-title">4. BAHAN LEMBARAN (LBR) - CETAK POND</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width:25px;">No</th>
+                                <th style="width:80px; text-align:left;">Bagian</th>
+                                <th style="text-align:left;">Nama Bahan Lembaran</th>
+                                <th style="width:120px;">Warna / Tipe</th>
+                                <th style="width:90px; text-align:right;">Kebutuhan Lembar</th>
+                                <th style="width:60px;">Satuan</th>
+                            </tr>
+                        </thead>
+                        <tbody>${lembaranRows || '<tr><td colspan="6" style="text-align:center;">Tidak ada bahan lembaran</td></tr>'}</tbody>
+                    </table>
+
+                    <div style="margin-top:35px; display:flex; justify-content:space-between; text-align:center;">
+                        <div style="width:200px;">
+                            <p style="margin-bottom:45px;">Dibuat Oleh,</p>
+                            <p><b>( _________________ )</b><br>Purchasing / Gudang</p>
+                        </div>
+                        <div style="width:200px;">
+                            <p style="margin-bottom:45px;">Disetujui Oleh,</p>
+                            <p><b>( _________________ )</b><br>Manajemen Produksi</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `;
+
+            const printWin = window.open('', '_blank', 'width=950,height=750');
+            if (printWin) {
+                printWin.document.write(printContent);
+                printWin.document.close();
+                printWin.focus();
+                setTimeout(() => { printWin.print(); }, 500);
+            }
+        }
+
+        // Export Kebutuhan Bahan PO ke Excel
+        function exportBahanPOExcel(poId) {
+            poId = poId || currentMakloonBahanPOId;
+            const data = calculatePORequiredMaterials(poId);
+            if (!data) return;
+
+            if (typeof XLSX === 'undefined') {
+                alert("Pustaka XLSX belum termuat. Silakan periksa koneksi internet.");
+                return;
+            }
+
+            const wb = XLSX.utils.book_new();
+
+            // Sheet 1: Sole Sized
+            const soleData = data.soleSized.map(r => {
+                let obj = {
+                    "Bagian": r.bagian,
+                    "Nama Bahan": r.bahan,
+                    "Warna Sol": r.warna
+                };
+                data.sizeLabels.forEach((lbl, i) => {
+                    obj[`Sz ${lbl}`] = r.sizes[i] || 0;
+                });
+                obj["Total Pasang"] = r.totalPasang;
+                obj["Sudah Kirim"] = r.sudahKirim;
+                obj["Sisa Kirim"] = r.sisaKirim;
+                return obj;
+            });
+            const wsSole = XLSX.utils.json_to_sheet(soleData.length > 0 ? soleData : [{"Status": "Kosong"}]);
+            XLSX.utils.book_append_sheet(wb, wsSole, "Sole_Insole_Sized");
+
+            // Sheet 2: Meteran
+            const meteranData = data.meteran.map(r => ({
+                "Bagian": r.bagian,
+                "Nama Bahan": r.bahan,
+                "Warna Bahan": r.warna,
+                "Satuan": r.satuan,
+                "Kebutuhan PO": r.totalKebutuhan,
+                "Sudah Kirim": r.sudahKirim,
+                "Sisa Kirim": r.sisaKirim
+            }));
+            const wsMeteran = XLSX.utils.json_to_sheet(meteranData.length > 0 ? meteranData : [{"Status": "Kosong"}]);
+            XLSX.utils.book_append_sheet(wb, wsMeteran, "Bahan_Meteran");
+
+            // Sheet 3: Aksesoris
+            const aksesorisData = data.aksesoris.map(r => ({
+                "Bagian": r.bagian,
+                "Nama Bahan": r.bahan,
+                "Warna/Spek": r.warna,
+                "Satuan": r.satuan,
+                "Kebutuhan PO": r.totalKebutuhan,
+                "Sudah Kirim": r.sudahKirim,
+                "Sisa Kirim": r.sisaKirim
+            }));
+            const wsAksesoris = XLSX.utils.json_to_sheet(aksesorisData.length > 0 ? aksesorisData : [{"Status": "Kosong"}]);
+            XLSX.utils.book_append_sheet(wb, wsAksesoris, "Aksesoris_Kemasan");
+
+            // Sheet 4: Lembaran
+            const lembaranData = data.lembaran.map(r => ({
+                "Bagian": r.bagian,
+                "Nama Bahan": r.bahan,
+                "Warna/Tipe": r.warna,
+                "Satuan": "LBR",
+                "Kebutuhan Lembar": r.totalKebutuhan,
+                "Sudah Kirim": r.sudahKirim,
+                "Sisa Kirim": r.sisaKirim
+            }));
+            const wsLembaran = XLSX.utils.json_to_sheet(lembaranData.length > 0 ? lembaranData : [{"Status": "Kosong"}]);
+            XLSX.utils.book_append_sheet(wb, wsLembaran, "Bahan_Lembaran");
+
+            XLSX.writeFile(wb, `Kebutuhan_Bahan_PO_${data.po.id}.xlsx`);
+            if (typeof showToast === 'function') showToast("File Excel Kebutuhan Bahan berhasil diunduh!", "success");
+        }
+
         // ==========================================
         // FITUR AUTO SYNC & OFFLINE DETECTOR
         // ==========================================
@@ -14968,6 +16825,7 @@
         renderCustomerList();
         renderPaymentList();
         renderMakloonCostTable();
+        renderMakloonBahanModule();
         updateNetworkStatus();
 
     </script>
