@@ -3005,10 +3005,10 @@
                 <!-- ========================================== -->
                 
                 <!-- TAB: KIRIM BAHAN BAKU -->
-                <section id="tab-makloon-bahan" class="tab-content hidden-tab p-2 md:p-4 h-full overflow-hidden">
-                    <div class="flex flex-col h-full w-full">
+                <section id="tab-makloon-bahan" class="tab-content hidden-tab h-full overflow-y-auto p-2 md:p-4">
+                    <div class="flex flex-col w-full space-y-4 pb-20">
                         <!-- Sub Header Nav & Title -->
-                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-3 flex flex-col md:flex-row md:items-center justify-between gap-3 shrink-0">
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 shrink-0">
                         <div class="flex items-center space-x-3">
                             <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg shadow-sm">
                                 <i class="fa-solid fa-truck-ramp-box"></i>
@@ -3035,7 +3035,7 @@
                     </div>
 
                     <!-- SUB-TAB 1: KALKULATOR BAHAN PO (MRP) -->
-                    <div id="subtab-content-mrp" class="flex-1 flex flex-col min-h-0 overflow-y-auto space-y-3 pb-8">
+                    <div id="subtab-content-mrp" class="w-full flex flex-col space-y-4">
                         <!-- PO Filter & Action Card -->
                         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 shrink-0">
                             <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -3069,7 +3069,7 @@
                             </div>
 
                             <!-- Summary Badges & Cards -->
-                            <div id="mrpPOHeaderSummary" class="mt-4 pt-3 border-t border-gray-100 grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div id="mrpPOHeaderSummary" class="mt-4 pt-3 border-t border-gray-100 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                                 <!-- Populated dynamically -->
                             </div>
                         </div>
@@ -3214,7 +3214,7 @@
                     </div>
 
                     <!-- SUB-TAB 2: RIWAYAT SURAT JALAN -->
-                    <div id="subtab-content-sj" class="hidden flex-1 flex flex-col min-h-0 bg-white rounded-xl shadow-sm border border-gray-100 p-4 overflow-hidden">
+                    <div id="subtab-content-sj" class="hidden w-full flex flex-col bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                         <!-- Filter bar -->
                         <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 shrink-0">
                             <div class="flex flex-wrap items-center gap-2">
@@ -3232,7 +3232,7 @@
                         </div>
 
                         <!-- Table Surat Jalan -->
-                        <div class="flex-1 overflow-y-auto border border-gray-100 rounded-xl">
+                        <div class="w-full overflow-x-auto border border-gray-100 rounded-xl">
                             <table class="w-full text-left text-xs">
                                 <thead class="bg-gray-50 border-b border-gray-200 text-gray-600 font-bold uppercase tracking-wider text-[11px] sticky top-0 z-10">
                                     <tr>
@@ -3716,6 +3716,58 @@
                 <div class="flex items-center gap-2" id="sjDetActions">
                     <!-- Injected dynamically -->
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL POP-UP: RINCIAN JATAH KASBON MAKLOON -->
+    <!-- ========================================== -->
+    <div id="modal-kasbon-breakdown" class="fixed inset-0 z-[9999] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm" onclick="closeModalKasbonBreakdown()"></div>
+        <div class="bg-white rounded-2xl shadow-2xl z-10 w-11/12 max-w-2xl transform scale-95 transition-transform duration-300 flex flex-col max-h-[90vh]">
+            <div class="p-4 md:p-5 border-b border-gray-100 flex justify-between items-center bg-emerald-50/70 rounded-t-2xl shrink-0">
+                <div class="flex items-center space-x-3">
+                    <span class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-lg shadow-sm">
+                        <i class="fa-solid fa-hand-holding-dollar"></i>
+                    </span>
+                    <div>
+                        <h3 class="text-base md:text-lg font-bold text-gray-800" id="kasbonModalTitle">Rincian Jatah Kasbon / Upah Makloon</h3>
+                        <p class="text-xs text-gray-500" id="kasbonModalSubTitle">Total ongkos pengerjaan, overhead & jasa makloon untuk PO ini</p>
+                    </div>
+                </div>
+                <button onclick="closeModalKasbonBreakdown()" class="text-gray-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+
+            <div class="p-4 md:p-6 overflow-y-auto flex-1 space-y-4">
+                <div class="border border-gray-200 rounded-xl overflow-hidden shadow-xs">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-gray-100 text-gray-700 font-bold uppercase tracking-wider text-[11px]">
+                            <tr>
+                                <th class="p-2.5 text-center w-10">No</th>
+                                <th class="p-2.5">Komponen Upah / Biaya</th>
+                                <th class="p-2.5 text-right w-28">Tarif / Psg</th>
+                                <th class="p-2.5 text-center w-24">Qty PO</th>
+                                <th class="p-2.5 text-right w-36">Total Biaya</th>
+                            </tr>
+                        </thead>
+                        <tbody id="kasbonBreakdownTableBody" class="divide-y divide-gray-100">
+                            <!-- Injected dynamically -->
+                        </tbody>
+                        <tfoot id="kasbonBreakdownTableFoot" class="bg-emerald-50/80 font-bold border-t border-emerald-200 text-emerald-950">
+                            <!-- Injected dynamically -->
+                        </tfoot>
+                    </table>
+                </div>
+                <p class="text-[11px] text-gray-400 italic">
+                    * Seluruh komponen dengan awalan <b>O. (Ongkos)</b>, <b>Overhead</b>, dan <b>Jasa Makloon</b> tidak masuk ke daftar bahan baku fisik yang dikirim, melainkan dihitung sebagai pagu/jatah kasbon upah makloon.
+                </p>
+            </div>
+
+            <div class="p-4 border-t border-gray-100 flex justify-end items-center bg-gray-50 rounded-b-2xl shrink-0">
+                <button type="button" onclick="closeModalKasbonBreakdown()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition">
+                    Tutup
+                </button>
             </div>
         </div>
     </div>
@@ -15421,8 +15473,19 @@
             return false;
         }
 
-        // 4. Kategori Bahan Baku
+        // 4. Helper & Kategori Bahan Baku
+        function isOngkosOrJasaOrOverhead(bagian, bahan) {
+            const bg = (bagian || '').trim().toUpperCase();
+            const bh = (bahan || '').trim().toUpperCase();
+            if (/^O[\.\s\-]/.test(bh) || bh === 'O') return true;
+            if (bh.startsWith('ONGKOS') || bh.startsWith('UPAH') || bh.includes('OVERHEAD') || bh.includes('JASA MAKLOON') || bh === 'MAKLOON') return true;
+            if (/^O[\.\s\-]/.test(bg) || bg === 'O') return true;
+            if (bg.startsWith('ONGKOS') || bg.startsWith('UPAH') || bg.includes('OVERHEAD') || bg.includes('JASA')) return true;
+            return false;
+        }
+
         function categorizeMaterial(bagian, bahan, satuan) {
+            if (isOngkosOrJasaOrOverhead(bagian, bahan)) return 'ONGKOS_JASA';
             if (isSizedComponent(bagian, bahan, satuan)) return 'SOLE_SIZED';
             const sat = (satuan || '').trim().toUpperCase();
             if (sat === 'LBR') return 'LEMBARAN';
@@ -15443,6 +15506,7 @@
             const meteranMap = {};
             const aksesorisMap = {};
             const lembaranMap = {};
+            const kasbonMap = {};
 
             let totalPairs = 0;
             let bomMatchedArticles = new Set();
@@ -15492,13 +15556,34 @@
                     const bgUpper = (r.bagian || '').trim().toUpperCase();
                     const bhUpper = (r.bahan || '').trim().toUpperCase();
 
-                    // Abaikan baris ongkos/jasa makloon
-                    if (bgUpper.includes('JASA') || bgUpper.includes('ONGKOS') || bgUpper.includes('UPAH') || bhUpper.includes('JASA') || bhUpper.includes('ONGKOS')) {
-                        return;
+                    let rawU = (r.rawUsage && r.rawUsage[colIdx] !== undefined && r.rawUsage[colIdx] !== '') 
+                        ? r.rawUsage[colIdx] 
+                        : ((r.usage && r.usage[colIdx] !== undefined && r.usage[colIdx] !== '') ? r.usage[colIdx] : null);
+                    let u = rawU !== null ? parseFractionOrNumber(rawU) : (isOngkosOrJasaOrOverhead(r.bagian, r.bahan) ? 1 : 0);
+                    const h = parseFloat(r.harga) || 0;
+
+                    // Pengecualian Ongkos (O.), Overhead & Jasa Makloon:
+                    // Tidak masuk ke kebutuhan bahan fisik, melainkan dialokasikan ke Jatah Kasbon Makloon
+                    if (isOngkosOrJasaOrOverhead(r.bagian, r.bahan)) {
+                        const costPerPsg = Math.round(u * h);
+                        const subTotalBiaya = Math.round(costPerPsg * itemTotal);
+                        const kKey = bhUpper || bgUpper || 'ONGKOS';
+
+                        if (!kasbonMap[kKey]) {
+                            kasbonMap[kKey] = {
+                                key: kKey,
+                                nama: r.bahan || r.bagian || 'Ongkos Makloon',
+                                bagian: r.bagian || 'ONGKOS / JASA',
+                                tarifPerPsg: costPerPsg,
+                                totalPairs: 0,
+                                totalBiaya: 0
+                            };
+                        }
+                        kasbonMap[kKey].totalPairs += itemTotal;
+                        kasbonMap[kKey].totalBiaya += subTotalBiaya;
+                        return; // Jangan masuk ke daftar bahan baku fisik
                     }
 
-                    const rawU = (r.rawUsage && r.rawUsage[colIdx]) || (r.usage && r.usage[colIdx]) || 0;
-                    const u = parseFractionOrNumber(rawU);
                     if (!r.bahan && u === 0) return;
 
                     const satuan = (r.satuan || 'PSG').trim().toUpperCase();
@@ -15615,14 +15700,14 @@
                     } else if (itCat === 'METERAN') {
                         const found = Object.values(meteranMap).find(x => x.bahan === itBahan && (x.warna === itWarna || x.warna === '-' || itWarna === '-'));
                         if (found) found.sudahKirim += itQty;
-                    } else {
+                    } else if (itCat !== 'ONGKOS_JASA') {
                         const found = Object.values(aksesorisMap).find(x => x.bahan === itBahan && (x.warna === itWarna || x.warna === '-' || itWarna === '-'));
                         if (found) found.sudahKirim += itQty;
                     }
                 });
             });
 
-            // Hitung sisa kebutuhan
+            // Hitung sisa kebutuhan bahan baku
             const soleList = Object.values(soleMap).map(item => {
                 item.sisaKirim = Math.max(0, item.totalPasang - item.sudahKirim);
                 return item;
@@ -15640,7 +15725,15 @@
                 return item;
             });
 
-            // Hitung progress keseluruhan
+            // Hitung total jatah kasbon makloon & rincian kasbon
+            const kasbonList = Object.values(kasbonMap).map(k => {
+                k.tarifPerPsg = k.totalPairs > 0 ? Math.round(k.totalBiaya / k.totalPairs) : k.tarifPerPsg;
+                return k;
+            });
+            const totalJatahKasbonMakloon = kasbonList.reduce((sum, k) => sum + (k.totalBiaya || 0), 0);
+            const avgKasbonPerPsg = totalPairs > 0 ? Math.round(totalJatahKasbonMakloon / totalPairs) : 0;
+
+            // Hitung progress keseluruhan pengiriman bahan baku fisik
             let grandTotalReq = 0;
             let grandTotalSent = 0;
             [...soleList, ...meteranList, ...aksesorisList, ...lembaranList].forEach(i => {
@@ -15658,6 +15751,9 @@
                 meteran: meteranList,
                 aksesoris: aksesorisList,
                 lembaran: lembaranList,
+                kasbonList: kasbonList,
+                totalJatahKasbonMakloon: totalJatahKasbonMakloon,
+                avgKasbonPerPsg: avgKasbonPerPsg,
                 bomMatchedArticles: Array.from(bomMatchedArticles),
                 missingBomArticles: Array.from(missingBomArticles),
                 isBomComplete: missingBomArticles.size === 0 && bomMatchedArticles.size > 0,
@@ -15738,7 +15834,7 @@
                 return;
             }
 
-            // 1. Header Summary Cards
+            // 1. Header Summary Cards (5 Kolom Responsive)
             if (containerSummary) {
                 containerSummary.innerHTML = `
                     <div class="bg-blue-50/60 p-3 rounded-xl border border-blue-100">
@@ -15760,6 +15856,20 @@
                             }
                         </div>
                         <div class="text-[11px] text-gray-500 font-medium mt-0.5">${data.bomMatchedArticles.length} terhubung</div>
+                    </div>
+                    <div class="bg-teal-50/70 p-3 rounded-xl border border-teal-200">
+                        <div class="text-[10px] uppercase font-bold text-teal-800 flex justify-between items-center">
+                            <span>Jatah Kasbon Makloon</span>
+                            <button type="button" onclick="openModalKasbonBreakdown()" class="text-[10px] font-bold text-teal-700 hover:text-teal-900 underline flex items-center gap-1 cursor-pointer">
+                                <i class="fa-solid fa-circle-info"></i> Rincian
+                            </button>
+                        </div>
+                        <div class="text-sm font-black text-teal-950 mt-0.5">
+                            Rp ${data.totalJatahKasbonMakloon.toLocaleString('id-ID')}
+                        </div>
+                        <div class="text-[11px] text-teal-700 font-medium truncate" title="Rp ${data.avgKasbonPerPsg.toLocaleString('id-ID')} / Psg (O. + Overhead + Jasa)">
+                            Rp ${data.avgKasbonPerPsg.toLocaleString('id-ID')} / Psg (O. + Overhead + Jasa)
+                        </div>
                     </div>
                     <div class="bg-indigo-50/60 p-3 rounded-xl border border-indigo-100">
                         <div class="text-[10px] uppercase font-bold text-indigo-700 flex justify-between">
@@ -15970,6 +16080,63 @@
             if (isNaN(num)) return '0';
             if (Number.isInteger(num)) return num.toLocaleString('id-ID');
             return parseFloat(num.toFixed(2)).toLocaleString('id-ID');
+        }
+
+        // Modal Rincian Jatah Kasbon Makloon
+        function openModalKasbonBreakdown() {
+            const modal = document.getElementById('modal-kasbon-breakdown');
+            if (!modal) return;
+
+            const data = calculatePORequiredMaterials(currentMakloonBahanPOId);
+            if (!data) return;
+
+            const title = document.getElementById('kasbonModalTitle');
+            const subTitle = document.getElementById('kasbonModalSubTitle');
+            const tbody = document.getElementById('kasbonBreakdownTableBody');
+            const tfoot = document.getElementById('kasbonBreakdownTableFoot');
+
+            if (title) title.innerText = `Rincian Jatah Kasbon Makloon - PO: ${data.po.id}`;
+            if (subTitle) subTitle.innerText = `Vendor: ${data.po.makloon || '-'} • Total: ${data.totalPairs.toLocaleString('id-ID')} Pasang • Rata-rata: Rp ${data.avgKasbonPerPsg.toLocaleString('id-ID')} / Psg`;
+
+            if (tbody) {
+                if (!data.kasbonList || data.kasbonList.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-gray-400">Tidak ada komponen ongkos/overhead/jasa makloon terdaftar dalam BOM PO ini.</td></tr>`;
+                } else {
+                    tbody.innerHTML = data.kasbonList.map((row, idx) => `
+                        <tr class="hover:bg-emerald-50/40 transition">
+                            <td class="p-2.5 text-center text-gray-400 font-medium">${idx + 1}</td>
+                            <td class="p-2.5 font-bold text-gray-800">
+                                ${row.nama}
+                                <div class="text-[10px] text-gray-400 font-normal">Kategori: ${row.bagian}</div>
+                            </td>
+                            <td class="p-2.5 text-right font-semibold text-gray-700">Rp ${row.tarifPerPsg.toLocaleString('id-ID')}</td>
+                            <td class="p-2.5 text-center font-bold text-gray-600">${row.totalPairs.toLocaleString('id-ID')} psg</td>
+                            <td class="p-2.5 text-right font-black text-emerald-800">Rp ${row.totalBiaya.toLocaleString('id-ID')}</td>
+                        </tr>
+                    `).join('');
+                }
+            }
+
+            if (tfoot) {
+                tfoot.innerHTML = `
+                    <tr>
+                        <td colspan="2" class="p-3 uppercase tracking-wider text-xs">TOTAL JATAH KASBON MAKLOON</td>
+                        <td class="p-3 text-right text-xs">Rp ${data.avgKasbonPerPsg.toLocaleString('id-ID')} / Psg</td>
+                        <td class="p-3 text-center text-xs">${data.totalPairs.toLocaleString('id-ID')} Psg</td>
+                        <td class="p-3 text-right text-sm font-black text-emerald-900">Rp ${data.totalJatahKasbonMakloon.toLocaleString('id-ID')}</td>
+                    </tr>
+                `;
+            }
+
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); }, 10);
+        }
+
+        function closeModalKasbonBreakdown() {
+            const modal = document.getElementById('modal-kasbon-breakdown');
+            if (!modal) return;
+            modal.classList.add('opacity-0');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
         }
 
         // =================================================================
@@ -16606,6 +16773,17 @@
                 </tr>
             `).join('');
 
+            let kasbonRows = (data.kasbonList || []).map((row, idx) => `
+                <tr>
+                    <td style="padding:4px; border:1px solid #333; text-align:center;">${idx + 1}</td>
+                    <td style="padding:4px; border:1px solid #333; font-weight:bold;">${row.nama}</td>
+                    <td style="padding:4px; border:1px solid #333;">${row.bagian}</td>
+                    <td style="padding:4px; border:1px solid #333; text-align:right;">Rp ${row.tarifPerPsg.toLocaleString('id-ID')}</td>
+                    <td style="padding:4px; border:1px solid #333; text-align:center;">${row.totalPairs.toLocaleString('id-ID')} Psg</td>
+                    <td style="padding:4px; border:1px solid #333; text-align:right; font-weight:bold;">Rp ${row.totalBiaya.toLocaleString('id-ID')}</td>
+                </tr>
+            `).join('');
+
             const printContent = `
                 <!DOCTYPE html>
                 <html>
@@ -16688,6 +16866,29 @@
                             </tr>
                         </thead>
                         <tbody>${lembaranRows || '<tr><td colspan="6" style="text-align:center;">Tidak ada bahan lembaran</td></tr>'}</tbody>
+                    </table>
+
+                    <div class="section-title">5. ESTIMASI JATAH KASBON / UPAH MAKLOON (O. + OVERHEAD + JASA)</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width:25px;">No</th>
+                                <th style="text-align:left;">Komponen Ongkos / Biaya</th>
+                                <th style="width:100px; text-align:left;">Kategori</th>
+                                <th style="width:100px; text-align:right;">Tarif / Psg</th>
+                                <th style="width:80px; text-align:center;">Qty PO</th>
+                                <th style="width:120px; text-align:right;">Total Kasbon</th>
+                            </tr>
+                        </thead>
+                        <tbody>${kasbonRows || '<tr><td colspan="6" style="text-align:center;">Tidak ada komponen ongkos / jasa</td></tr>'}</tbody>
+                        <tfoot>
+                            <tr style="background:#e6f4ea; font-weight:bold;">
+                                <td colspan="3" style="padding:5px; border:1px solid #333;">TOTAL ESTIMASI JATAH KASBON MAKLOON</td>
+                                <td style="padding:5px; border:1px solid #333; text-align:right;">Rp ${data.avgKasbonPerPsg.toLocaleString('id-ID')} / Psg</td>
+                                <td style="padding:5px; border:1px solid #333; text-align:center;">${data.totalPairs.toLocaleString('id-ID')} Psg</td>
+                                <td style="padding:5px; border:1px solid #333; text-align:right; font-size:11px; font-weight:bold;">Rp ${data.totalJatahKasbonMakloon.toLocaleString('id-ID')}</td>
+                            </tr>
+                        </tfoot>
                     </table>
 
                     <div style="margin-top:35px; display:flex; justify-content:space-between; text-align:center;">
@@ -16782,6 +16983,17 @@
             }));
             const wsLembaran = XLSX.utils.json_to_sheet(lembaranData.length > 0 ? lembaranData : [{"Status": "Kosong"}]);
             XLSX.utils.book_append_sheet(wb, wsLembaran, "Bahan_Lembaran");
+
+            // Sheet 5: Jatah Kasbon Makloon
+            const kasbonData = (data.kasbonList || []).map(r => ({
+                "Komponen Biaya / Ongkos": r.nama,
+                "Kategori": r.bagian,
+                "Tarif Per Pasang (Rp)": r.tarifPerPsg,
+                "Qty PO (Pasang)": r.totalPairs,
+                "Total Jatah Kasbon (Rp)": r.totalBiaya
+            }));
+            const wsKasbon = XLSX.utils.json_to_sheet(kasbonData.length > 0 ? kasbonData : [{"Status": "Kosong"}]);
+            XLSX.utils.book_append_sheet(wb, wsKasbon, "Jatah_Kasbon_Makloon");
 
             XLSX.writeFile(wb, `Kebutuhan_Bahan_PO_${data.po.id}.xlsx`);
             if (typeof showToast === 'function') showToast("File Excel Kebutuhan Bahan berhasil diunduh!", "success");
