@@ -9723,7 +9723,8 @@
                 davclar_kontrabon: db_kontrabon,
                 davclar_sales_cp: db_sales_cp,
                 davclar_kasbon: db_kasbon,
-                davclar_users: db_users
+                davclar_users: db_users,
+                davclar_makloon_cost: typeof db_makloon_cost !== 'undefined' ? db_makloon_cost : []
             };
 
             // 2. Ubah jadi format JSON Text yang rapi
@@ -9795,6 +9796,8 @@
             window.firebaseWrite('davclar_kasbon', data.davclar_kasbon);
                         if(data.davclar_users) localStorage.setItem('davclar_users', JSON.stringify(data.davclar_users));
             window.firebaseWrite('davclar_users', data.davclar_users);
+                        if(data.davclar_makloon_cost) localStorage.setItem('davclar_makloon_cost', JSON.stringify(data.davclar_makloon_cost));
+            window.firebaseWrite('davclar_makloon_cost', data.davclar_makloon_cost);
 
                         if(typeof showToast === "function") showToast("Restore Berhasil! Memuat ulang sistem...", "success");
                         
@@ -9833,7 +9836,8 @@
                 "Kontra_Bon": typeof db_kontrabon !== 'undefined' ? db_kontrabon : [],
                 "Kasbon_Sales": typeof db_kasbon !== 'undefined' ? db_kasbon : [],
                 "Riwayat_Komisi_CP": typeof db_payment !== 'undefined' ? db_payment : [],
-                "Akun_User": typeof db_users !== 'undefined' ? db_users : []
+                "Akun_User": typeof db_users !== 'undefined' ? db_users : [],
+                "Setting_Cost_Makloon": typeof db_makloon_cost !== 'undefined' ? db_makloon_cost : []
             };
 
             // 2. Blueprint Urutan Kolom Baku (Sesuai struktur asli Kontra Bon)
@@ -9848,7 +9852,8 @@
                 "Kontra_Bon": ["id", "tanggal", "toko", "total", "invId", "inv_tanggal", "nilai", "bayar", "potong", "sisa"],
                 "Kasbon_Sales": ["id", "tanggal", "sales", "tipe", "nominal"],
                 "Riwayat_Komisi_CP": ["no_cp", "tanggal", "sales", "total_komisi", "keterangan"],
-                "Akun_User": ["username", "password", "role", "access"]
+                "Akun_User": ["username", "password", "role", "access"],
+                "Setting_Cost_Makloon": ["id", "model", "merk", "vendor", "kategori", "articles", "catatan", "createdAt", "updatedAt"]
             };
 
             // 3. Mesin Pemecah & Penyelaras Data
@@ -9988,7 +9993,9 @@
                             let newRow = { ...row };
                             if (newRow.items) delete newRow.items;
                             if (newRow.invoices) delete newRow.invoices;
+                            if (newRow.rows) delete newRow.rows;
                             if (Array.isArray(newRow.sizeLabels)) newRow.sizeLabels = newRow.sizeLabels.join(', ');
+                            if (Array.isArray(newRow.articles)) newRow.articles = newRow.articles.join(', ');
                             tempRows.push(newRow);
                         }
 
@@ -13626,12 +13633,6 @@
                 return articleTotals[artIdx] || 0;
             }
             return parseInt(record.total) || 0;
-        }
-
-        // Auto-seed contoh MIKA jika db_makloon_cost masih kosong
-        if (typeof db_makloon_cost !== 'undefined' && Array.isArray(db_makloon_cost) && db_makloon_cost.length === 0) {
-            db_makloon_cost.push(JSON.parse(JSON.stringify(sampleMikaCostSheet)));
-            localStorage.setItem('davclar_makloon_cost', JSON.stringify(db_makloon_cost));
         }
 
         // Render List Table Setting Cost
