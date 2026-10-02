@@ -3282,8 +3282,8 @@
                                         <i class="fa-solid fa-box-open"></i>
                                     </span>
                                     <div>
-                                        <h3 class="text-sm font-bold text-gray-800">3. Aksesoris, Kemasan, Lem & Bahan Pendukung (PCS / SET / DUS / LEM / KG)</h3>
-                                        <p class="text-[11px] text-gray-500">Ring buckle, kancing, boneka/ornamen, lem, hangtag, dus sepatu Davclar, bahan kiloan (KG).</p>
+                                        <h3 class="text-sm font-bold text-gray-800">3. Aksesoris, Kemasan, Lem & Bahan Pendukung (PCS / SET / DUS / GLN / BLK / KG)</h3>
+                                        <p class="text-[11px] text-gray-500">Ring buckle, kancing, boneka/ornamen, lem (GLN/BLK), hangtag, dus sepatu Davclar, bahan kiloan (KG).</p>
                                     </div>
                                 </div>
                                 <span id="badgeCountAksesoris" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">0 Item</span>
@@ -15214,10 +15214,12 @@
                             <option value="YARD" ${row.satuan === 'YARD' ? 'selected' : ''}>YARD</option>
                             <option value="PCS" ${row.satuan === 'PCS' ? 'selected' : ''}>PCS</option>
                             <option value="SET" ${row.satuan === 'SET' ? 'selected' : ''}>SET</option>
-                            <option value="LEM" ${row.satuan === 'LEM' ? 'selected' : ''}>LEM</option>
+                            <option value="GLN" ${row.satuan === 'GLN' ? 'selected' : ''}>GLN</option>
+                            <option value="BLK" ${row.satuan === 'BLK' ? 'selected' : ''}>BLK</option>
+                            <option value="KG" ${row.satuan === 'KG' ? 'selected' : ''}>KG</option>
                             <option value="ROLL" ${row.satuan === 'ROLL' ? 'selected' : ''}>ROLL</option>
                             <option value="LBR" ${row.satuan === 'LBR' ? 'selected' : ''}>LBR</option>
-                            <option value="KG" ${row.satuan === 'KG' ? 'selected' : ''}>KG</option>
+                            <option value="LEM" ${row.satuan === 'LEM' ? 'selected' : ''}>LEM</option>
                         </select>
                     </td>
                     
@@ -15950,6 +15952,25 @@
             return false;
         }
 
+        // Helper untuk mengambil nama artikel dari objek PO
+        function getPOArtikelDisplay(po) {
+            if (!po || !po.items || po.items.length === 0) return '';
+            const artikels = new Set();
+            po.items.forEach(it => {
+                let art = (it.artikel || '').trim();
+                if (!art && it.barangId && typeof db_barang !== 'undefined') {
+                    const brg = (db_barang || []).find(b => b.id === it.barangId);
+                    if (brg && brg.artikel) art = brg.artikel.trim();
+                }
+                if (!art && it.namaBarang) {
+                    let parts = it.namaBarang.split('-');
+                    art = parts.length > 1 ? parts.slice(1).join('-').trim() : it.namaBarang.trim();
+                }
+                if (art) artikels.add(art.toUpperCase());
+            });
+            return Array.from(artikels).join(', ');
+        }
+
         function categorizeMaterial(bagian, bahan, satuan) {
             if (isOngkosOrJasaOrOverhead(bagian, bahan)) return 'ONGKOS_JASA';
             if (isSizedComponent(bagian, bahan, satuan)) return 'SOLE_SIZED';
@@ -16280,8 +16301,10 @@
                     poSelect.innerHTML = sortedPOs.map(p => {
                         let totalQty = 0;
                         (p.items || []).forEach(it => { totalQty += (parseInt(it.total) || 0); });
+                        const artDisplay = getPOArtikelDisplay(p);
+                        const vendorArt = artDisplay ? `${p.makloon || 'PABRIK'} - ${artDisplay}` : (p.makloon || 'PABRIK');
                         return `<option value="${p.id}" ${p.id === currentVal ? 'selected' : ''}>
-                            PO: ${p.id} • ${p.makloon || 'PABRIK'} • ${totalQty.toLocaleString('id-ID')} Psg • Tgl: ${p.tanggal || '-'}
+                            PO: ${p.id} • ${vendorArt} • ${totalQty.toLocaleString('id-ID')} Psg • Tgl: ${p.tanggal || '-'}
                         </option>`;
                     }).join('');
 
@@ -16293,7 +16316,11 @@
 
             if (sjPoSelect) {
                 sjPoSelect.innerHTML = '<option value="">-- Pilih Nomor PO --</option>' + 
-                    sortedPOs.map(p => `<option value="${p.id}">${p.id} (${p.makloon || 'PABRIK'})</option>`).join('');
+                    sortedPOs.map(p => {
+                        const artDisplay = getPOArtikelDisplay(p);
+                        const vendorArt = artDisplay ? `${p.makloon || 'PABRIK'} - ${artDisplay}` : (p.makloon || 'PABRIK');
+                        return `<option value="${p.id}">${p.id} (${vendorArt})</option>`;
+                    }).join('');
             }
 
             if (currentMakloonBahanPOId) {
@@ -16320,10 +16347,12 @@
 
             // 1. Header Summary Cards (5 Kolom Responsive)
             if (containerSummary) {
+                const artDisplay = getPOArtikelDisplay(data.po);
+                const vendorArtDisplay = artDisplay ? `${data.po.makloon || '-'} - ${artDisplay}` : (data.po.makloon || '-');
                 containerSummary.innerHTML = `
                     <div class="bg-blue-50/60 p-3 rounded-xl border border-blue-100">
-                        <div class="text-[10px] uppercase font-bold text-blue-700">Vendor Makloon</div>
-                        <div class="text-sm font-extrabold text-gray-800 truncate">${data.po.makloon || '-'}</div>
+                        <div class="text-[10px] uppercase font-bold text-blue-700">Vendor & Artikel</div>
+                        <div class="text-sm font-extrabold text-gray-800 truncate" title="${vendorArtDisplay}">${vendorArtDisplay}</div>
                         <div class="text-[11px] text-gray-500 font-medium">Tgl: ${data.po.tanggal || '-'}</div>
                     </div>
                     <div class="bg-amber-50/60 p-3 rounded-xl border border-amber-100">
@@ -16821,7 +16850,7 @@
                             <select onchange="tempSJItems[${idx}].kategori = this.value; renderSJFormItems();" class="w-full bg-white border border-gray-200 rounded px-2 py-1 text-xs font-semibold">
                                 <option value="SOLE_SIZED" ${item.kategori === 'SOLE_SIZED' ? 'selected' : ''}>Sol / Insole (PSG)</option>
                                 <option value="METERAN" ${item.kategori === 'METERAN' ? 'selected' : ''}>Meteran (M/YARD)</option>
-                                <option value="AKSESORIS" ${item.kategori === 'AKSESORIS' ? 'selected' : ''}>Aksesoris/Dus/KG (PCS/KG)</option>
+                                <option value="AKSESORIS" ${item.kategori === 'AKSESORIS' ? 'selected' : ''}>Aksesoris/Lem/Dus/KG (PCS/GLN/BLK/KG)</option>
                                 <option value="LEMBARAN" ${item.kategori === 'LEMBARAN' ? 'selected' : ''}>Lembaran (LBR)</option>
                             </select>
                         </td>
@@ -17270,6 +17299,9 @@
                 </tr>
             `).join('');
 
+            const artDisplay = getPOArtikelDisplay(data.po);
+            const vendorDisplay = artDisplay ? `${data.po.makloon || 'PABRIK'} - ${artDisplay}` : (data.po.makloon || 'PABRIK');
+
             const printContent = `
                 <!DOCTYPE html>
                 <html>
@@ -17291,7 +17323,7 @@
                         </div>
                         <div style="text-align:right;">
                             <div style="font-size:14px; font-weight:bold;">PO: ${data.po.id}</div>
-                            <div style="font-size:11px;">Vendor: <b>${data.po.makloon}</b> • ${data.totalPairs.toLocaleString('id-ID')} Pasang</div>
+                            <div style="font-size:11px;">Vendor: <b>${vendorDisplay}</b> • ${data.totalPairs.toLocaleString('id-ID')} Pasang</div>
                         </div>
                     </div>
 
@@ -17324,7 +17356,7 @@
                         <tbody>${meteranRows || '<tr><td colspan="6" style="text-align:center;">Tidak ada bahan meteran</td></tr>'}</tbody>
                     </table>
 
-                    <div class="section-title">3. AKSESORIS, KEMASAN & PENDUKUNG (PCS / SET / DUS)</div>
+                    <div class="section-title">3. AKSESORIS, KEMASAN, LEM & PENDUKUNG (PCS / SET / DUS / GLN / BLK / KG)</div>
                     <table>
                         <thead>
                             <tr>
@@ -17481,7 +17513,9 @@
             const wsKasbon = XLSX.utils.json_to_sheet(kasbonData.length > 0 ? kasbonData : [{"Status": "Kosong"}]);
             XLSX.utils.book_append_sheet(wb, wsKasbon, "Jatah_Kasbon_Makloon");
 
-            XLSX.writeFile(wb, `Kebutuhan_Bahan_PO_${data.po.id}.xlsx`);
+            const artDisplay = getPOArtikelDisplay(data.po);
+            const safeArt = artDisplay ? `_${artDisplay.replace(/[^A-Za-z0-9_-]/g, '_')}` : '';
+            XLSX.writeFile(wb, `Kebutuhan_Bahan_PO_${data.po.id}${safeArt}.xlsx`);
             if (typeof showToast === 'function') showToast("File Excel Kebutuhan Bahan berhasil diunduh!", "success");
         }
 
