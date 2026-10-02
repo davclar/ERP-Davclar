@@ -16556,6 +16556,7 @@
             if (!pObj || !pObj.items) return 0;
             const cleanBahan = (bahanRaw || '').replace(/\s*[\-\(]\s*(?:Sz|Size)\s*[0-9A-Za-z]+[\)]?/i, '').trim().toUpperCase();
             const cleanWarna = (warna || '-').trim().toUpperCase();
+            const cleanSatuan = (satuan || '').trim().toUpperCase();
             let totalReq = 0;
 
             const extractSizes = (it) => {
@@ -16588,18 +16589,33 @@
                 }
 
                 (bom.rows || []).forEach(r => {
+                    if (typeof isOngkosOrJasaOrOverhead === 'function' && isOngkosOrJasaOrOverhead(r.bagian, r.bahan)) return;
                     const rBahan = (r.bahan || '').trim().toUpperCase();
                     if (!rBahan) return;
-                    if (rBahan === cleanBahan || cleanBahan.includes(rBahan) || rBahan.includes(cleanBahan)) {
-                        let rawU = (r.rawUsage && r.rawUsage[colIdx] !== undefined && r.rawUsage[colIdx] !== '') 
-                            ? r.rawUsage[colIdx] 
-                            : ((r.usage && r.usage[colIdx] !== undefined && r.usage[colIdx] !== '') ? r.usage[colIdx] : null);
-                        let u = rawU !== null ? parseFractionOrNumber(rawU) : 0;
-                        totalReq += (itemTotal * u);
+                    if (rBahan !== cleanBahan && !cleanBahan.includes(rBahan) && !rBahan.includes(cleanBahan)) return;
+
+                    // COLOR MATCH: pastikan warna bahan sama dengan warna Surat Jalan
+                    const resolvedColor = resolveBOMMaterialColor(poColor, r.warna);
+                    if (cleanWarna !== '-' && resolvedColor !== '-') {
+                        if (cleanWarna !== resolvedColor && !cleanWarna.includes(resolvedColor) && !resolvedColor.includes(cleanWarna)) {
+                            return;
+                        }
                     }
+
+                    // SATUAN CHECK (jika ada):
+                    if (cleanSatuan && r.satuan) {
+                        const rSatuan = (r.satuan || '').trim().toUpperCase();
+                        if (rSatuan && rSatuan !== cleanSatuan) return;
+                    }
+
+                    let rawU = (r.rawUsage && r.rawUsage[colIdx] !== undefined && r.rawUsage[colIdx] !== '') 
+                        ? r.rawUsage[colIdx] 
+                        : ((r.usage && r.usage[colIdx] !== undefined && r.usage[colIdx] !== '') ? r.usage[colIdx] : null);
+                    let u = rawU !== null ? parseFractionOrNumber(rawU) : 0;
+                    totalReq += (itemTotal * u);
                 });
             });
-            return totalReq;
+            return roundUpOneDec(totalReq);
         }
 
         // 5. Mesin Kalkulator Kebutuhan Bahan PO (BOM x PO Produksi - Support Multi-PO)
@@ -16987,42 +17003,41 @@
                                 sumReq += reqP;
                             });
 
-                            const targetReq = reqByPO.filter(x => targetPoIds.includes(x.id)).reduce((a, b) => a + b.req, 0);
-
                             if (sumReq > 0) {
-                                if (itRawQty >= sumReq) {
-                                    // Memenuhi total kebutuhan semua PO: target PO dapat kebutuhan penuhnya
-                                    const extra = itRawQty - sumReq;
-                                    const extraShare = extra > 0 ? (extra * (targetReq / sumReq)) : 0;
-                                    allocQty = targetReq + extraShare;
-                                } else {
-                                    // Pengiriman sebagian: kurangi dari PO pertama, sisanya ke PO berikutnya
-                                    let remShipment = itRawQty;
-                                    let targetAlloc = 0;
-                                    reqByPO.forEach(poReq => {
-                                        const take = Math.min(poReq.req, remShipment);
-                                        remShipment -= take;
-                                        if (targetPoIds.includes(poReq.id)) {
-                                            targetAlloc += take;
-                                        }
-                                    });
-                                    allocQty = targetAlloc;
-                                }
+                                // Alokasi berurutan: penuhi kebutuhan PO pertama, sisanya ke PO berikutnya
+                                let remShipment = itRawQty;
+                                let targetAlloc = 0;
+                                reqByPO.forEach((poReq, pIdx) => {
+                                    let take = 0;
+                                    if (pIdx === reqByPO.length - 1) {
+                                        // PO terakhir mengambil seluruh sisa pengiriman
+                                        take = Math.max(0, remShipment);
+                                    } else {
+                                        // PO sebelumnya mengambil hingga batas kebutuhannya
+                                        take = Math.min(poReq.req, Math.max(0, remShipment));
+                                    }
+                                    remShipment -= take;
+                                    if (targetPoIds.includes(poReq.id)) {
+                                        targetAlloc += take;
+                                    }
+                                });
+                                allocQty = targetAlloc;
                             } else {
                                 allocQty = itRawQty * defaultAllocRatio;
                             }
                         }
 
-                        if (itCat === 'LEMBARAN') {
-                            const found = Object.values(lembaranMap).find(x => x.bahan === itBahanRaw.toUpperCase() && (x.warna === itWarna || x.warna === '-' || itWarna === '-'));
-                            if (found) found.sudahKirim += allocQty;
-                        } else if (itCat === 'METERAN') {
-                            const found = Object.values(meteranMap).find(x => x.bahan === itBahanRaw.toUpperCase() && (x.warna === itWarna || x.warna === '-' || itWarna === '-'));
-                            if (found) found.sudahKirim += allocQty;
-                        } else {
-                            const found = Object.values(aksesorisMap).find(x => x.bahan === itBahanRaw.toUpperCase() && (x.warna === itWarna || x.warna === '-' || itWarna === '-'));
-                            if (found) found.sudahKirim += allocQty;
+                        // Cari objek tujuan berdasarkan kesamaan bahan dan warna
+                        let targetMap = (itCat === 'LEMBARAN') ? lembaranMap : ((itCat === 'METERAN') ? meteranMap : aksesorisMap);
+                        const cleanItBahan = itBahanRaw.toUpperCase();
+                        let found = Object.values(targetMap).find(x => x.bahan === cleanItBahan && x.warna === itWarna);
+                        if (!found) {
+                            found = Object.values(targetMap).find(x => x.bahan === cleanItBahan && (x.warna === '-' || itWarna === '-'));
                         }
+                        if (!found) {
+                            found = Object.values(targetMap).find(x => (x.bahan.includes(cleanItBahan) || cleanItBahan.includes(x.bahan)) && (x.warna === itWarna || x.warna === '-' || itWarna === '-'));
+                        }
+                        if (found) found.sudahKirim += allocQty;
                     }
                 });
             });
