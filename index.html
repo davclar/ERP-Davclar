@@ -928,14 +928,16 @@
                                     <input type="text" id="poFormNote" placeholder="Catatan keseluruhan PO..." class="w-full px-3 py-2 border border-blue-200 rounded-lg text-sm bg-white">
                                 </div>
                                 <div class="sm:col-span-2">
-                                    <label class="block text-xs font-bold text-indigo-700 uppercase mb-1">Label Nomor Ukuran (S1 - S6)</label>
-                                    <div class="grid grid-cols-6 gap-1">
+                                    <label class="block text-xs font-bold text-indigo-700 uppercase mb-1">Label Nomor Ukuran (S1 - S8)</label>
+                                    <div class="grid grid-cols-8 gap-1">
                                         <input type="text" id="poL1" placeholder="36" class="w-full px-1 py-1.5 border border-indigo-300 rounded text-center text-xs font-bold bg-indigo-50" oninput="updateTempLabels()">
                                         <input type="text" id="poL2" placeholder="37" class="w-full px-1 py-1.5 border border-indigo-300 rounded text-center text-xs font-bold bg-indigo-50" oninput="updateTempLabels()">
                                         <input type="text" id="poL3" placeholder="38" class="w-full px-1 py-1.5 border border-indigo-300 rounded text-center text-xs font-bold bg-indigo-50" oninput="updateTempLabels()">
-                                        <input type="text" id="poL4" placeholder="Opt" class="w-full px-1 py-1.5 border border-indigo-300 rounded text-center text-xs font-bold" oninput="updateTempLabels()">
-                                        <input type="text" id="poL5" placeholder="Opt" class="w-full px-1 py-1.5 border border-indigo-300 rounded text-center text-xs font-bold" oninput="updateTempLabels()">
-                                        <input type="text" id="poL6" placeholder="Opt" class="w-full px-1 py-1.5 border border-indigo-300 rounded text-center text-xs font-bold" oninput="updateTempLabels()">
+                                        <input type="text" id="poL4" placeholder="39" class="w-full px-1 py-1.5 border border-indigo-300 rounded text-center text-xs font-bold bg-indigo-50" oninput="updateTempLabels()">
+                                        <input type="text" id="poL5" placeholder="40" class="w-full px-1 py-1.5 border border-indigo-300 rounded text-center text-xs font-bold bg-indigo-50" oninput="updateTempLabels()">
+                                        <input type="text" id="poL6" placeholder="41" class="w-full px-1 py-1.5 border border-indigo-300 rounded text-center text-xs font-bold" oninput="updateTempLabels()">
+                                        <input type="text" id="poL7" placeholder="Opt" class="w-full px-1 py-1.5 border border-indigo-300 rounded text-center text-xs font-bold" oninput="updateTempLabels()">
+                                        <input type="text" id="poL8" placeholder="Opt" class="w-full px-1 py-1.5 border border-indigo-300 rounded text-center text-xs font-bold" oninput="updateTempLabels()">
                                     </div>
                                 </div>
                             </div>
@@ -965,14 +967,16 @@
                                         <input type="text" id="poInpWarna" placeholder="Warna..." class="w-full px-2 py-2 border border-emerald-400 rounded-lg text-xs uppercase">
                                     </div>
                                     
-                                    <!-- Wadah Khusus 6 Kotak Ukuran (S1-S6) -->
-                                    <div class="flex gap-1.5 w-full lg:w-auto justify-between lg:justify-start">
-                                        <div class="w-12 sm:w-12 shrink-0"><label id="lblS1" class="block text-[10px] font-bold text-gray-600 uppercase mb-1 text-center">36</label><input type="number" id="poInpS1" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-lg text-xs text-center"></div>
-                                        <div class="w-12 sm:w-12 shrink-0"><label id="lblS2" class="block text-[10px] font-bold text-gray-600 uppercase mb-1 text-center">37</label><input type="number" id="poInpS2" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-lg text-xs text-center"></div>
-                                        <div class="w-12 sm:w-12 shrink-0"><label id="lblS3" class="block text-[10px] font-bold text-gray-600 uppercase mb-1 text-center">38</label><input type="number" id="poInpS3" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-lg text-xs text-center"></div>
-                                        <div class="w-12 sm:w-12 shrink-0"><label id="lblS4" class="block text-[10px] font-bold text-gray-600 uppercase mb-1 text-center">39</label><input type="number" id="poInpS4" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-lg text-xs text-center"></div>
-                                        <div class="w-12 sm:w-12 shrink-0"><label id="lblS5" class="block text-[10px] font-bold text-gray-600 uppercase mb-1 text-center">40</label><input type="number" id="poInpS5" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-lg text-xs text-center"></div>
-                                        <div class="w-12 sm:w-12 shrink-0"><label id="lblS6" class="block text-[10px] font-bold text-gray-600 uppercase mb-1 text-center">-</label><input type="number" id="poInpS6" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-lg text-xs text-center"></div>
+                                    <!-- Wadah Khusus 8 Kotak Ukuran (S1-S8) -->
+                                    <div class="flex gap-1.5 w-full lg:w-auto justify-between lg:justify-start overflow-x-auto pb-1">
+                                        <div class="w-11 sm:w-12 shrink-0"><label id="lblS1" class="block text-[10px] font-bold text-gray-600 uppercase mb-1 text-center">36</label><input type="number" id="poInpS1" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-lg text-xs text-center"></div>
+                                        <div class="w-11 sm:w-12 shrink-0"><label id="lblS2" class="block text-[10px] font-bold text-gray-600 uppercase mb-1 text-center">37</label><input type="number" id="poInpS2" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-lg text-xs text-center"></div>
+                                        <div class="w-11 sm:w-12 shrink-0"><label id="lblS3" class="block text-[10px] font-bold text-gray-600 uppercase mb-1 text-center">38</label><input type="number" id="poInpS3" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-lg text-xs text-center"></div>
+                                        <div class="w-11 sm:w-12 shrink-0"><label id="lblS4" class="block text-[10px] font-bold text-gray-600 uppercase mb-1 text-center">39</label><input type="number" id="poInpS4" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-lg text-xs text-center"></div>
+                                        <div class="w-11 sm:w-12 shrink-0"><label id="lblS5" class="block text-[10px] font-bold text-gray-600 uppercase mb-1 text-center">40</label><input type="number" id="poInpS5" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-lg text-xs text-center"></div>
+                                        <div class="w-11 sm:w-12 shrink-0"><label id="lblS6" class="block text-[10px] font-bold text-gray-600 uppercase mb-1 text-center">41</label><input type="number" id="poInpS6" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-lg text-xs text-center"></div>
+                                        <div class="w-11 sm:w-12 shrink-0"><label id="lblS7" class="block text-[10px] font-bold text-gray-600 uppercase mb-1 text-center">-</label><input type="number" id="poInpS7" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-lg text-xs text-center"></div>
+                                        <div class="w-11 sm:w-12 shrink-0"><label id="lblS8" class="block text-[10px] font-bold text-gray-600 uppercase mb-1 text-center">-</label><input type="number" id="poInpS8" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-lg text-xs text-center"></div>
                                     </div>
                                     
                                 </div>
@@ -1000,7 +1004,9 @@
                                             <th id="thS3" class="py-2 px-2 text-center">38</th>
                                             <th id="thS4" class="py-2 px-2 text-center">39</th>
                                             <th id="thS5" class="py-2 px-2 text-center">40</th>
-                                            <th id="thS6" class="py-2 px-2 text-center">-</th>
+                                            <th id="thS6" class="py-2 px-2 text-center">41</th>
+                                            <th id="thS7" class="py-2 px-2 text-center">-</th>
+                                            <th id="thS8" class="py-2 px-2 text-center">-</th>
                                             <th class="py-2 px-3 text-center font-bold">Total</th>
                                             <th class="py-2 px-2 text-center">Ket</th>
                                             <th class="py-2 px-3 text-center">Aksi</th>
@@ -1126,17 +1132,19 @@
                                     <table class="w-full border-collapse border border-black text-xs text-center" style="table-layout: fixed;">
                                         <thead>
                                             <tr class="font-bold border border-black bg-gray-50">
-                                                <th class="border border-black py-1 px-1 w-[12%]">MERK</th>
-                                                <th class="border border-black py-1 px-1 w-[20%]">ARTIKEL</th>
-                                                <th class="border border-black py-1 px-1 w-[12%]">WARNA</th>
-                                                <th id="pTh1" class="border border-black py-1 w-[6%]"></th>
-                                                <th id="pTh2" class="border border-black py-1 w-[6%]"></th>
-                                                <th id="pTh3" class="border border-black py-1 w-[6%]"></th>
-                                                <th id="pTh4" class="border border-black py-1 w-[6%]"></th>
-                                                <th id="pTh5" class="border border-black py-1 w-[6%]"></th>
-                                                <th id="pTh6" class="border border-black py-1 w-[6%]"></th>
-                                                <th class="border border-black py-1 px-1 w-[8%]">JUMLAH</th>
-                                                <th class="border border-black py-1 px-1 w-[12%]">KETERANGAN</th>
+                                                <th id="pThMerk" class="border border-black py-1 px-1 w-[10%]">MERK</th>
+                                                <th id="pThArt" class="border border-black py-1 px-1 w-[18%]">ARTIKEL</th>
+                                                <th id="pThWrn" class="border border-black py-1 px-1 w-[10%]">WARNA</th>
+                                                <th id="pTh1" class="border border-black py-1 w-[5%]"></th>
+                                                <th id="pTh2" class="border border-black py-1 w-[5%]"></th>
+                                                <th id="pTh3" class="border border-black py-1 w-[5%]"></th>
+                                                <th id="pTh4" class="border border-black py-1 w-[5%]"></th>
+                                                <th id="pTh5" class="border border-black py-1 w-[5%]"></th>
+                                                <th id="pTh6" class="border border-black py-1 w-[5%]"></th>
+                                                <th id="pTh7" class="border border-black py-1 w-[5%]"></th>
+                                                <th id="pTh8" class="border border-black py-1 w-[5%]"></th>
+                                                <th id="pThJml" class="border border-black py-1 px-1 w-[8%]">JUMLAH</th>
+                                                <th id="pThKet" class="border border-black py-1 px-1 w-[14%]">KETERANGAN</th>
                                             </tr>
                                         </thead>
                                         <tbody id="detTableBody"></tbody>
@@ -1146,6 +1154,7 @@
                                                 <td id="detT1" class="border border-black py-1"></td><td id="detT2" class="border border-black py-1"></td>
                                                 <td id="detT3" class="border border-black py-1"></td><td id="detT4" class="border border-black py-1"></td>
                                                 <td id="detT5" class="border border-black py-1"></td><td id="detT6" class="border border-black py-1"></td>
+                                                <td id="detT7" class="border border-black py-1"></td><td id="detT8" class="border border-black py-1"></td>
                                                 <td id="detTAll" class="border border-black py-1 text-blue-700"></td>
                                                 <td class="border border-black py-1"></td>
                                             </tr>
@@ -2456,13 +2465,15 @@
                                 <div class="bg-gray-50 p-3 border border-gray-200 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 w-full md:w-1/2">
                                     <div class="w-full">
                                         <div class="text-[10px] font-bold text-gray-500 uppercase mb-1.5 tracking-wider"><i class="fa-solid fa-pen mr-1"></i> Label Size (Bila Input Manual)</div>
-                                        <div class="flex gap-1.5 w-full lg:w-auto justify-between lg:justify-start">
+                                        <div class="flex gap-1.5 w-full lg:w-auto justify-between lg:justify-start overflow-x-auto pb-1">
                                             <input type="text" id="bcL1" placeholder="36" class="w-8 sm:w-10 px-1 py-1 border border-indigo-300 rounded text-center text-xs font-bold bg-indigo-50" oninput="updateBCTempLabels()">
                                             <input type="text" id="bcL2" placeholder="37" class="w-8 sm:w-10 px-1 py-1 border border-indigo-300 rounded text-center text-xs font-bold bg-indigo-50" oninput="updateBCTempLabels()">
                                             <input type="text" id="bcL3" placeholder="38" class="w-8 sm:w-10 px-1 py-1 border border-indigo-300 rounded text-center text-xs font-bold bg-indigo-50" oninput="updateBCTempLabels()">
                                             <input type="text" id="bcL4" placeholder="39" class="w-8 sm:w-10 px-1 py-1 border border-indigo-300 rounded text-center text-xs font-bold bg-indigo-50" oninput="updateBCTempLabels()">
                                             <input type="text" id="bcL5" placeholder="40" class="w-8 sm:w-10 px-1 py-1 border border-indigo-300 rounded text-center text-xs font-bold bg-indigo-50" oninput="updateBCTempLabels()">
-                                            <input type="text" id="bcL6" placeholder="-" class="w-8 sm:w-10 px-1 py-1 border border-indigo-300 rounded text-center text-xs font-bold bg-indigo-50" oninput="updateBCTempLabels()">
+                                            <input type="text" id="bcL6" placeholder="41" class="w-8 sm:w-10 px-1 py-1 border border-indigo-300 rounded text-center text-xs font-bold bg-indigo-50" oninput="updateBCTempLabels()">
+                                            <input type="text" id="bcL7" placeholder="-" class="w-8 sm:w-10 px-1 py-1 border border-indigo-300 rounded text-center text-xs font-bold bg-indigo-50" oninput="updateBCTempLabels()">
+                                            <input type="text" id="bcL8" placeholder="-" class="w-8 sm:w-10 px-1 py-1 border border-indigo-300 rounded text-center text-xs font-bold bg-indigo-50" oninput="updateBCTempLabels()">
                                         </div>
                                     </div>
                                     <button onclick="clearBarcodeQueue()" class="w-full sm:w-auto bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 text-[11px] md:text-xs font-bold px-3 py-2 rounded-lg transition border border-red-200 shadow-sm whitespace-nowrap mt-1 sm:mt-0 text-center">
@@ -2483,7 +2494,9 @@
                                             <th id="bcTh3" class="py-2.5 px-1 font-bold text-center w-10">38</th>
                                             <th id="bcTh4" class="py-2.5 px-1 font-bold text-center w-10">39</th>
                                             <th id="bcTh5" class="py-2.5 px-1 font-bold text-center w-10">40</th>
-                                            <th id="bcTh6" class="py-2.5 px-1 font-bold text-center w-10">-</th>
+                                            <th id="bcTh6" class="py-2.5 px-1 font-bold text-center w-10">41</th>
+                                            <th id="bcTh7" class="py-2.5 px-1 font-bold text-center w-10">-</th>
+                                            <th id="bcTh8" class="py-2.5 px-1 font-bold text-center w-10">-</th>
                                             <th class="py-2.5 px-3 md:px-4 font-bold text-center text-indigo-700 w-16">Total</th>
                                             <th class="py-2.5 px-3 md:px-4 font-bold text-center w-12">Aksi</th>
                                         </tr>
@@ -5427,9 +5440,9 @@
             document.getElementById('poInpMerk').value = ''; // Reset Merk
             document.getElementById('poInpKet').value = '';
             
-            for(let i=1; i<=6; i++) {
-                document.getElementById(`poInpS${i}`).value = '';
-                document.getElementById(`poL${i}`).value = '';
+            for(let i=1; i<=8; i++) {
+                if(document.getElementById(`poInpS${i}`)) document.getElementById(`poInpS${i}`).value = '';
+                if(document.getElementById(`poL${i}`)) document.getElementById(`poL${i}`).value = '';
             }
             
             tempPOItems = [];
@@ -5449,7 +5462,7 @@
             document.getElementById('poInputBarang').value = '';
             document.getElementById('poInpMerk').value = '';
             document.getElementById('poInpKet').value = '';
-            for(let i=1; i<=6; i++) {
+            for(let i=1; i<=8; i++) {
                 if(document.getElementById(`poInpS${i}`)) document.getElementById(`poInpS${i}`).value = '';
             }
             selectedProdIdTemp = "";
@@ -5769,9 +5782,47 @@
             document.getElementById('detHarga').innerText = parseInt(po.harga || 0).toLocaleString('id-ID');
             document.getElementById('detCatatan').innerText = po.catatan || "-";
 
-            for(let i=1; i<=6; i++) {
+            const show8 = (po.sizeLabels && (po.sizeLabels[6] || po.sizeLabels[7])) || (po.items || []).some(it => (parseInt(it.s7)||0) > 0 || (parseInt(it.s8)||0) > 0);
+
+            const pTh7 = document.getElementById('pTh7');
+            const pTh8 = document.getElementById('pTh8');
+            const detT7 = document.getElementById('detT7');
+            const detT8 = document.getElementById('detT8');
+
+            const pThMerk = document.getElementById('pThMerk');
+            const pThArt = document.getElementById('pThArt');
+            const pThWrn = document.getElementById('pThWrn');
+            const pThJml = document.getElementById('pThJml');
+            const pThKet = document.getElementById('pThKet');
+
+            if (show8) {
+                if(pTh7) pTh7.style.display = '';
+                if(pTh8) pTh8.style.display = '';
+                if(detT7) detT7.style.display = '';
+                if(detT8) detT8.style.display = '';
+                if(pThMerk) pThMerk.style.width = '10%';
+                if(pThArt) pThArt.style.width = '18%';
+                if(pThWrn) pThWrn.style.width = '10%';
+                if(pThJml) pThJml.style.width = '8%';
+                if(pThKet) pThKet.style.width = '14%';
+            } else {
+                if(pTh7) pTh7.style.display = 'none';
+                if(pTh8) pTh8.style.display = 'none';
+                if(detT7) detT7.style.display = 'none';
+                if(detT8) detT8.style.display = 'none';
+                if(pThMerk) pThMerk.style.width = '12%';
+                if(pThArt) pThArt.style.width = '20%';
+                if(pThWrn) pThWrn.style.width = '12%';
+                if(pThJml) pThJml.style.width = '8%';
+                if(pThKet) pThKet.style.width = '12%';
+            }
+
+            for(let i=1; i<=8; i++) {
                 const thEl = document.getElementById(`pTh${i}`);
-                if(thEl) thEl.innerText = (po.sizeLabels && po.sizeLabels[i-1]) ? po.sizeLabels[i-1] : '';
+                if(thEl) {
+                    thEl.innerText = (po.sizeLabels && po.sizeLabels[i-1]) ? po.sizeLabels[i-1] : '';
+                    thEl.style.width = show8 ? '5%' : '6%';
+                }
             }
             
             document.getElementById('detStSPK').innerText = po.spkPrintedAt || '';
@@ -5797,7 +5848,7 @@
             const tbody = document.getElementById('detTableBody');
             if(tbody) {
                 tbody.innerHTML = '';
-                let t = [0,0,0,0,0,0,0]; 
+                let t = [0,0,0,0,0,0,0,0,0]; 
 
                 (po.items || []).forEach(item => {
                     const brg = (typeof db_databarang !== 'undefined' ? db_databarang : []).find(b => b.prodId === item.prodId);
@@ -5811,9 +5862,11 @@
                     t[3] += (item.s4 || 0); 
                     t[4] += (item.s5 || 0); 
                     t[5] += (item.s6 || 0); 
-                    t[6] += (item.total || 0);
+                    t[6] += (item.s7 || 0); 
+                    t[7] += (item.s8 || 0); 
+                    t[8] += (item.total || 0);
                     
-                    let htmlS = [item.s1, item.s2, item.s3, item.s4, item.s5, item.s6].map(v => (v === 0 || !v) ? '' : v);
+                    let htmlS = [item.s1, item.s2, item.s3, item.s4, item.s5, item.s6, item.s7, item.s8].map(v => (v === 0 || !v) ? '' : v);
             
                     if(item.prodId === "MANUAL") {
                         let parts = a.split(' ');
@@ -5823,29 +5876,35 @@
                         }
                     }
 
+                    let sizeCells = '';
+                    if (show8) {
+                        for(let i=0; i<8; i++) {
+                            sizeCells += `<td class="border border-black py-1">${htmlS[i]}</td>`;
+                        }
+                    } else {
+                        for(let i=0; i<6; i++) {
+                            sizeCells += `<td class="border border-black py-1">${htmlS[i]}</td>`;
+                        }
+                    }
+
                     tbody.innerHTML += `
                         <tr>
                             <td class="border border-black py-1 px-1">${m}</td>
                             <td class="border border-black py-1 px-1">${a}</td>
                             <td class="border border-black py-1 px-1">${w}</td>
-                            <td class="border border-black py-1">${htmlS[0]}</td>
-                            <td class="border border-black py-1">${htmlS[1]}</td>
-                            <td class="border border-black py-1">${htmlS[2]}</td>
-                            <td class="border border-black py-1">${htmlS[3]}</td>
-                            <td class="border border-black py-1">${htmlS[4]}</td>
-                            <td class="border border-black py-1">${htmlS[5]}</td>
+                            ${sizeCells}
                             <td class="border border-black py-1 font-bold">${item.total}</td>
                             <td class="border border-black py-1 px-2 text-left">${item.ket || ''}</td>
                         </tr>
                     `;
                 });
 
-                for(let i=0; i<6; i++) {
+                for(let i=0; i<8; i++) {
                     const tEl = document.getElementById(`detT${i+1}`);
                     if(tEl) tEl.innerText = t[i] === 0 ? '' : t[i];
                 }
                 const tAll = document.getElementById('detTAll');
-                if(tAll) tAll.innerText = t[6] === 0 ? '' : t[6];
+                if(tAll) tAll.innerText = t[8] === 0 ? '' : t[8];
             }
         }
 
@@ -5879,7 +5938,7 @@
             document.getElementById('poFormHarga').value = po.harga;
             document.getElementById('poFormNote').value = po.catatan || "";
 
-            for(let i=1; i<=6; i++) {
+            for(let i=1; i<=8; i++) {
                 const lEl = document.getElementById(`poL${i}`);
                 if(lEl) lEl.value = (po.sizeLabels && po.sizeLabels[i-1]) ? po.sizeLabels[i-1] : "";
             }
@@ -5889,7 +5948,7 @@
             document.getElementById('poInpMerk').value = '';
             document.getElementById('poInpWarna').value = '';
             document.getElementById('poInpKet').value = '';
-            for(let i=1; i<=6; i++) {
+            for(let i=1; i<=8; i++) {
                 const sEl = document.getElementById(`poInpS${i}`);
                 if(sEl) sEl.value = '';
             }
@@ -5919,7 +5978,7 @@
             if(!l1 || !l2 || !l3) { showToast('Harap isi minimal 3 Label Ukuran!'); return; }
 
             let s = [], total = 0;
-            for(let i=1; i<=6; i++) {
+            for(let i=1; i<=8; i++) {
                 let v = parseInt(document.getElementById(`poInpS${i}`).value) || 0;
                 s.push(v); total += v;
             }
@@ -5935,11 +5994,11 @@
                 artikel: inputArtikel,
                 warna: inputWarna,
                 namaBarang: namaFull,
-                s1:s[0], s2:s[1], s3:s[2], s4:s[3], s5:s[4], s6:s[5], 
+                s1:s[0], s2:s[1], s3:s[2], s4:s[3], s5:s[4], s6:s[5], s7:s[6], s8:s[7], 
                 total: total, ket: ketItem 
             });
             
-            for(let i=1; i<=6; i++) document.getElementById(`poInpS${i}`).value = '';
+            for(let i=1; i<=8; i++) document.getElementById(`poInpS${i}`).value = '';
             document.getElementById('poInpKet').value = '';
             document.getElementById('poInputBarang').value = '';
             document.getElementById('poInpMerk').value = '';
@@ -5992,7 +6051,7 @@
             document.getElementById('poInpWarna').value = (wrn && wrn !== '-') ? wrn : '';
 
             // 4. Masukkan Size dan Keterangan
-            for(let i=1; i<=6; i++) {
+            for(let i=1; i<=8; i++) {
                 document.getElementById(`poInpS${i}`).value = item[`s${i}`] || "";
             }
             document.getElementById('poInpKet').value = item.ket || "";
@@ -6014,10 +6073,10 @@
 
         // 4. Update Label Ukuran Dinamis
         function updateTempLabels() {
-            for(let i=1; i<=6; i++) {
+            for(let i=1; i<=8; i++) {
                 let val = document.getElementById(`poL${i}`).value || '-';
                 document.getElementById(`lblS${i}`).innerText = val;
-                document.getElementById(`thS${i}`).innerText = val;
+                if(document.getElementById(`thS${i}`)) document.getElementById(`thS${i}`).innerText = val;
             }
         }
 
@@ -6034,7 +6093,7 @@
                 const brg = db_databarang.find(b => b.prodId === item.prodId);
                 
                 // Blank jika 0
-                let htmlS = [item.s1, item.s2, item.s3, item.s4, item.s5, item.s6].map(v => v === 0 ? '' : v);
+                let htmlS = [item.s1, item.s2, item.s3, item.s4, item.s5, item.s6, item.s7, item.s8].map(v => v === 0 ? '' : v);
                 
                 // Ambil nama barang untuk ditampilkan
                 let namaTampil = item.namaBarang || item.artikel || 'Tanpa Nama';
@@ -6054,9 +6113,10 @@
                             <i class="fa-solid fa-grip-vertical text-gray-300 mr-3 cursor-grab hover:text-blue-500"></i> 
                             ${namaTampil}
                         </td>
-                        <td class="py-2 px-2 text-center text-xs">${htmlS[0]}</td><td class="py-2 px-2 text-center text-xs">${htmlS[1]}</td>
-                        <td class="py-2 px-2 text-center text-xs">${htmlS[2]}</td><td class="py-2 px-2 text-center text-xs">${htmlS[3]}</td>
-                        <td class="py-2 px-2 text-center text-xs">${htmlS[4]}</td><td class="py-2 px-2 text-center text-xs">${htmlS[5]}</td>
+                        <td class="py-2 px-1 text-center text-xs">${htmlS[0]}</td><td class="py-2 px-1 text-center text-xs">${htmlS[1]}</td>
+                        <td class="py-2 px-1 text-center text-xs">${htmlS[2]}</td><td class="py-2 px-1 text-center text-xs">${htmlS[3]}</td>
+                        <td class="py-2 px-1 text-center text-xs">${htmlS[4]}</td><td class="py-2 px-1 text-center text-xs">${htmlS[5]}</td>
+                        <td class="py-2 px-1 text-center text-xs">${htmlS[6]}</td><td class="py-2 px-1 text-center text-xs">${htmlS[7]}</td>
                         <td class="py-2 px-3 text-center font-bold text-indigo-600">${item.total}</td>
                         <td class="py-2 px-2 text-center text-[10px] text-gray-500 truncate max-w-[100px]">${item.ket || '-'}</td>
                         <td class="py-2 px-3 text-center space-x-3 w-20">
@@ -6128,7 +6188,7 @@
             if(tempPOItems.length === 0) { showToast('Keranjang PO masih kosong!'); return; }
             
             let szLabels = [];
-            for(let i=1; i<=6; i++) szLabels.push(document.getElementById(`poL${i}`).value);
+            for(let i=1; i<=8; i++) szLabels.push(document.getElementById(`poL${i}`).value);
 
             let formPoId = document.getElementById('poFormNo').value;
             
@@ -6209,7 +6269,7 @@
             // 1. Identifikasi Label Size Aktif dari PO
             let rawLabels = po.sizeLabels || [];
             let activeSizes = [];
-            for (let i = 0; i < 6; i++) {
+            for (let i = 0; i < 8; i++) {
                 let lbl = rawLabels[i] ? String(rawLabels[i]).trim() : '';
                 let hasQty = (po.items || []).some(it => (parseInt(it[`s${i+1}`]) || 0) > 0);
                 if (lbl !== '' || hasQty) {
@@ -6401,10 +6461,18 @@
                 let kuponBatch = spkList.slice(kp * KUPONS_PER_PAGE, (kp + 1) * KUPONS_PER_PAGE);
 
                 let kuponCardsHtml = kuponBatch.map((kupon, idx) => {
-                    // 7 slot kolom size (Col 1 s/d Col 7)
+                    let numKuponSlots = Math.max(activeSizes.length, 7);
+                    let totalCols = 1 + numKuponSlots; // 8 or 9
+                    let colPct = (100 / totalCols).toFixed(2);
+                    let kuponColGroup = '';
+                    for (let c = 0; c < totalCols; c++) {
+                        kuponColGroup += `<col style="width: ${colPct}%;">`;
+                    }
+
+                    // slot kolom size
                     let sizeHeadersHtml = '';
                     let sizeValuesHtml = '';
-                    for (let c = 0; c < 7; c++) {
+                    for (let c = 0; c < numKuponSlots; c++) {
                         if (c < activeSizes.length) {
                             let s = activeSizes[c];
                             let q = kupon.sizes[`s${s.index}`];
@@ -6419,40 +6487,37 @@
                     let isLastInBatch = (idx === kuponBatch.length - 1);
                     let mbStyle = isLastInBatch ? 'margin-bottom: 0;' : 'margin-bottom: 3.5mm;';
 
+                    let spanCol1 = 3;
+                    let spanCol2 = (totalCols === 9) ? 4 : 3;
+                    let lastBlankSpan = (totalCols === 9) ? 'colspan="2"' : '';
+
                     return `
                         <div class="spk-kupon-card box-border" style="page-break-inside: avoid; break-inside: avoid; height: 44mm; ${mbStyle}">
                             <table class="w-full border-collapse border border-black text-[11.5px] text-black font-bold uppercase" style="table-layout: fixed; width: 100%; height: 100%; border: 1.5px solid #000; font-family: 'Arial Narrow', 'Barlow Condensed', 'Roboto Condensed', sans-serif;">
                                 <colgroup>
-                                    <col style="width: 12.5%;">
-                                    <col style="width: 12.5%;">
-                                    <col style="width: 12.5%;">
-                                    <col style="width: 12.5%;">
-                                    <col style="width: 12.5%;">
-                                    <col style="width: 12.5%;">
-                                    <col style="width: 12.5%;">
-                                    <col style="width: 12.5%;">
+                                    ${kuponColGroup}
                                 </colgroup>
                                 <tbody>
                                     <!-- Row 1: MERK / WARNA -->
                                     <tr style="height: 5.5mm;">
                                         <td class="border border-black px-1.5 align-middle">MERK</td>
-                                        <td colspan="3" class="border border-black px-1.5 align-middle truncate">${kupon.merk}</td>
+                                        <td colspan="${spanCol1}" class="border border-black px-1.5 align-middle truncate">${kupon.merk}</td>
                                         <td class="border border-black px-1.5 align-middle">WARNA</td>
-                                        <td colspan="3" class="border border-black px-1.5 align-middle truncate">${kupon.warna}</td>
+                                        <td colspan="${spanCol2}" class="border border-black px-1.5 align-middle truncate">${kupon.warna}</td>
                                     </tr>
                                     <!-- Row 2: ART / SOLE -->
                                     <tr style="height: 5.5mm;">
                                         <td class="border border-black px-1.5 align-middle">ART</td>
-                                        <td colspan="3" class="border border-black px-1.5 align-middle truncate">${kupon.artikel}</td>
+                                        <td colspan="${spanCol1}" class="border border-black px-1.5 align-middle truncate">${kupon.artikel}</td>
                                         <td class="border border-black px-1.5 align-middle">SOLE</td>
-                                        <td colspan="3" class="border border-black px-1.5 align-middle truncate">${kupon.sole || ''}</td>
+                                        <td colspan="${spanCol2}" class="border border-black px-1.5 align-middle truncate">${kupon.sole || ''}</td>
                                     </tr>
                                     <!-- Row 3: TOKO/PO / INSOLE -->
                                     <tr style="height: 5.5mm;">
                                         <td class="border border-black px-1.5 align-middle">TOKO/PO</td>
-                                        <td colspan="3" class="border border-black px-1.5 align-middle truncate">${kupon.poId}</td>
+                                        <td colspan="${spanCol1}" class="border border-black px-1.5 align-middle truncate">${kupon.poId}</td>
                                         <td class="border border-black px-1.5 align-middle">INSOLE</td>
-                                        <td colspan="3" class="border border-black px-1.5 align-middle truncate">${kupon.insole || ''}</td>
+                                        <td colspan="${spanCol2}" class="border border-black px-1.5 align-middle truncate">${kupon.insole || ''}</td>
                                     </tr>
                                     <!-- Row 4: SIZE -->
                                     <tr style="height: 5.5mm;">
@@ -6473,7 +6538,7 @@
                                         <td class="border border-black px-1.5 align-middle">SOLE</td>
                                         <td class="border border-black align-middle"></td>
                                         <td class="border border-black px-1.5 align-middle">INSOLE</td>
-                                        <td class="border border-black align-middle"></td>
+                                        <td ${lastBlankSpan} class="border border-black align-middle"></td>
                                     </tr>
                                     <!-- Row 7: TGL MTG -->
                                     <tr style="height: 5.5mm;">
@@ -6484,7 +6549,7 @@
                                         <td class="border border-black px-1.5 align-middle whitespace-nowrap">TGL MTG</td>
                                         <td class="border border-black align-middle"></td>
                                         <td class="border border-black px-1.5 align-middle whitespace-nowrap">TGL MTG</td>
-                                        <td class="border border-black align-middle"></td>
+                                        <td ${lastBlankSpan} class="border border-black align-middle"></td>
                                     </tr>
                                     <!-- Row 8: TGL SETOR -->
                                     <tr style="height: 5.5mm;">
@@ -6495,7 +6560,7 @@
                                         <td class="border border-black px-1.5 align-middle whitespace-nowrap">TGL SETOR</td>
                                         <td class="border border-black align-middle"></td>
                                         <td class="border border-black px-1.5 align-middle whitespace-nowrap">TGL SETOR</td>
-                                        <td class="border border-black align-middle"></td>
+                                        <td ${lastBlankSpan} class="border border-black align-middle"></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -10313,7 +10378,7 @@
             const tableHeaders = {
                 "Data_Barang": ["prodId", "urut", "merk", "kategori", "artikel", "warna", "artikelWarna", "hpp", "hargaJual"],
                 "Customer": ["id", "nama", "kota", "region", "alamat", "tlp", "bank", "sales", "type", "disc1", "disc2", "rate", "ket"],
-                "PO_Produksi": ["id", "tanggal", "makloon", "harga", "catatan", "spkPrintedAt", "statusBarcode", "sizeLabels", "item_prodId", "item_merk", "item_artikel", "item_warna", "item_s1", "item_s2", "item_s3", "item_s4", "item_s5", "item_s6", "item_total", "item_ket"],
+                "PO_Produksi": ["id", "tanggal", "makloon", "harga", "catatan", "spkPrintedAt", "statusBarcode", "sizeLabels", "item_prodId", "item_merk", "item_artikel", "item_warna", "item_s1", "item_s2", "item_s3", "item_s4", "item_s5", "item_s6", "item_s7", "item_s8", "item_total", "item_ket"],
                 "Sales_Order": ["id", "tanggal", "toko", "alamat", "type", "disc", "disc2", "status", "item_prodId", "item_merk", "item_artikel", "item_warna", "item_harga", "item_s1", "item_s2", "item_s3", "item_s4", "item_s5", "item_s6", "item_total", "item_subtotal"],
                 "Invoice": ["id", "tanggal", "soId", "toko", "type", "disc1", "disc2", "subtotal", "penyesuaian", "totalAkhir", "item_prodId", "item_merk", "item_artikel", "item_warna", "item_harga", "item_s1", "item_s2", "item_s3", "item_s4", "item_s5", "item_s6", "item_total", "item_subtotal"],
                 "Buku_Kas": ["id", "tanggal", "toko", "invId", "merk", "metode", "nominal", "retur", "fee", "qtyKonsi", "ket", "komisi", "noCP"],
@@ -10718,7 +10783,7 @@
                 let iMerk = headers.findIndex(h => h === 'ITEM_MERK');
                 let iArt = headers.findIndex(h => h === 'ITEM_ARTIKEL');
                 let iWrn = headers.findIndex(h => h === 'ITEM_WARNA');
-                for(let k=1; k<=6; k++) this[`iS${k}`] = headers.findIndex(h => h === `ITEM_S${k}`);
+                for(let k=1; k<=8; k++) this[`iS${k}`] = headers.findIndex(h => h === `ITEM_S${k}`);
                 let iItemTot = headers.findIndex(h => h === 'ITEM_TOTAL');
                 let iItemKet = headers.findIndex(h => h === 'ITEM_KET'); // PO pakai Keterangan per item
 
@@ -10736,7 +10801,7 @@
                     if (!poMap[poId]) {
                         // Merakit ulang array Size Labels (Misal "36, 37, -" kembali jadi ["36", "37", "-"])
                         let rawLabels = cols[iSizeLabels] ? cols[iSizeLabels].trim() : "";
-                        let arrLabels = rawLabels ? rawLabels.split(',').map(s => s.trim()) : ["","","","","",""];
+                        let arrLabels = rawLabels ? rawLabels.split(',').map(s => s.trim()) : ["","","","","","","",""];
 
                         poMap[poId] = {
                             id: poId,
@@ -10756,14 +10821,18 @@
                     
                     if (prodId || art) {
                         let sVals = [];
-                        for(let k=1; k<=6; k++) sVals.push(parseInt(cols[this[`iS${k}`]]) || 0);
+                        for(let k=1; k<=8; k++) {
+                            let colIdx = this[`iS${k}`];
+                            sVals.push((colIdx !== -1 && cols[colIdx]) ? (parseInt(cols[colIdx]) || 0) : 0);
+                        }
                         
                         poMap[poId].items.push({
                             prodId: prodId,
                             merk: cols[iMerk] ? cols[iMerk].trim().toUpperCase() : "",
                             artikel: art,
                             warna: cols[iWrn] ? cols[iWrn].trim().toUpperCase() : "",
-                            s1: sVals[0], s2: sVals[1], s3: sVals[2], s4: sVals[3], s5: sVals[4], s6: sVals[5],
+                            s1: sVals[0], s2: sVals[1], s3: sVals[2], s4: sVals[3], 
+                            s5: sVals[4], s6: sVals[5], s7: sVals[6], s8: sVals[7],
                             total: sVals.reduce((a,b)=>a+b, 0),
                             ket: cols[iItemKet] ? cols[iItemKet].trim() : ""
                         });
@@ -12869,8 +12938,8 @@
         }
 
         function updateBCTempLabels() {
-            for(let i=1; i<=6; i++) {
-                let val = document.getElementById(`bcL${i}`).value || '-';
+            for(let i=1; i<=8; i++) {
+                let val = document.getElementById(`bcL${i}`) ? (document.getElementById(`bcL${i}`).value || '-') : '-';
                 if(document.getElementById(`bcTh${i}`)) document.getElementById(`bcTh${i}`).innerText = val;
             }
         }
@@ -12882,16 +12951,25 @@
             if(!po) { showToast("Data PO tidak ditemukan!", "error"); return; }
             
             // Set Ukuran Header
-            for(let i=1; i<=6; i++) document.getElementById(`bcL${i}`).value = po.sizeLabels[i-1] || '';
+            for(let i=1; i<=8; i++) {
+                let val = po.sizeLabels ? (po.sizeLabels[i-1] || '') : '';
+                let el = document.getElementById(`bcL${i}`);
+                if(el) el.value = val;
+            }
             updateBCTempLabels();
 
             po.items.forEach(item => {
                 let brg = db_databarang.find(b => b.prodId === item.prodId);
+                let totalQty = (parseInt(item.s1)||0) + (parseInt(item.s2)||0) + (parseInt(item.s3)||0) + 
+                            (parseInt(item.s4)||0) + (parseInt(item.s5)||0) + (parseInt(item.s6)||0) +
+                            (parseInt(item.s7)||0) + (parseInt(item.s8)||0);
                 barcodeQueue.push({
                     prodId: item.prodId, merk: item.merk || (brg?brg.merk:'DAVCLAR'),
                     artikel: item.artikel || (brg?brg.artikel:item.namaBarang),
                     warna: item.warna || (brg?brg.warna:'-'), harga: brg ? brg.hargaJual : 0,
-                    s1: item.s1||0, s2: item.s2||0, s3: item.s3||0, s4: item.s4||0, s5: item.s5||0, s6: item.s6||0, total: item.total||0
+                    s1: item.s1||0, s2: item.s2||0, s3: item.s3||0, s4: item.s4||0, 
+                    s5: item.s5||0, s6: item.s6||0, s7: item.s7||0, s8: item.s8||0, 
+                    total: totalQty || (item.total||0)
                 });
             });
             renderBarcodeQueue(); showToast(`Berhasil menarik ${po.items.length} barang dari PO!`, "success");
@@ -12900,7 +12978,8 @@
         function updateBCQty(index, field, val) {
             barcodeQueue[index][field] = parseInt(val) || 0;
             let item = barcodeQueue[index];
-            item.total = item.s1 + item.s2 + item.s3 + item.s4 + item.s5 + item.s6;
+            item.total = (item.s1||0) + (item.s2||0) + (item.s3||0) + (item.s4||0) + 
+                         (item.s5||0) + (item.s6||0) + (item.s7||0) + (item.s8||0);
             renderBarcodeQueue();
         }
 
@@ -12912,7 +12991,7 @@
             let grandTotal = 0;
 
             if(barcodeQueue.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="10" class="text-center py-10 text-gray-400 italic">Antrean cetak kosong...</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="12" class="text-center py-10 text-gray-400 italic">Antrean cetak kosong...</td></tr>`;
                 document.getElementById('lblTotalBarcode').innerText = `0 Pcs`; return;
             }
 
@@ -12922,12 +13001,14 @@
                     <tr class="hover:bg-blue-50 transition border-b border-gray-50">
                         <td class="py-2 px-3 text-center font-bold text-gray-400">${i + 1}</td>
                         <td class="py-2 px-3"><div class="font-bold text-gray-800 text-xs">${item.artikel}</div><div class="text-[10px] text-blue-600">${item.warna}</div></td>
-                        <td class="py-2 px-1"><input type="number" value="${item.s1}" onchange="updateBCQty(${i}, 's1', this.value)" class="w-10 px-1 py-1 border border-gray-300 rounded text-center text-xs font-bold"></td>
-                        <td class="py-2 px-1"><input type="number" value="${item.s2}" onchange="updateBCQty(${i}, 's2', this.value)" class="w-10 px-1 py-1 border border-gray-300 rounded text-center text-xs font-bold"></td>
-                        <td class="py-2 px-1"><input type="number" value="${item.s3}" onchange="updateBCQty(${i}, 's3', this.value)" class="w-10 px-1 py-1 border border-gray-300 rounded text-center text-xs font-bold"></td>
-                        <td class="py-2 px-1"><input type="number" value="${item.s4}" onchange="updateBCQty(${i}, 's4', this.value)" class="w-10 px-1 py-1 border border-gray-300 rounded text-center text-xs font-bold"></td>
-                        <td class="py-2 px-1"><input type="number" value="${item.s5}" onchange="updateBCQty(${i}, 's5', this.value)" class="w-10 px-1 py-1 border border-gray-300 rounded text-center text-xs font-bold"></td>
-                        <td class="py-2 px-1"><input type="number" value="${item.s6}" onchange="updateBCQty(${i}, 's6', this.value)" class="w-10 px-1 py-1 border border-gray-300 rounded text-center text-xs font-bold"></td>
+                        <td class="py-2 px-1"><input type="number" value="${item.s1||0}" onchange="updateBCQty(${i}, 's1', this.value)" class="w-10 px-1 py-1 border border-gray-300 rounded text-center text-xs font-bold"></td>
+                        <td class="py-2 px-1"><input type="number" value="${item.s2||0}" onchange="updateBCQty(${i}, 's2', this.value)" class="w-10 px-1 py-1 border border-gray-300 rounded text-center text-xs font-bold"></td>
+                        <td class="py-2 px-1"><input type="number" value="${item.s3||0}" onchange="updateBCQty(${i}, 's3', this.value)" class="w-10 px-1 py-1 border border-gray-300 rounded text-center text-xs font-bold"></td>
+                        <td class="py-2 px-1"><input type="number" value="${item.s4||0}" onchange="updateBCQty(${i}, 's4', this.value)" class="w-10 px-1 py-1 border border-gray-300 rounded text-center text-xs font-bold"></td>
+                        <td class="py-2 px-1"><input type="number" value="${item.s5||0}" onchange="updateBCQty(${i}, 's5', this.value)" class="w-10 px-1 py-1 border border-gray-300 rounded text-center text-xs font-bold"></td>
+                        <td class="py-2 px-1"><input type="number" value="${item.s6||0}" onchange="updateBCQty(${i}, 's6', this.value)" class="w-10 px-1 py-1 border border-gray-300 rounded text-center text-xs font-bold"></td>
+                        <td class="py-2 px-1"><input type="number" value="${item.s7||0}" onchange="updateBCQty(${i}, 's7', this.value)" class="w-10 px-1 py-1 border border-gray-300 rounded text-center text-xs font-bold"></td>
+                        <td class="py-2 px-1"><input type="number" value="${item.s8||0}" onchange="updateBCQty(${i}, 's8', this.value)" class="w-10 px-1 py-1 border border-gray-300 rounded text-center text-xs font-bold"></td>
                         <td class="py-2 px-3 text-center font-bold text-indigo-700 text-sm">${item.total}</td>
                         <td class="py-2 px-2 text-center"><button onclick="barcodeQueue.splice(${i},1); renderBarcodeQueue();" class="text-red-400 hover:text-red-600 p-1 rounded"><i class="fa-solid fa-xmark"></i></button></td>
                     </tr>
@@ -12994,9 +13075,9 @@
                 });
             } else {
                 barcodeQueue.forEach(item => {
-                    for(let i=1; i<=6; i++) {
+                    for(let i=1; i<=8; i++) {
                         let qty = parseInt(item[`s${i}`]) || 0;
-                        let sizeLabel = document.getElementById(`bcL${i}`).value || '-';
+                        let sizeLabel = document.getElementById(`bcL${i}`) ? (document.getElementById(`bcL${i}`).value || '-') : '-';
                         if(qty > 0) {
                             for(let k=0; k<qty; k++) { flatItems.push({...item, size: sizeLabel}); }
                         }
@@ -13292,7 +13373,8 @@
                 
                 // [FIX] Hitung total QTY per item biar gak undefined
                 let totalQty = (parseInt(item.s1)||0) + (parseInt(item.s2)||0) + (parseInt(item.s3)||0) + 
-                            (parseInt(item.s4)||0) + (parseInt(item.s5)||0) + (parseInt(item.s6)||0);
+                            (parseInt(item.s4)||0) + (parseInt(item.s5)||0) + (parseInt(item.s6)||0) +
+                            (parseInt(item.s7)||0) + (parseInt(item.s8)||0);
 
                 barcodeQueue.push({
                     prodId: item.prodId || '',
@@ -13300,6 +13382,7 @@
                     warna: item.warna || (brg ? brg.warna : '-'),
                     s1: item.s1 || 0, s2: item.s2 || 0, s3: item.s3 || 0,
                     s4: item.s4 || 0, s5: item.s5 || 0, s6: item.s6 || 0,
+                    s7: item.s7 || 0, s8: item.s8 || 0,
                     total: totalQty, // <--- INI DIA YANG KETINGGALAN BOSKU!
                     harga: item.hargaJual || item.harga || 0,
                     merk: item.merk || (brg ? brg.merk : 'DAVCLAR')
@@ -13307,13 +13390,13 @@
             });
 
             // Otomatis isi Label Size dari data PO
-            for(let i=1; i<=6; i++) {
+            for(let i=1; i<=8; i++) {
                 let labelInput = document.getElementById(`bcL${i}`);
                 if(labelInput) {
                     labelInput.value = po.sizeLabels ? (po.sizeLabels[i-1] || '') : '';
-                    if(typeof updateBCTempLabels === 'function') updateBCTempLabels();
                 }
             }
+            if(typeof updateBCTempLabels === 'function') updateBCTempLabels();
 
             if(typeof renderBarcodeQueue === 'function') renderBarcodeQueue();
         }
@@ -15507,9 +15590,13 @@
             const po = (db_po || []).find(p => p.id === poId);
             if (!po) return null;
 
-            const sizeLabels = (po.sizeLabels && po.sizeLabels.length >= 6) 
-                ? po.sizeLabels.slice(0, 6) 
-                : ['38', '39', '40', '41', '42', '-'];
+            const rawLabels = (po.sizeLabels && Array.isArray(po.sizeLabels)) ? po.sizeLabels : [];
+            const has8 = (rawLabels[6] || rawLabels[7]) || (po.items || []).some(it => (parseInt(it.s7)||0) > 0 || (parseInt(it.s8)||0) > 0);
+            const maxSlot = has8 ? 8 : 6;
+            const sizeLabels = [];
+            for (let i = 0; i < maxSlot; i++) {
+                sizeLabels.push(rawLabels[i] ? String(rawLabels[i]).trim() : `S${i+1}`);
+            }
 
             const soleMap = {};
             const meteranMap = {};
@@ -15531,7 +15618,9 @@
                     parseInt(item.s3) || 0,
                     parseInt(item.s4) || 0,
                     parseInt(item.s5) || 0,
-                    parseInt(item.s6) || 0
+                    parseInt(item.s6) || 0,
+                    parseInt(item.s7) || 0,
+                    parseInt(item.s8) || 0
                 ];
                 const itemTotal = parseInt(item.total) || s.reduce((a, b) => a + b, 0);
                 totalPairs += itemTotal;
@@ -15609,15 +15698,15 @@
                                 bahan: bahan,
                                 warna: resolvedColor,
                                 satuan: 'PSG',
-                                sizes: [0, 0, 0, 0, 0, 0],
+                                sizes: new Array(maxSlot).fill(0),
                                 totalPasang: 0,
                                 articles: new Set(),
                                 sudahKirim: 0,
                                 sisaKirim: 0,
-                                sizesKirim: [0, 0, 0, 0, 0, 0]
+                                sizesKirim: new Array(maxSlot).fill(0)
                             };
                         }
-                        for (let i = 0; i < 6; i++) {
+                        for (let i = 0; i < maxSlot; i++) {
                             soleMap[key].sizes[i] += Math.round(s[i] * u);
                         }
                         soleMap[key].totalPasang += Math.round(itemTotal * u);
@@ -15697,7 +15786,7 @@
                         if (soleMap[key]) {
                             soleMap[key].sudahKirim += itQty;
                             if (Array.isArray(it.sizes)) {
-                                for (let i = 0; i < 6; i++) {
+                                for (let i = 0; i < maxSlot; i++) {
                                     soleMap[key].sizesKirim[i] += (parseInt(it.sizes[i]) || 0);
                                 }
                             }
