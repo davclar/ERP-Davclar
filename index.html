@@ -16370,6 +16370,21 @@
                                 }
                             }
 
+                            const extractPoItemSizes = (itPo) => {
+                                if (!itPo) return [0, 0, 0, 0, 0, 0, 0, 0];
+                                if (Array.isArray(itPo.sizes) && itPo.sizes.length > 0) return itPo.sizes;
+                                return [
+                                    parseInt(itPo.s1) || 0,
+                                    parseInt(itPo.s2) || 0,
+                                    parseInt(itPo.s3) || 0,
+                                    parseInt(itPo.s4) || 0,
+                                    parseInt(itPo.s5) || 0,
+                                    parseInt(itPo.s6) || 0,
+                                    parseInt(itPo.s7) || 0,
+                                    parseInt(itPo.s8) || 0
+                                ];
+                            };
+
                             if (szIdx >= 0 && szIdx < maxSlot) {
                                 let allocSoleQty = itRawQty;
                                 if (isMultiPO && !coversAll) {
@@ -16379,15 +16394,21 @@
                                         const pObj = (db_po || []).find(x => x.id === pId);
                                         if (pObj && pObj.items) {
                                             pObj.items.forEach(itPo => {
-                                                const sArr = itPo.sizes || [];
+                                                const sArr = extractPoItemSizes(itPo);
                                                 totalReqSzAllPos += (parseInt(sArr[szIdx]) || 0);
                                             });
                                         }
                                     });
                                     const targetReqSz = soleMap[foundKey].sizes[szIdx] || 0;
                                     if (totalReqSzAllPos > 0) {
-                                        const sizeRatio = Math.min(1.0, targetReqSz / totalReqSzAllPos);
-                                        allocSoleQty = Math.round(itRawQty * sizeRatio);
+                                        if (itRawQty >= totalReqSzAllPos) {
+                                            // Terkirim penuh atau lebih: penuhi kebutuhan PO ini terlebih dahulu
+                                            const extra = itRawQty - totalReqSzAllPos;
+                                            const extraShare = extra > 0 ? Math.round(extra * (targetReqSz / totalReqSzAllPos)) : 0;
+                                            allocSoleQty = targetReqSz + extraShare;
+                                        } else {
+                                            allocSoleQty = Math.round(itRawQty * (targetReqSz / totalReqSzAllPos));
+                                        }
                                     } else {
                                         allocSoleQty = Math.round(itRawQty * defaultAllocRatio);
                                     }
@@ -16405,15 +16426,20 @@
                                             const pObj = (db_po || []).find(x => x.id === pId);
                                             if (pObj && pObj.items) {
                                                 pObj.items.forEach(itPo => {
-                                                    const sArr = itPo.sizes || [];
+                                                    const sArr = extractPoItemSizes(itPo);
                                                     totalReqSzAllPos += (parseInt(sArr[i]) || 0);
                                                 });
                                             }
                                         });
                                         const targetReqSz = soleMap[foundKey].sizes[i] || 0;
                                         if (totalReqSzAllPos > 0) {
-                                            const sizeRatio = Math.min(1.0, targetReqSz / totalReqSzAllPos);
-                                            sQty = Math.round(sQty * sizeRatio);
+                                            if (sQty >= totalReqSzAllPos) {
+                                                const extra = sQty - totalReqSzAllPos;
+                                                const extraShare = extra > 0 ? Math.round(extra * (targetReqSz / totalReqSzAllPos)) : 0;
+                                                sQty = targetReqSz + extraShare;
+                                            } else {
+                                                sQty = Math.round(sQty * (targetReqSz / totalReqSzAllPos));
+                                            }
                                         } else {
                                             sQty = Math.round(sQty * defaultAllocRatio);
                                         }
