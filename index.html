@@ -3350,31 +3350,22 @@
                     <!-- SUB-TAB 2: RIWAYAT SURAT JALAN -->
                     <div id="subtab-content-sj" class="hidden w-full flex flex-col bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                         <!-- Summary Cards Riwayat Surat Jalan -->
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-                            <div class="bg-blue-50/70 p-3 rounded-xl border border-blue-100 flex items-center justify-between">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                            <div class="bg-blue-50/70 p-3.5 rounded-xl border border-blue-100 flex items-center justify-between">
                                 <div>
-                                    <div class="text-[10px] uppercase font-bold text-blue-700">Total Surat Jalan</div>
-                                    <div id="statSJCount" class="text-lg font-black text-blue-950">0 SJ</div>
+                                    <div class="text-[10px] uppercase font-bold text-blue-700">Total Surat Jalan Dibuat</div>
+                                    <div id="statSJCount" class="text-xl font-black text-blue-950 mt-0.5">0 SJ</div>
                                 </div>
-                                <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
+                                <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-base shadow-xs">
                                     <i class="fa-solid fa-file-invoice"></i>
                                 </div>
                             </div>
-                            <div class="bg-amber-50/70 p-3 rounded-xl border border-amber-100 flex items-center justify-between">
+                            <div class="bg-violet-50/70 p-3.5 rounded-xl border border-violet-100 flex items-center justify-between">
                                 <div>
-                                    <div class="text-[10px] uppercase font-bold text-amber-700">Total Kuantitas Fisik</div>
-                                    <div id="statSJTotalQty" class="text-lg font-black text-amber-950">0</div>
+                                    <div class="text-[10px] uppercase font-bold text-violet-700">Total Nilai Pengiriman Bahan (Rupiah)</div>
+                                    <div id="statSJTotalNilai" class="text-xl font-black text-violet-950 mt-0.5">Rp 0</div>
                                 </div>
-                                <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-sm">
-                                    <i class="fa-solid fa-boxes-stacked"></i>
-                                </div>
-                            </div>
-                            <div class="bg-violet-50/70 p-3 rounded-xl border border-violet-100 flex items-center justify-between">
-                                <div>
-                                    <div class="text-[10px] uppercase font-bold text-violet-700">Total Nilai Pengiriman Bahan</div>
-                                    <div id="statSJTotalNilai" class="text-lg font-black text-violet-950">Rp 0</div>
-                                </div>
-                                <div class="w-8 h-8 rounded-lg bg-violet-100 text-violet-600 flex items-center justify-center font-bold text-sm">
+                                <div class="w-10 h-10 rounded-xl bg-violet-100 text-violet-600 flex items-center justify-center font-bold text-base shadow-xs">
                                     <i class="fa-solid fa-money-bill-wave"></i>
                                 </div>
                             </div>
@@ -16089,6 +16080,57 @@
             return Math.ceil(parseFloat((val * 10).toFixed(6)) - 1e-9) / 10;
         }
 
+        // Helper: Hitung kebutuhan bahan tertentu untuk satu PO
+        function getPOItemMaterialReq(pObj, bahanRaw, warna, satuan) {
+            if (!pObj || !pObj.items) return 0;
+            const cleanBahan = (bahanRaw || '').replace(/\s*[\-\(]\s*(?:Sz|Size)\s*[0-9A-Za-z]+[\)]?/i, '').trim().toUpperCase();
+            const cleanWarna = (warna || '-').trim().toUpperCase();
+            let totalReq = 0;
+
+            const extractSizes = (it) => {
+                if (Array.isArray(it.sizes) && it.sizes.length > 0) return it.sizes;
+                return [
+                    parseInt(it.s1) || 0, parseInt(it.s2) || 0, parseInt(it.s3) || 0, parseInt(it.s4) || 0,
+                    parseInt(it.s5) || 0, parseInt(it.s6) || 0, parseInt(it.s7) || 0, parseInt(it.s8) || 0
+                ];
+            };
+
+            pObj.items.forEach(it => {
+                const art = (it.artikel || '').trim().toUpperCase();
+                const poColor = (it.warna || '').trim().toUpperCase();
+                const sArr = extractSizes(it);
+                const itemTotal = parseInt(it.total) || sArr.reduce((a, b) => a + b, 0);
+
+                let bom = (db_makloon_cost || []).find(c => {
+                    if (Array.isArray(c.articles) && c.articles.some(a => a.trim().toUpperCase() === art)) return true;
+                    if ((c.model || '').trim().toUpperCase() === art) return true;
+                    if ((c.artikel || '').trim().toUpperCase() === art) return true;
+                    if (c.model && art.startsWith(c.model.trim().toUpperCase())) return true;
+                    return false;
+                });
+                if (!bom) return;
+
+                let colIdx = 0;
+                if (Array.isArray(bom.articles) && bom.articles.length > 0) {
+                    const foundIdx = bom.articles.findIndex(a => a.trim().toUpperCase() === art);
+                    if (foundIdx !== -1) colIdx = foundIdx;
+                }
+
+                (bom.rows || []).forEach(r => {
+                    const rBahan = (r.bahan || '').trim().toUpperCase();
+                    if (!rBahan) return;
+                    if (rBahan === cleanBahan || cleanBahan.includes(rBahan) || rBahan.includes(cleanBahan)) {
+                        let rawU = (r.rawUsage && r.rawUsage[colIdx] !== undefined && r.rawUsage[colIdx] !== '') 
+                            ? r.rawUsage[colIdx] 
+                            : ((r.usage && r.usage[colIdx] !== undefined && r.usage[colIdx] !== '') ? r.usage[colIdx] : null);
+                        let u = rawU !== null ? parseFractionOrNumber(rawU) : 0;
+                        totalReq += (itemTotal * u);
+                    }
+                });
+            });
+            return totalReq;
+        }
+
         // 5. Mesin Kalkulator Kebutuhan Bahan PO (BOM x PO Produksi - Support Multi-PO)
         function calculatePORequiredMaterials(poIdOrIds) {
             let targetPoIds = [];
@@ -16462,18 +16504,54 @@
                                 }
                             }
                         }
-                    } else if (itCat === 'LEMBARAN') {
-                        const itQty = itRawQty * defaultAllocRatio;
-                        const found = Object.values(lembaranMap).find(x => x.bahan === itBahanRaw.toUpperCase() && (x.warna === itWarna || x.warna === '-' || itWarna === '-'));
-                        if (found) found.sudahKirim += itQty;
-                    } else if (itCat === 'METERAN') {
-                        const itQty = itRawQty * defaultAllocRatio;
-                        const found = Object.values(meteranMap).find(x => x.bahan === itBahanRaw.toUpperCase() && (x.warna === itWarna || x.warna === '-' || itWarna === '-'));
-                        if (found) found.sudahKirim += itQty;
                     } else if (itCat !== 'ONGKOS_JASA') {
-                        const itQty = itRawQty * defaultAllocRatio;
-                        const found = Object.values(aksesorisMap).find(x => x.bahan === itBahanRaw.toUpperCase() && (x.warna === itWarna || x.warna === '-' || itWarna === '-'));
-                        if (found) found.sudahKirim += itQty;
+                        let allocQty = itRawQty;
+                        if (isMultiPO && !coversAll) {
+                            let reqByPO = [];
+                            let sumReq = 0;
+                            sjAllPos.forEach(pId => {
+                                const pObj = (db_po || []).find(x => x.id === pId);
+                                const reqP = getPOItemMaterialReq(pObj, itBahanRaw, itWarna, itSatuan);
+                                reqByPO.push({ id: pId, req: reqP });
+                                sumReq += reqP;
+                            });
+
+                            const targetReq = reqByPO.filter(x => targetPoIds.includes(x.id)).reduce((a, b) => a + b.req, 0);
+
+                            if (sumReq > 0) {
+                                if (itRawQty >= sumReq) {
+                                    // Memenuhi total kebutuhan semua PO: target PO dapat kebutuhan penuhnya
+                                    const extra = itRawQty - sumReq;
+                                    const extraShare = extra > 0 ? (extra * (targetReq / sumReq)) : 0;
+                                    allocQty = targetReq + extraShare;
+                                } else {
+                                    // Pengiriman sebagian: kurangi dari PO pertama, sisanya ke PO berikutnya
+                                    let remShipment = itRawQty;
+                                    let targetAlloc = 0;
+                                    reqByPO.forEach(poReq => {
+                                        const take = Math.min(poReq.req, remShipment);
+                                        remShipment -= take;
+                                        if (targetPoIds.includes(poReq.id)) {
+                                            targetAlloc += take;
+                                        }
+                                    });
+                                    allocQty = targetAlloc;
+                                }
+                            } else {
+                                allocQty = itRawQty * defaultAllocRatio;
+                            }
+                        }
+
+                        if (itCat === 'LEMBARAN') {
+                            const found = Object.values(lembaranMap).find(x => x.bahan === itBahanRaw.toUpperCase() && (x.warna === itWarna || x.warna === '-' || itWarna === '-'));
+                            if (found) found.sudahKirim += allocQty;
+                        } else if (itCat === 'METERAN') {
+                            const found = Object.values(meteranMap).find(x => x.bahan === itBahanRaw.toUpperCase() && (x.warna === itWarna || x.warna === '-' || itWarna === '-'));
+                            if (found) found.sudahKirim += allocQty;
+                        } else {
+                            const found = Object.values(aksesorisMap).find(x => x.bahan === itBahanRaw.toUpperCase() && (x.warna === itWarna || x.warna === '-' || itWarna === '-'));
+                            if (found) found.sudahKirim += allocQty;
+                        }
                     }
                 });
             });
@@ -17740,10 +17818,8 @@
             });
 
             const statCount = document.getElementById('statSJCount');
-            const statQty = document.getElementById('statSJTotalQty');
             const statNilai = document.getElementById('statSJTotalNilai');
             if (statCount) statCount.innerText = `${list.length} SJ`;
-            if (statQty) statQty.innerText = `${formatNumberTwoDec(grandTotalQtySJ)} Item`;
             if (statNilai) statNilai.innerText = `Rp ${grandTotalNilaiSJ.toLocaleString('id-ID')}`;
 
             if (list.length === 0) {
@@ -17753,8 +17829,6 @@
 
             body.innerHTML = list.map((sj, idx) => {
                 let totalItemsCount = (sj.items || []).length;
-                let totalQtySum = 0;
-                (sj.items || []).forEach(i => { totalQtySum += (parseFloat(i.qty) || 0); });
                 const sjTotalNilai = calculateSJTotalNilai(sj);
 
                 return `
@@ -17771,7 +17845,7 @@
                         <td class="p-3 text-gray-600">${sj.driver || '-'}</td>
                         <td class="p-3 text-center">
                             <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-800">
-                                ${totalItemsCount} Macam (${formatNumberTwoDec(totalQtySum)})
+                                ${totalItemsCount} Macam
                             </span>
                         </td>
                         <td class="p-3 text-right font-extrabold text-violet-900 bg-violet-50/30 whitespace-nowrap">
@@ -17849,7 +17923,7 @@
                         <div><span class="text-gray-400 font-bold block">Nomor PO Reff:</span> <b>${sj.noPO}</b></div>
                         <div><span class="text-gray-400 font-bold block">Vendor Makloon:</span> <b class="text-indigo-900">${sj.makloon}</b></div>
                         <div><span class="text-gray-400 font-bold block">Sopir / Kurir:</span> <b>${sj.driver || '-'}</b></div>
-                        <div><span class="text-gray-400 font-bold block">Total Fisik Item:</span> <b class="text-gray-900">${formatNumberTwoDec(grandTotalQty)} Item</b></div>
+                        <div><span class="text-gray-400 font-bold block">Total Macam Bahan:</span> <b class="text-gray-900">${(sj.items || []).length} Macam</b></div>
                         <div class="md:col-span-2 bg-violet-100/60 p-2 rounded-lg border border-violet-200 flex items-center justify-between">
                             <span class="text-violet-800 font-bold">Total Nilai Bahan Kirim:</span>
                             <span class="text-sm font-black text-violet-950">Rp ${grandTotalNilai.toLocaleString('id-ID')}</span>
@@ -17877,9 +17951,7 @@
                             </tbody>
                             <tfoot class="bg-gray-50 border-t-2 border-gray-300 font-bold text-xs">
                                 <tr>
-                                    <td colspan="4" class="p-2.5 text-right uppercase text-gray-600">Grand Total:</td>
-                                    <td class="p-2.5 text-right text-blue-700 font-black">${formatNumberTwoDec(grandTotalQty)}</td>
-                                    <td colspan="2"></td>
+                                    <td colspan="7" class="p-2.5 text-right uppercase text-gray-700 font-bold">Total Nilai Bahan Kirim:</td>
                                     <td class="p-2.5 text-right text-violet-950 font-black bg-violet-100/70 text-sm">Rp ${grandTotalNilai.toLocaleString('id-ID')}</td>
                                     <td></td>
                                 </tr>
