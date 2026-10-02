@@ -3744,22 +3744,42 @@
                         <input type="date" id="sjTglInput" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Nomor PO Reff</label>
-                        <select id="sjPOSelect" onchange="onSJPODropdownChange(this.value)" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs font-semibold focus:ring-1 focus:ring-blue-500">
-                            <!-- Populated dynamically -->
-                        </select>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Makloon / Vendor</label>
+                        <input type="text" id="sjMakloonInput" class="w-full bg-gray-100 border border-gray-300 rounded-lg px-3 py-2 text-xs font-black text-indigo-900 uppercase focus:ring-1 focus:ring-blue-500" placeholder="Otomatis dari PO" readonly>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Makloon / Vendor Tujuan</label>
-                        <input type="text" id="sjMakloonInput" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs font-bold text-gray-800 uppercase focus:ring-1 focus:ring-blue-500" placeholder="Pabrik / Vendor">
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Artikel</label>
+                        <input type="text" id="sjArtikelInput" class="w-full bg-gray-100 border border-gray-300 rounded-lg px-3 py-2 text-xs font-black text-blue-900 uppercase focus:ring-1 focus:ring-blue-500" placeholder="Otomatis dari PO" readonly>
                     </div>
+
+                    <!-- Pemilihan Multi-PO Reff -->
+                    <div class="md:col-span-4 bg-white p-3 rounded-xl border border-blue-200 shadow-2xs">
+                        <div class="flex flex-wrap items-center justify-between gap-1 mb-1.5">
+                            <label class="block text-xs font-extrabold text-blue-900 uppercase flex items-center gap-1.5">
+                                <i class="fa-solid fa-file-invoice text-blue-600"></i> Nomor PO Reff (<span id="sjCountPOSelected">0</span> PO Terpilih)
+                            </label>
+                            <span id="sjPOSameNotice" class="text-[11px] text-gray-500 font-medium">
+                                Syarat gabung PO: <b class="text-gray-700">Vendor Makloon & Artikel harus sama</b>
+                            </span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <select id="sjPOSelect" onchange="addSelectedSJPO(this.value)" class="flex-1 bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs font-semibold focus:ring-1 focus:ring-blue-500">
+                                <!-- Populated dynamically -->
+                            </select>
+                        </div>
+                        <!-- Daftar PO Terpilih (Chips / Tags) -->
+                        <div id="sjSelectedPOsContainer" class="flex flex-wrap items-center gap-1.5 mt-2 min-h-[38px] p-2 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                            <!-- Populated dynamically: Chips e.g. [PO-001 • PORTI - FLEUR • 1.000 Psg ✕] -->
+                        </div>
+                    </div>
+
                     <div class="md:col-span-2">
                         <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Sopir / Ekspedisi / Pengantar</label>
                         <input type="text" id="sjDriverInput" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500" placeholder="Nama sopir atau nama kurir...">
                     </div>
                     <div class="md:col-span-2">
                         <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Catatan Pengiriman</label>
-                        <input type="text" id="sjCatatanInput" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500" placeholder="Catatan tambahan (misal: pengiriman tahap 1)">
+                        <input type="text" id="sjCatatanInput" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500" placeholder="Catatan tambahan (misal: pengiriman gabungan PO)">
                     </div>
                 </div>
 
@@ -16037,13 +16057,30 @@
             return Math.ceil(parseFloat((val * 10).toFixed(6)) - 1e-9) / 10;
         }
 
-        // 5. Mesin Kalkulator Kebutuhan Bahan PO (BOM x PO Produksi)
-        function calculatePORequiredMaterials(poId) {
-            const po = (db_po || []).find(p => p.id === poId);
-            if (!po) return null;
+        // 5. Mesin Kalkulator Kebutuhan Bahan PO (BOM x PO Produksi - Support Multi-PO)
+        function calculatePORequiredMaterials(poIdOrIds) {
+            let targetPoIds = [];
+            if (Array.isArray(poIdOrIds)) {
+                targetPoIds = poIdOrIds.map(s => String(s).trim()).filter(Boolean);
+            } else if (typeof poIdOrIds === 'string') {
+                targetPoIds = poIdOrIds.split(',').map(s => s.trim()).filter(Boolean);
+            }
+            if (targetPoIds.length === 0) return null;
 
-            const rawLabels = (po.sizeLabels && Array.isArray(po.sizeLabels)) ? po.sizeLabels : [];
-            const has8 = (rawLabels[6] || rawLabels[7]) || (po.items || []).some(it => (parseInt(it.s7)||0) > 0 || (parseInt(it.s8)||0) > 0);
+            const poList = (db_po || []).filter(p => targetPoIds.includes(p.id));
+            if (poList.length === 0) return null;
+            const po = poList[0];
+
+            let rawLabels = (po.sizeLabels && Array.isArray(po.sizeLabels)) ? po.sizeLabels : [];
+            let has8 = false;
+            poList.forEach(p => {
+                if (Array.isArray(p.sizeLabels) && p.sizeLabels.length > rawLabels.length) {
+                    rawLabels = p.sizeLabels;
+                }
+                if ((p.sizeLabels && (p.sizeLabels[6] || p.sizeLabels[7])) || (p.items || []).some(it => (parseInt(it.s7)||0) > 0 || (parseInt(it.s8)||0) > 0)) {
+                    has8 = true;
+                }
+            });
             const maxSlot = has8 ? 8 : 6;
             const sizeLabels = [];
             for (let i = 0; i < maxSlot; i++) {
@@ -16060,178 +16097,207 @@
             let bomMatchedArticles = new Set();
             let missingBomArticles = new Set();
 
-            const items = po.items || [];
-            items.forEach(item => {
-                const art = (item.artikel || '').trim().toUpperCase();
-                const poColor = (item.warna || '').trim().toUpperCase();
-                const s = [
-                    parseInt(item.s1) || 0,
-                    parseInt(item.s2) || 0,
-                    parseInt(item.s3) || 0,
-                    parseInt(item.s4) || 0,
-                    parseInt(item.s5) || 0,
-                    parseInt(item.s6) || 0,
-                    parseInt(item.s7) || 0,
-                    parseInt(item.s8) || 0
-                ];
-                const itemTotal = parseInt(item.total) || s.reduce((a, b) => a + b, 0);
-                totalPairs += itemTotal;
+            poList.forEach(currentPo => {
+                const items = currentPo.items || [];
+                items.forEach(item => {
+                    const art = (item.artikel || '').trim().toUpperCase();
+                    const poColor = (item.warna || '').trim().toUpperCase();
+                    const s = [
+                        parseInt(item.s1) || 0,
+                        parseInt(item.s2) || 0,
+                        parseInt(item.s3) || 0,
+                        parseInt(item.s4) || 0,
+                        parseInt(item.s5) || 0,
+                        parseInt(item.s6) || 0,
+                        parseInt(item.s7) || 0,
+                        parseInt(item.s8) || 0
+                    ];
+                    const itemTotal = parseInt(item.total) || s.reduce((a, b) => a + b, 0);
+                    totalPairs += itemTotal;
 
-                // Cari Setting Cost / BOM yang cocok untuk artikel ini
-                let bom = (db_makloon_cost || []).find(c => {
-                    if (Array.isArray(c.articles) && c.articles.some(a => a.trim().toUpperCase() === art)) return true;
-                    if ((c.model || '').trim().toUpperCase() === art) return true;
-                    if ((c.artikel || '').trim().toUpperCase() === art) return true;
-                    if (c.model && art.startsWith(c.model.trim().toUpperCase())) return true;
-                    return false;
-                });
+                    // Cari Setting Cost / BOM yang cocok untuk artikel ini
+                    let bom = (db_makloon_cost || []).find(c => {
+                        if (Array.isArray(c.articles) && c.articles.some(a => a.trim().toUpperCase() === art)) return true;
+                        if ((c.model || '').trim().toUpperCase() === art) return true;
+                        if ((c.artikel || '').trim().toUpperCase() === art) return true;
+                        if (c.model && art.startsWith(c.model.trim().toUpperCase())) return true;
+                        return false;
+                    });
 
-                if (!bom) {
-                    missingBomArticles.add(art || 'Tanpa Artikel');
-                    return;
-                }
-
-                bomMatchedArticles.add(art);
-
-                // Tentukan index kolom artikel dalam BOM
-                let colIdx = 0;
-                if (Array.isArray(bom.articles) && bom.articles.length > 0) {
-                    const foundIdx = bom.articles.findIndex(a => a.trim().toUpperCase() === art);
-                    if (foundIdx !== -1) colIdx = foundIdx;
-                }
-
-                // Iterasi setiap baris BOM
-                const rows = bom.rows || [];
-                rows.forEach(r => {
-                    const bgUpper = (r.bagian || '').trim().toUpperCase();
-                    const bhUpper = (r.bahan || '').trim().toUpperCase();
-
-                    let rawU = (r.rawUsage && r.rawUsage[colIdx] !== undefined && r.rawUsage[colIdx] !== '') 
-                        ? r.rawUsage[colIdx] 
-                        : ((r.usage && r.usage[colIdx] !== undefined && r.usage[colIdx] !== '') ? r.usage[colIdx] : null);
-                    let u = rawU !== null ? parseFractionOrNumber(rawU) : (isOngkosOrJasaOrOverhead(r.bagian, r.bahan) ? 1 : 0);
-                    const h = parseFloat(r.harga) || 0;
-
-                    // Pengecualian Ongkos (O.), Overhead & Jasa Makloon:
-                    // Tidak masuk ke kebutuhan bahan fisik, melainkan dialokasikan ke Jatah Kasbon Makloon
-                    if (isOngkosOrJasaOrOverhead(r.bagian, r.bahan)) {
-                        const costPerPsg = Math.round(u * h);
-                        const subTotalBiaya = Math.round(costPerPsg * itemTotal);
-                        const kKey = bhUpper || bgUpper || 'ONGKOS';
-
-                        if (!kasbonMap[kKey]) {
-                            kasbonMap[kKey] = {
-                                key: kKey,
-                                nama: r.bahan || r.bagian || 'Ongkos Makloon',
-                                bagian: r.bagian || 'ONGKOS / JASA',
-                                tarifPerPsg: costPerPsg,
-                                totalPairs: 0,
-                                totalBiaya: 0
-                            };
-                        }
-                        kasbonMap[kKey].totalPairs += itemTotal;
-                        kasbonMap[kKey].totalBiaya += subTotalBiaya;
-                        return; // Jangan masuk ke daftar bahan baku fisik
+                    if (!bom) {
+                        missingBomArticles.add(art || 'Tanpa Artikel');
+                        return;
                     }
 
-                    if (!r.bahan && u === 0) return;
+                    bomMatchedArticles.add(art);
 
-                    const satuan = (r.satuan || 'PSG').trim().toUpperCase();
-                    const bahan = (r.bahan || '-').trim().toUpperCase();
-                    const resolvedColor = resolveBOMMaterialColor(poColor, r.warna);
-                    const cat = categorizeMaterial(r.bagian, r.bahan, satuan);
-
-                    if (cat === 'SOLE_SIZED') {
-                        const key = `${bahan}|${resolvedColor}`;
-                        if (!soleMap[key]) {
-                            soleMap[key] = {
-                                key: key,
-                                bagian: r.bagian || 'SOLE',
-                                bahan: bahan,
-                                warna: resolvedColor,
-                                satuan: 'PSG',
-                                sizes: new Array(maxSlot).fill(0),
-                                totalPasang: 0,
-                                articles: new Set(),
-                                sudahKirim: 0,
-                                sisaKirim: 0,
-                                sizesKirim: new Array(maxSlot).fill(0)
-                            };
-                        }
-                        for (let i = 0; i < maxSlot; i++) {
-                            soleMap[key].sizes[i] += Math.round(s[i] * u);
-                        }
-                        soleMap[key].totalPasang += Math.round(itemTotal * u);
-                        soleMap[key].articles.add(art);
-
-                    } else if (cat === 'LEMBARAN') {
-                        const key = `${bahan}|${resolvedColor}|LBR|${bgUpper}`;
-                        if (!lembaranMap[key]) {
-                            lembaranMap[key] = {
-                                key: key,
-                                bagian: r.bagian || 'LEMBARAN',
-                                bahan: bahan,
-                                warna: resolvedColor,
-                                satuan: 'LBR',
-                                totalKebutuhan: 0,
-                                articles: new Set(),
-                                sudahKirim: 0,
-                                sisaKirim: 0
-                            };
-                        }
-                        lembaranMap[key].totalKebutuhan += (itemTotal * u);
-                        lembaranMap[key].articles.add(art);
-
-                    } else if (cat === 'METERAN') {
-                        const key = `${bahan}|${resolvedColor}|${satuan}|${bgUpper}`;
-                        if (!meteranMap[key]) {
-                            meteranMap[key] = {
-                                key: key,
-                                bagian: r.bagian || 'UPPER',
-                                bahan: bahan,
-                                warna: resolvedColor,
-                                satuan: satuan,
-                                totalKebutuhan: 0,
-                                articles: new Set(),
-                                sudahKirim: 0,
-                                sisaKirim: 0
-                            };
-                        }
-                        meteranMap[key].totalKebutuhan += (itemTotal * u);
-                        meteranMap[key].articles.add(art);
-
-                    } else {
-                        // AKSESORIS / KEMASAN / DUS / LEM
-                        const key = `${bahan}|${resolvedColor}|${satuan}|${bgUpper}`;
-                        if (!aksesorisMap[key]) {
-                            aksesorisMap[key] = {
-                                key: key,
-                                bagian: r.bagian || 'AKSESORIS',
-                                bahan: bahan,
-                                warna: resolvedColor,
-                                satuan: satuan,
-                                totalKebutuhan: 0,
-                                articles: new Set(),
-                                sudahKirim: 0,
-                                sisaKirim: 0
-                            };
-                        }
-                        aksesorisMap[key].totalKebutuhan += (itemTotal * u);
-                        aksesorisMap[key].articles.add(art);
+                    // Tentukan index kolom artikel dalam BOM
+                    let colIdx = 0;
+                    if (Array.isArray(bom.articles) && bom.articles.length > 0) {
+                        const foundIdx = bom.articles.findIndex(a => a.trim().toUpperCase() === art);
+                        if (foundIdx !== -1) colIdx = foundIdx;
                     }
+
+                    // Iterasi setiap baris BOM
+                    const rows = bom.rows || [];
+                    rows.forEach(r => {
+                        const bgUpper = (r.bagian || '').trim().toUpperCase();
+                        const bhUpper = (r.bahan || '').trim().toUpperCase();
+
+                        let rawU = (r.rawUsage && r.rawUsage[colIdx] !== undefined && r.rawUsage[colIdx] !== '') 
+                            ? r.rawUsage[colIdx] 
+                            : ((r.usage && r.usage[colIdx] !== undefined && r.usage[colIdx] !== '') ? r.usage[colIdx] : null);
+                        let u = rawU !== null ? parseFractionOrNumber(rawU) : (isOngkosOrJasaOrOverhead(r.bagian, r.bahan) ? 1 : 0);
+                        const h = parseFloat(r.harga) || 0;
+
+                        // Pengecualian Ongkos (O.), Overhead & Jasa Makloon
+                        if (isOngkosOrJasaOrOverhead(r.bagian, r.bahan)) {
+                            const costPerPsg = Math.round(u * h);
+                            const subTotalBiaya = Math.round(costPerPsg * itemTotal);
+                            const kKey = bhUpper || bgUpper || 'ONGKOS';
+
+                            if (!kasbonMap[kKey]) {
+                                kasbonMap[kKey] = {
+                                    key: kKey,
+                                    nama: r.bahan || r.bagian || 'Ongkos Makloon',
+                                    bagian: r.bagian || 'ONGKOS / JASA',
+                                    tarifPerPsg: costPerPsg,
+                                    totalPairs: 0,
+                                    totalBiaya: 0
+                                };
+                            }
+                            kasbonMap[kKey].totalPairs += itemTotal;
+                            kasbonMap[kKey].totalBiaya += subTotalBiaya;
+                            return; // Jangan masuk ke daftar bahan baku fisik
+                        }
+
+                        if (!r.bahan && u === 0) return;
+
+                        const satuan = (r.satuan || 'PSG').trim().toUpperCase();
+                        const bahan = (r.bahan || '-').trim().toUpperCase();
+                        const resolvedColor = resolveBOMMaterialColor(poColor, r.warna);
+                        const cat = categorizeMaterial(r.bagian, r.bahan, satuan);
+
+                        if (cat === 'SOLE_SIZED') {
+                            const key = `${bahan}|${resolvedColor}`;
+                            if (!soleMap[key]) {
+                                soleMap[key] = {
+                                    key: key,
+                                    bagian: r.bagian || 'SOLE',
+                                    bahan: bahan,
+                                    warna: resolvedColor,
+                                    satuan: 'PSG',
+                                    sizes: new Array(maxSlot).fill(0),
+                                    totalPasang: 0,
+                                    articles: new Set(),
+                                    sudahKirim: 0,
+                                    sisaKirim: 0,
+                                    sizesKirim: new Array(maxSlot).fill(0)
+                                };
+                            }
+                            for (let i = 0; i < maxSlot; i++) {
+                                soleMap[key].sizes[i] += Math.round(s[i] * u);
+                            }
+                            soleMap[key].totalPasang += Math.round(itemTotal * u);
+                            soleMap[key].articles.add(art);
+
+                        } else if (cat === 'LEMBARAN') {
+                            const key = `${bahan}|${resolvedColor}|LBR|${bgUpper}`;
+                            if (!lembaranMap[key]) {
+                                lembaranMap[key] = {
+                                    key: key,
+                                    bagian: r.bagian || 'LEMBARAN',
+                                    bahan: bahan,
+                                    warna: resolvedColor,
+                                    satuan: 'LBR',
+                                    totalKebutuhan: 0,
+                                    articles: new Set(),
+                                    sudahKirim: 0,
+                                    sisaKirim: 0
+                                };
+                            }
+                            lembaranMap[key].totalKebutuhan += (itemTotal * u);
+                            lembaranMap[key].articles.add(art);
+
+                        } else if (cat === 'METERAN') {
+                            const key = `${bahan}|${resolvedColor}|${satuan}|${bgUpper}`;
+                            if (!meteranMap[key]) {
+                                meteranMap[key] = {
+                                    key: key,
+                                    bagian: r.bagian || 'UPPER',
+                                    bahan: bahan,
+                                    warna: resolvedColor,
+                                    satuan: satuan,
+                                    totalKebutuhan: 0,
+                                    articles: new Set(),
+                                    sudahKirim: 0,
+                                    sisaKirim: 0
+                                };
+                            }
+                            meteranMap[key].totalKebutuhan += (itemTotal * u);
+                            meteranMap[key].articles.add(art);
+
+                        } else {
+                            // AKSESORIS / KEMASAN / DUS / LEM
+                            const key = `${bahan}|${resolvedColor}|${satuan}|${bgUpper}`;
+                            if (!aksesorisMap[key]) {
+                                aksesorisMap[key] = {
+                                    key: key,
+                                    bagian: r.bagian || 'AKSESORIS',
+                                    bahan: bahan,
+                                    warna: resolvedColor,
+                                    satuan: satuan,
+                                    totalKebutuhan: 0,
+                                    articles: new Set(),
+                                    sudahKirim: 0,
+                                    sisaKirim: 0
+                                };
+                            }
+                            aksesorisMap[key].totalKebutuhan += (itemTotal * u);
+                            aksesorisMap[key].articles.add(art);
+                        }
+                    });
                 });
             });
 
             // Akumulasi pengiriman dari Riwayat Surat Jalan (db_makloon_kirim)
-            const shipments = (db_makloon_kirim || []).filter(k => k.noPO === poId);
+            const shipments = (db_makloon_kirim || []).filter(k => {
+                if (Array.isArray(k.poList) && k.poList.some(p => targetPoIds.includes(p))) return true;
+                const parts = (k.noPO || '').split(',').map(s => s.trim());
+                return parts.some(p => targetPoIds.includes(p));
+            });
+
             shipments.forEach(sj => {
+                // Hitung rasio alokasi jika SJ mencakup multi-PO tapi targetPoIds hanya sebagian
+                const sjAllPos = (Array.isArray(sj.poList) && sj.poList.length > 0) ? sj.poList : (sj.noPO || '').split(',').map(s => s.trim()).filter(Boolean);
+                let allocRatio = 1.0;
+                if (sjAllPos.length > 1) {
+                    const coversAll = sjAllPos.every(p => targetPoIds.includes(p));
+                    if (!coversAll) {
+                        let targetPairsSum = 0;
+                        let sjTotalPairsSum = 0;
+                        sjAllPos.forEach(pId => {
+                            const pObj = (db_po || []).find(x => x.id === pId);
+                            let pairs = 0;
+                            if (pObj && pObj.items) {
+                                pObj.items.forEach(it => { pairs += (parseInt(it.total) || 0); });
+                            }
+                            if (targetPoIds.includes(pId)) targetPairsSum += pairs;
+                            sjTotalPairsSum += pairs;
+                        });
+                        if (sjTotalPairsSum > 0 && targetPairsSum > 0) {
+                            allocRatio = targetPairsSum / sjTotalPairsSum;
+                        }
+                    }
+                }
+
                 const sItems = sj.items || [];
                 sItems.forEach(it => {
                     const itBahanRaw = (it.bahan || '').trim();
                     const itWarna = (it.warna || '-').trim().toUpperCase();
                     const itSatuan = (it.satuan || '').trim().toUpperCase();
                     const itCat = it.kategori || categorizeMaterial(it.bagian, it.bahan, it.satuan);
-                    const itQty = parseFloat(it.qty) || 0;
+                    const itQty = (parseFloat(it.qty) || 0) * allocRatio;
 
                     if (itCat === 'SOLE_SIZED') {
                         // Bersihkan nama bahan jika berformat "SOLE TRABAS - Sz 22" atau "SOLE TRABAS (Sz 22)"
@@ -16267,7 +16333,7 @@
                                 soleMap[foundKey].sizesKirim[szIdx] += itQty;
                             } else if (Array.isArray(it.sizes)) {
                                 for (let i = 0; i < maxSlot; i++) {
-                                    soleMap[foundKey].sizesKirim[i] += (parseInt(it.sizes[i]) || 0);
+                                    soleMap[foundKey].sizesKirim[i] += ((parseInt(it.sizes[i]) || 0) * allocRatio);
                                 }
                             } else {
                                 // Fallback: alokasikan itQty ke size yang masih membutuhkan
@@ -16282,7 +16348,6 @@
                             }
                         }
                     } else if (itCat === 'LEMBARAN') {
-                        // Match by bahan & warna
                         const found = Object.values(lembaranMap).find(x => x.bahan === itBahanRaw.toUpperCase() && (x.warna === itWarna || x.warna === '-' || itWarna === '-'));
                         if (found) found.sudahKirim += itQty;
                     } else if (itCat === 'METERAN') {
@@ -16343,6 +16408,9 @@
 
             return {
                 po: po,
+                poList: poList,
+                targetPoIds: targetPoIds,
+                poId: targetPoIds.join(', '),
                 sizeLabels: sizeLabels,
                 totalPairs: totalPairs,
                 soleSized: soleList,
@@ -16408,12 +16476,7 @@
             }
 
             if (sjPoSelect) {
-                sjPoSelect.innerHTML = '<option value="">-- Pilih Nomor PO --</option>' + 
-                    sortedPOs.map(p => {
-                        const artDisplay = getPOArtikelDisplay(p);
-                        const vendorArt = artDisplay ? `${p.makloon || 'PABRIK'} - ${artDisplay}` : (p.makloon || 'PABRIK');
-                        return `<option value="${p.id}">${p.id} (${vendorArt})</option>`;
-                    }).join('');
+                renderSJPOSelection();
             }
 
             if (currentMakloonBahanPOId) {
@@ -16777,8 +16840,10 @@
         }
 
         // =================================================================
-        // MANAJEMEN SURAT JALAN KIRIM BAHAN (CRUD & MODAL)
+        // MANAJEMEN SURAT JALAN KIRIM BAHAN (CRUD & MODAL - MULTI-PO SUPPORT)
         // =================================================================
+        let currentSJSelectedPOs = [];
+
         function openModalBuatSuratJalan(editId) {
             const modal = document.getElementById('modal-makloon-sj-form');
             if (!modal) return;
@@ -16794,12 +16859,11 @@
             const editInp = document.getElementById('sjEditId');
             const noInp = document.getElementById('sjNoInput');
             const tglInp = document.getElementById('sjTglInput');
-            const poSelect = document.getElementById('sjPOSelect');
-            const makloonInp = document.getElementById('sjMakloonInput');
             const driverInp = document.getElementById('sjDriverInput');
             const catatanInp = document.getElementById('sjCatatanInput');
 
             tempSJItems = [];
+            currentSJSelectedPOs = [];
 
             const todayStr = new Date().toISOString().split('T')[0];
 
@@ -16810,10 +16874,15 @@
                 if (editInp) editInp.value = sj.id;
                 if (noInp) noInp.value = sj.id;
                 if (tglInp) tglInp.value = sj.tanggal || todayStr;
-                if (poSelect) poSelect.value = sj.noPO || '';
-                if (makloonInp) makloonInp.value = sj.makloon || '';
                 if (driverInp) driverInp.value = sj.driver || '';
                 if (catatanInp) catatanInp.value = sj.catatan || '';
+
+                if (Array.isArray(sj.poList) && sj.poList.length > 0) {
+                    currentSJSelectedPOs = [...sj.poList];
+                } else if (sj.noPO) {
+                    currentSJSelectedPOs = sj.noPO.split(',').map(s => s.trim()).filter(Boolean);
+                }
+
                 tempSJItems = JSON.parse(JSON.stringify(sj.items || []));
             } else {
                 if (title) title.innerText = "Buat Surat Jalan Kirim Bahan Baku";
@@ -16828,19 +16897,20 @@
 
                 if (noInp) noInp.value = autoNo;
                 if (tglInp) tglInp.value = todayStr;
-                if (poSelect) poSelect.value = currentMakloonBahanPOId || '';
                 if (driverInp) driverInp.value = '';
                 if (catatanInp) catatanInp.value = '';
 
-                // Isi otomatis makloon berdasarkan PO terpilih
-                const activePO = (db_po || []).find(p => p.id === (currentMakloonBahanPOId || (poSelect ? poSelect.value : '')));
-                if (makloonInp) makloonInp.value = activePO ? (activePO.makloon || '') : '';
+                // Default PO pertama dari PO yang sedang dilihat di modul
+                if (currentMakloonBahanPOId) {
+                    currentSJSelectedPOs = [currentMakloonBahanPOId];
+                }
 
                 // Tarik otomatis item sisa kebutuhan bahan PO
                 autoFillSJRemaingItems();
             }
 
-            updateSJModalSisaInfo(poSelect ? poSelect.value : '');
+            renderSJPOSelection();
+            updateSJModalSisaInfo(currentSJSelectedPOs);
             renderSJFormItems();
 
             modal.classList.remove('hidden');
@@ -16854,29 +16924,160 @@
             setTimeout(() => { modal.classList.add('hidden'); }, 300);
         }
 
-        function onSJPODropdownChange(poId) {
-            const activePO = (db_po || []).find(p => p.id === poId);
+        function renderSJPOSelection() {
+            const container = document.getElementById('sjSelectedPOsContainer');
+            const countEl = document.getElementById('sjCountPOSelected');
+            const selectEl = document.getElementById('sjPOSelect');
             const makloonInp = document.getElementById('sjMakloonInput');
-            if (makloonInp && activePO) {
-                makloonInp.value = activePO.makloon || '';
+            const artikelInp = document.getElementById('sjArtikelInput');
+            const noticeEl = document.getElementById('sjPOSameNotice');
+
+            if (countEl) countEl.innerText = currentSJSelectedPOs.length;
+
+            const selectedObjs = currentSJSelectedPOs.map(id => (db_po || []).find(p => p.id === id)).filter(Boolean);
+            const firstPo = selectedObjs[0] || null;
+            const targetMakloon = firstPo ? (firstPo.makloon || '').trim().toUpperCase() : '';
+            const targetArtikel = firstPo ? getPOArtikelDisplay(firstPo).trim().toUpperCase() : '';
+
+            if (makloonInp) makloonInp.value = targetMakloon;
+            if (artikelInp) artikelInp.value = targetArtikel;
+
+            if (noticeEl) {
+                if (firstPo) {
+                    noticeEl.innerHTML = `Filter aktif: <b class="text-blue-700">${targetMakloon || 'PABRIK'}</b> • <b class="text-indigo-900">${targetArtikel || 'SEMUA ARTIKEL'}</b>`;
+                } else {
+                    noticeEl.innerHTML = `Syarat gabung PO: <b class="text-gray-700">Vendor Makloon & Artikel harus sama</b>`;
+                }
             }
-            updateSJModalSisaInfo(poId);
-            autoFillSJRemaingItems();
+
+            // Render Chip PO Terpilih
+            if (container) {
+                if (selectedObjs.length === 0) {
+                    container.innerHTML = `<span class="text-xs text-gray-400 italic py-1 px-1">Belum ada PO dipilih. Silakan pilih PO pada dropdown di atas.</span>`;
+                } else {
+                    let totalPsg = 0;
+                    const chipsHtml = selectedObjs.map(p => {
+                        let pairs = 0;
+                        (p.items || []).forEach(it => { pairs += (parseInt(it.total) || 0); });
+                        totalPsg += pairs;
+                        return `
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-100/90 text-blue-900 border border-blue-300 text-xs font-bold shadow-2xs">
+                                <span><i class="fa-solid fa-file-invoice text-blue-600"></i> ${p.id}</span>
+                                <span class="text-[11px] font-semibold text-gray-600">(${pairs.toLocaleString('id-ID')} Psg)</span>
+                                <button type="button" onclick="removeSelectedSJPO('${p.id}')" class="text-rose-600 hover:text-rose-800 ml-1 hover:bg-rose-200/60 rounded-full w-4 h-4 flex items-center justify-center transition" title="Hapus PO ini">
+                                    <i class="fa-solid fa-xmark text-xs"></i>
+                                </button>
+                            </span>
+                        `;
+                    }).join('');
+
+                    const totalBadge = selectedObjs.length > 1 ? `
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-black ml-auto">
+                            Total Gabungan: ${totalPsg.toLocaleString('id-ID')} Psg (${selectedObjs.length} PO)
+                        </span>
+                    ` : '';
+
+                    container.innerHTML = chipsHtml + totalBadge;
+                }
+            }
+
+            // Populate Dropdown Options
+            if (selectEl) {
+                const sortedPOs = [...(db_po || [])].sort((a, b) => {
+                    const da = a.tanggal || '';
+                    const db = b.tanggal || '';
+                    return db.localeCompare(da);
+                });
+
+                if (currentSJSelectedPOs.length === 0) {
+                    selectEl.innerHTML = `<option value="">-- Pilih Nomor PO Pertama --</option>` + 
+                        sortedPOs.map(p => {
+                            const art = getPOArtikelDisplay(p);
+                            const vArt = art ? `${p.makloon || 'PABRIK'} - ${art}` : (p.makloon || 'PABRIK');
+                            let qty = 0;
+                            (p.items || []).forEach(it => { qty += (parseInt(it.total) || 0); });
+                            return `<option value="${p.id}">${p.id} • ${vArt} (${qty.toLocaleString('id-ID')} Psg • ${p.tanggal || '-'})</option>`;
+                        }).join('');
+                } else {
+                    const filteredPOs = sortedPOs.filter(p => {
+                        if (currentSJSelectedPOs.includes(p.id)) return false;
+                        const pMak = (p.makloon || '').trim().toUpperCase();
+                        const pArt = getPOArtikelDisplay(p).trim().toUpperCase();
+                        return pMak === targetMakloon && pArt === targetArtikel;
+                    });
+
+                    if (filteredPOs.length > 0) {
+                        selectEl.innerHTML = `<option value="">+ Tambah PO Lain (${targetMakloon} - ${targetArtikel})...</option>` + 
+                            filteredPOs.map(p => {
+                                let qty = 0;
+                                (p.items || []).forEach(it => { qty += (parseInt(it.total) || 0); });
+                                return `<option value="${p.id}">+ ${p.id} (${qty.toLocaleString('id-ID')} Psg • Tgl: ${p.tanggal || '-'})</option>`;
+                            }).join('');
+                    } else {
+                        selectEl.innerHTML = `<option value="" disabled>(Tidak ada PO lain dengan Makloon & Artikel yang sama)</option>`;
+                    }
+                }
+            }
         }
 
-        function updateSJModalSisaInfo(poId) {
-            const poSelect = document.getElementById('sjPOSelect');
-            const targetPoId = poId || (poSelect ? poSelect.value : currentMakloonBahanPOId);
+        function addSelectedSJPO(poId) {
+            if (!poId) return;
+            if (currentSJSelectedPOs.includes(poId)) return;
+
+            const newPo = (db_po || []).find(p => p.id === poId);
+            if (!newPo) return;
+
+            if (currentSJSelectedPOs.length > 0) {
+                const firstPo = (db_po || []).find(p => p.id === currentSJSelectedPOs[0]);
+                const targetMakloon = firstPo ? (firstPo.makloon || '').trim().toUpperCase() : '';
+                const targetArtikel = firstPo ? getPOArtikelDisplay(firstPo).trim().toUpperCase() : '';
+
+                const newMakloon = (newPo.makloon || '').trim().toUpperCase();
+                const newArtikel = getPOArtikelDisplay(newPo).trim().toUpperCase();
+
+                if (newMakloon !== targetMakloon || newArtikel !== targetArtikel) {
+                    alert(`Gagal menggabungkan PO!\n\nPO "${poId}" memiliki Vendor: "${newMakloon}" dan Artikel: "${newArtikel}".\nHanya PO dengan Vendor: "${targetMakloon}" dan Artikel: "${targetArtikel}" yang dapat digabungkan dalam 1 Surat Jalan.`);
+                    renderSJPOSelection();
+                    return;
+                }
+            }
+
+            currentSJSelectedPOs.push(poId);
+            renderSJPOSelection();
+            autoFillSJRemaingItems();
+            updateSJModalSisaInfo(currentSJSelectedPOs);
+            if (typeof showToast === 'function') showToast(`PO ${poId} ditambahkan ke Surat Jalan! Kebutuhan bahan otomatis digabung.`, "success");
+        }
+
+        function removeSelectedSJPO(poId) {
+            currentSJSelectedPOs = currentSJSelectedPOs.filter(p => p !== poId);
+            renderSJPOSelection();
+            if (currentSJSelectedPOs.length > 0) {
+                autoFillSJRemaingItems();
+            } else {
+                tempSJItems = [];
+                renderSJFormItems();
+            }
+            updateSJModalSisaInfo(currentSJSelectedPOs);
+            if (typeof showToast === 'function') showToast(`PO ${poId} dihapus dari daftar Surat Jalan.`, "info");
+        }
+
+        function onSJPODropdownChange(poId) {
+            addSelectedSJPO(poId);
+        }
+
+        function updateSJModalSisaInfo(poIds) {
+            const targetPoIds = poIds || currentSJSelectedPOs;
             const banner = document.getElementById('sjSisaSolBanner');
             if (!banner) return;
 
-            if (!targetPoId) {
+            if (!targetPoIds || targetPoIds.length === 0) {
                 banner.classList.add('hidden');
                 banner.innerHTML = '';
                 return;
             }
 
-            const calc = calculatePORequiredMaterials(targetPoId);
+            const calc = calculatePORequiredMaterials(targetPoIds);
             if (!calc || !calc.soleSized || calc.soleSized.length === 0) {
                 banner.classList.add('hidden');
                 banner.innerHTML = '';
@@ -16909,7 +17110,7 @@
                                 <i class="fa-solid fa-shoe-prints text-orange-600 mr-1"></i> ${row.bahan} <span class="text-gray-500 font-semibold">(${row.warna || '-'})</span>
                             </div>
                             <div class="text-[11px]">
-                                Total Kebutuhan: <b>${formatNumberTwoDec(row.kebutuhan)} PSG</b> • 
+                                Total Kebutuhan: <b>${formatNumberTwoDec(row.kebutuhan || row.totalPasang)} PSG</b> • 
                                 Terkirim: <b class="text-blue-700">${formatNumberTwoDec(row.sudahKirim)} PSG</b> • 
                                 Sisa: <b class="${row.sisaKirim > 0 ? 'text-rose-600 font-black' : 'text-emerald-600'}">${formatNumberTwoDec(row.sisaKirim)} PSG</b>
                             </div>
@@ -16922,12 +17123,17 @@
                 `;
             }).join('');
 
+            const poBadgeText = targetPoIds.length > 1 ? `${targetPoIds.join(', ')} (${targetPoIds.length} PO)` : targetPoIds[0];
+            const artDisp = calc.po ? getPOArtikelDisplay(calc.po) : '';
+
             banner.innerHTML = `
                 <div class="flex items-center justify-between mb-2">
                     <div class="font-black text-orange-950 uppercase tracking-wide flex items-center gap-1.5 text-xs">
-                        <i class="fa-solid fa-circle-info text-orange-600"></i> Status Kebutuhan & Sisa Sol PO (${targetPoId})
+                        <i class="fa-solid fa-circle-info text-orange-600"></i> Status Kebutuhan & Sisa Sol Gabungan: ${poBadgeText}
                     </div>
-                    <span class="text-[11px] text-orange-800 font-medium">Bahan sol di bawah otomatis disesuaikan per ukuran</span>
+                    <span class="text-[11px] text-orange-800 font-medium">
+                        ${calc.po ? (calc.po.makloon || 'PABRIK') : ''} • ${artDisp || ''} • Total ${calc.totalPairs.toLocaleString('id-ID')} Psg
+                    </span>
                 </div>
                 ${solSummaryHtml}
             `;
@@ -16935,11 +17141,9 @@
         }
 
         function autoFillSJRemaingItems() {
-            const poSelect = document.getElementById('sjPOSelect');
-            const poId = poSelect ? poSelect.value : currentMakloonBahanPOId;
-            if (!poId) return;
+            if (!currentSJSelectedPOs || currentSJSelectedPOs.length === 0) return;
 
-            const calc = calculatePORequiredMaterials(poId);
+            const calc = calculatePORequiredMaterials(currentSJSelectedPOs);
             if (!calc) return;
 
             tempSJItems = [];
@@ -17027,14 +17231,12 @@
             });
 
             renderSJFormItems();
-            updateSJModalSisaInfo(poId);
-            if (typeof showToast === 'function') showToast(`Tarik data otomatis: ${tempSJItems.length} item sisa dimuat!`, "info");
+            updateSJModalSisaInfo(currentSJSelectedPOs);
+            if (typeof showToast === 'function') showToast(`Tarik data otomatis: ${tempSJItems.length} item sisa dari ${currentSJSelectedPOs.length} PO berhasil dimuat!`, "info");
         }
 
         function splitSJSoleRows() {
-            const poSelect = document.getElementById('sjPOSelect');
-            const targetPoId = poSelect ? poSelect.value : currentMakloonBahanPOId;
-            const calc = targetPoId ? calculatePORequiredMaterials(targetPoId) : null;
+            const calc = (currentSJSelectedPOs.length > 0) ? calculatePORequiredMaterials(currentSJSelectedPOs) : null;
 
             let newItems = [];
             let modified = false;
@@ -17214,8 +17416,8 @@
             const editId = (document.getElementById('sjEditId').value || '').trim();
             const noSj = (document.getElementById('sjNoInput').value || '').trim().toUpperCase();
             const tgl = document.getElementById('sjTglInput').value;
-            const noPO = (document.getElementById('sjPOSelect').value || '').trim();
             const makloon = (document.getElementById('sjMakloonInput').value || '').trim().toUpperCase();
+            const artikel = (document.getElementById('sjArtikelInput').value || '').trim().toUpperCase();
             const driver = (document.getElementById('sjDriverInput').value || '').trim();
             const catatan = (document.getElementById('sjCatatanInput').value || '').trim();
 
@@ -17223,8 +17425,8 @@
                 alert("Nomor Surat Jalan wajib diisi!");
                 return;
             }
-            if (!noPO) {
-                alert("Nomor PO Reff wajib dipilih!");
+            if (currentSJSelectedPOs.length === 0) {
+                alert("Nomor PO Reff wajib dipilih minimal 1 PO!");
                 return;
             }
             if (tempSJItems.length === 0) {
@@ -17232,12 +17434,15 @@
                 return;
             }
 
+            const noPO = currentSJSelectedPOs.join(', ');
             const nowStr = new Date().toISOString();
             const record = {
                 id: noSj,
                 tanggal: tgl,
                 noPO: noPO,
+                poList: [...currentSJSelectedPOs],
                 makloon: makloon || 'PORTI',
+                artikel: artikel || '',
                 driver: driver || '-',
                 catatan: catatan || '',
                 items: JSON.parse(JSON.stringify(tempSJItems)),
@@ -17318,7 +17523,9 @@
                             ${sj.id}
                         </td>
                         <td class="p-3 text-gray-600 font-medium">${sj.tanggal || '-'}</td>
-                        <td class="p-3 font-bold text-gray-800">${sj.noPO || '-'}</td>
+                        <td class="p-3 font-bold text-gray-800">
+                            ${(sj.noPO || '-').split(',').map(p => `<span class="inline-block px-1.5 py-0.5 rounded bg-blue-50 text-blue-800 border border-blue-200 text-xs font-bold mr-1 mb-0.5">${p.trim()}</span>`).join('')}
+                        </td>
                         <td class="p-3 font-bold text-indigo-900">${sj.makloon || '-'}</td>
                         <td class="p-3 text-gray-600">${sj.driver || '-'}</td>
                         <td class="p-3 text-center">
