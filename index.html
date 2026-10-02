@@ -820,7 +820,7 @@
                                     <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
                                         <i class="fa-solid fa-magnifying-glass text-sm"></i>
                                     </span>
-                                    <input type="search" id="searchPO" oninput="poCurrentPage=1; renderPOList()" placeholder="Cari No. PO atau Vendor..." class="w-full md:w-48 pl-9 pr-3 py-2 md:py-2.5 text-xs md:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                                    <input type="search" id="searchPO" oninput="poCurrentPage=1; renderPOList()" placeholder="Cari No. PO, Makloon, Merk, Artikel..." class="w-full md:w-64 pl-9 pr-3 py-2 md:py-2.5 text-xs md:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
                                 </div>
 
                                 <!-- WADAH TOTAL DINAMIS -->
@@ -5686,13 +5686,50 @@
             if (thAksiPO) thAksiPO.style.display = '';
 
             const searchInput = document.getElementById('searchPO');
-            const search = searchInput ? searchInput.value.toLowerCase() : '';
+            const search = searchInput ? searchInput.value.trim().toLowerCase() : '';
+            const searchTokens = search ? search.split(/\s+/).filter(Boolean) : [];
 
-            // SUPER SEARCH: PO PRODUKSI
+            // SUPER SEARCH: PO PRODUKSI (No PO, Makloon/Vendor, Merk, Artikel, Warna, Harga, Catatan)
             const filtered = db_po.filter(po => {
-                let barang = po.items.map(i => `${i.merk || ''} ${i.namaBarang || ''}`).join(' ');
-                const gabungan = `${po.id} ${po.tanggal} ${po.makloon} ${po.harga} ${po.catatan || ''} ${barang}`.toLowerCase();
-                return gabungan.includes(search);
+                if (searchTokens.length === 0) return true;
+
+                let itemTerms = [];
+                (po.items || []).forEach(item => {
+                    let m = item.merk || '';
+                    let a = item.artikel || '';
+                    let n = item.namaBarang || '';
+                    let w = item.warna || '';
+                    let s = item.sole || '';
+                    let ins = item.insole || '';
+
+                    // Lookup db_databarang
+                    if (typeof db_databarang !== 'undefined' && item.prodId) {
+                        const brg = db_databarang.find(b => b.prodId === item.prodId);
+                        if (brg) {
+                            if (brg.merk) m += ' ' + brg.merk;
+                            if (brg.artikel) a += ' ' + brg.artikel;
+                            if (brg.warna) w += ' ' + brg.warna;
+                            if (brg.artikelWarna) a += ' ' + brg.artikelWarna;
+                        }
+                    }
+
+                    // Lookup db_barang (jika ada)
+                    if (typeof db_barang !== 'undefined' && item.barangId) {
+                        const brg = db_barang.find(b => b.id === item.barangId);
+                        if (brg) {
+                            if (brg.merk) m += ' ' + brg.merk;
+                            if (brg.artikel) a += ' ' + brg.artikel;
+                            if (brg.warna) w += ' ' + brg.warna;
+                        }
+                    }
+
+                    itemTerms.push(`${m} ${a} ${n} ${w} ${s} ${ins}`);
+                });
+
+                const searchableText = `${po.id || ''} ${po.tanggal || ''} ${po.makloon || ''} ${po.harga || ''} ${po.catatan || ''} ${itemTerms.join(' ')}`.toLowerCase();
+
+                // Semua kata kunci (token) harus ditemukan di dalam data baris PO
+                return searchTokens.every(token => searchableText.includes(token));
             });
 
             // === HITUNG TOTAL QTY DARI DATA YANG TERFILTER (PERBAIKAN DI SINI) ===
