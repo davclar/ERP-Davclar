@@ -3349,6 +3349,37 @@
 
                     <!-- SUB-TAB 2: RIWAYAT SURAT JALAN -->
                     <div id="subtab-content-sj" class="hidden w-full flex flex-col bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                        <!-- Summary Cards Riwayat Surat Jalan -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                            <div class="bg-blue-50/70 p-3 rounded-xl border border-blue-100 flex items-center justify-between">
+                                <div>
+                                    <div class="text-[10px] uppercase font-bold text-blue-700">Total Surat Jalan</div>
+                                    <div id="statSJCount" class="text-lg font-black text-blue-950">0 SJ</div>
+                                </div>
+                                <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
+                                    <i class="fa-solid fa-file-invoice"></i>
+                                </div>
+                            </div>
+                            <div class="bg-amber-50/70 p-3 rounded-xl border border-amber-100 flex items-center justify-between">
+                                <div>
+                                    <div class="text-[10px] uppercase font-bold text-amber-700">Total Kuantitas Fisik</div>
+                                    <div id="statSJTotalQty" class="text-lg font-black text-amber-950">0</div>
+                                </div>
+                                <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-sm">
+                                    <i class="fa-solid fa-boxes-stacked"></i>
+                                </div>
+                            </div>
+                            <div class="bg-violet-50/70 p-3 rounded-xl border border-violet-100 flex items-center justify-between">
+                                <div>
+                                    <div class="text-[10px] uppercase font-bold text-violet-700">Total Nilai Pengiriman Bahan</div>
+                                    <div id="statSJTotalNilai" class="text-lg font-black text-violet-950">Rp 0</div>
+                                </div>
+                                <div class="w-8 h-8 rounded-lg bg-violet-100 text-violet-600 flex items-center justify-center font-bold text-sm">
+                                    <i class="fa-solid fa-money-bill-wave"></i>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Filter bar -->
                         <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 shrink-0">
                             <div class="flex flex-wrap items-center gap-2">
@@ -3377,6 +3408,7 @@
                                         <th class="p-3">Makloon Tujuan</th>
                                         <th class="p-3">Sopir / Kurir</th>
                                         <th class="p-3 text-center">Total Item</th>
+                                        <th class="p-3 text-right">Nilai Bahan (Rp)</th>
                                         <th class="p-3">Catatan</th>
                                         <th class="p-3 text-center w-36">Aksi</th>
                                     </tr>
@@ -16187,6 +16219,7 @@
                                     bahan: bahan,
                                     warna: resolvedColor,
                                     satuan: 'PSG',
+                                    harga: h || 0,
                                     sizes: new Array(maxSlot).fill(0),
                                     totalPasang: 0,
                                     articles: new Set(),
@@ -16194,6 +16227,8 @@
                                     sisaKirim: 0,
                                     sizesKirim: new Array(maxSlot).fill(0)
                                 };
+                            } else if ((!soleMap[key].harga || soleMap[key].harga === 0) && h > 0) {
+                                soleMap[key].harga = h;
                             }
                             for (let i = 0; i < maxSlot; i++) {
                                 soleMap[key].sizes[i] += Math.round(s[i] * u);
@@ -16210,11 +16245,14 @@
                                     bahan: bahan,
                                     warna: resolvedColor,
                                     satuan: 'LBR',
+                                    harga: h || 0,
                                     totalKebutuhan: 0,
                                     articles: new Set(),
                                     sudahKirim: 0,
                                     sisaKirim: 0
                                 };
+                            } else if ((!lembaranMap[key].harga || lembaranMap[key].harga === 0) && h > 0) {
+                                lembaranMap[key].harga = h;
                             }
                             lembaranMap[key].totalKebutuhan += (itemTotal * u);
                             lembaranMap[key].articles.add(art);
@@ -16228,11 +16266,14 @@
                                     bahan: bahan,
                                     warna: resolvedColor,
                                     satuan: satuan,
+                                    harga: h || 0,
                                     totalKebutuhan: 0,
                                     articles: new Set(),
                                     sudahKirim: 0,
                                     sisaKirim: 0
                                 };
+                            } else if ((!meteranMap[key].harga || meteranMap[key].harga === 0) && h > 0) {
+                                meteranMap[key].harga = h;
                             }
                             meteranMap[key].totalKebutuhan += (itemTotal * u);
                             meteranMap[key].articles.add(art);
@@ -16247,11 +16288,14 @@
                                     bahan: bahan,
                                     warna: resolvedColor,
                                     satuan: satuan,
+                                    harga: h || 0,
                                     totalKebutuhan: 0,
                                     articles: new Set(),
                                     sudahKirim: 0,
                                     sisaKirim: 0
                                 };
+                            } else if ((!aksesorisMap[key].harga || aksesorisMap[key].harga === 0) && h > 0) {
+                                aksesorisMap[key].harga = h;
                             }
                             aksesorisMap[key].totalKebutuhan += (itemTotal * u);
                             aksesorisMap[key].articles.add(art);
@@ -16270,26 +16314,25 @@
             shipments.forEach(sj => {
                 // Hitung rasio alokasi jika SJ mencakup multi-PO tapi targetPoIds hanya sebagian
                 const sjAllPos = (Array.isArray(sj.poList) && sj.poList.length > 0) ? sj.poList : (sj.noPO || '').split(',').map(s => s.trim()).filter(Boolean);
-                let allocRatio = 1.0;
-                if (sjAllPos.length > 1) {
-                    const coversAll = sjAllPos.every(p => targetPoIds.includes(p));
-                    if (!coversAll) {
-                        let targetPairsSum = 0;
-                        let sjTotalPairsSum = 0;
-                        sjAllPos.forEach(pId => {
-                            const pObj = (db_po || []).find(x => x.id === pId);
-                            let pairs = 0;
-                            if (pObj && pObj.items) {
-                                pObj.items.forEach(it => { pairs += (parseInt(it.total) || 0); });
-                            }
-                            if (targetPoIds.includes(pId)) targetPairsSum += pairs;
-                            sjTotalPairsSum += pairs;
-                        });
-                        if (sjTotalPairsSum > 0 && targetPairsSum > 0) {
-                            allocRatio = targetPairsSum / sjTotalPairsSum;
+                const isMultiPO = sjAllPos.length > 1;
+                const coversAll = !isMultiPO || sjAllPos.every(p => targetPoIds.includes(p));
+
+                let targetPairsSum = 0;
+                let sjTotalPairsSum = 0;
+                if (isMultiPO && !coversAll) {
+                    sjAllPos.forEach(pId => {
+                        const pObj = (db_po || []).find(x => x.id === pId);
+                        let pairs = 0;
+                        if (pObj && pObj.items) {
+                            pObj.items.forEach(it => { pairs += (parseInt(it.total) || 0); });
                         }
-                    }
+                        if (targetPoIds.includes(pId)) targetPairsSum += pairs;
+                        sjTotalPairsSum += pairs;
+                    });
                 }
+                const defaultAllocRatio = (isMultiPO && !coversAll && sjTotalPairsSum > 0 && targetPairsSum > 0) 
+                    ? (targetPairsSum / sjTotalPairsSum) 
+                    : 1.0;
 
                 const sItems = sj.items || [];
                 sItems.forEach(it => {
@@ -16297,7 +16340,7 @@
                     const itWarna = (it.warna || '-').trim().toUpperCase();
                     const itSatuan = (it.satuan || '').trim().toUpperCase();
                     const itCat = it.kategori || categorizeMaterial(it.bagian, it.bahan, it.satuan);
-                    const itQty = (parseFloat(it.qty) || 0) * allocRatio;
+                    const itRawQty = parseFloat(it.qty) || 0;
 
                     if (itCat === 'SOLE_SIZED') {
                         // Bersihkan nama bahan jika berformat "SOLE TRABAS - Sz 22" atau "SOLE TRABAS (Sz 22)"
@@ -16313,8 +16356,6 @@
                         }
 
                         if (foundKey && soleMap[foundKey]) {
-                            soleMap[foundKey].sudahKirim += itQty;
-
                             // Cek apakah item ini spesifik untuk size tertentu
                             let szIdx = -1;
                             if (it.sizeIndex !== undefined && it.sizeIndex !== null && it.sizeIndex >= 0) {
@@ -16330,14 +16371,62 @@
                             }
 
                             if (szIdx >= 0 && szIdx < maxSlot) {
-                                soleMap[foundKey].sizesKirim[szIdx] += itQty;
+                                let allocSoleQty = itRawQty;
+                                if (isMultiPO && !coversAll) {
+                                    // Hitung kebutuhan size ini secara spesifik untuk target PO vs semua PO di SJ
+                                    let totalReqSzAllPos = 0;
+                                    sjAllPos.forEach(pId => {
+                                        const pObj = (db_po || []).find(x => x.id === pId);
+                                        if (pObj && pObj.items) {
+                                            pObj.items.forEach(itPo => {
+                                                const sArr = itPo.sizes || [];
+                                                totalReqSzAllPos += (parseInt(sArr[szIdx]) || 0);
+                                            });
+                                        }
+                                    });
+                                    const targetReqSz = soleMap[foundKey].sizes[szIdx] || 0;
+                                    if (totalReqSzAllPos > 0) {
+                                        const sizeRatio = Math.min(1.0, targetReqSz / totalReqSzAllPos);
+                                        allocSoleQty = Math.round(itRawQty * sizeRatio);
+                                    } else {
+                                        allocSoleQty = Math.round(itRawQty * defaultAllocRatio);
+                                    }
+                                }
+                                allocSoleQty = Math.round(allocSoleQty);
+                                soleMap[foundKey].sizesKirim[szIdx] += allocSoleQty;
+                                soleMap[foundKey].sudahKirim += allocSoleQty;
+
                             } else if (Array.isArray(it.sizes)) {
                                 for (let i = 0; i < maxSlot; i++) {
-                                    soleMap[foundKey].sizesKirim[i] += ((parseInt(it.sizes[i]) || 0) * allocRatio);
+                                    let sQty = parseInt(it.sizes[i]) || 0;
+                                    if (isMultiPO && !coversAll) {
+                                        let totalReqSzAllPos = 0;
+                                        sjAllPos.forEach(pId => {
+                                            const pObj = (db_po || []).find(x => x.id === pId);
+                                            if (pObj && pObj.items) {
+                                                pObj.items.forEach(itPo => {
+                                                    const sArr = itPo.sizes || [];
+                                                    totalReqSzAllPos += (parseInt(sArr[i]) || 0);
+                                                });
+                                            }
+                                        });
+                                        const targetReqSz = soleMap[foundKey].sizes[i] || 0;
+                                        if (totalReqSzAllPos > 0) {
+                                            const sizeRatio = Math.min(1.0, targetReqSz / totalReqSzAllPos);
+                                            sQty = Math.round(sQty * sizeRatio);
+                                        } else {
+                                            sQty = Math.round(sQty * defaultAllocRatio);
+                                        }
+                                    }
+                                    sQty = Math.round(sQty);
+                                    soleMap[foundKey].sizesKirim[i] += sQty;
+                                    soleMap[foundKey].sudahKirim += sQty;
                                 }
                             } else {
-                                // Fallback: alokasikan itQty ke size yang masih membutuhkan
-                                let remNeeded = itQty;
+                                // Fallback: alokasikan ke size yang masih membutuhkan
+                                let allocSoleQty = (isMultiPO && !coversAll) ? Math.round(itRawQty * defaultAllocRatio) : Math.round(itRawQty);
+                                soleMap[foundKey].sudahKirim += allocSoleQty;
+                                let remNeeded = allocSoleQty;
                                 for (let i = 0; i < maxSlot; i++) {
                                     if (remNeeded <= 0) break;
                                     const needed = Math.max(0, soleMap[foundKey].sizes[i] - soleMap[foundKey].sizesKirim[i]);
@@ -16348,42 +16437,51 @@
                             }
                         }
                     } else if (itCat === 'LEMBARAN') {
+                        const itQty = itRawQty * defaultAllocRatio;
                         const found = Object.values(lembaranMap).find(x => x.bahan === itBahanRaw.toUpperCase() && (x.warna === itWarna || x.warna === '-' || itWarna === '-'));
                         if (found) found.sudahKirim += itQty;
                     } else if (itCat === 'METERAN') {
+                        const itQty = itRawQty * defaultAllocRatio;
                         const found = Object.values(meteranMap).find(x => x.bahan === itBahanRaw.toUpperCase() && (x.warna === itWarna || x.warna === '-' || itWarna === '-'));
                         if (found) found.sudahKirim += itQty;
                     } else if (itCat !== 'ONGKOS_JASA') {
+                        const itQty = itRawQty * defaultAllocRatio;
                         const found = Object.values(aksesorisMap).find(x => x.bahan === itBahanRaw.toUpperCase() && (x.warna === itWarna || x.warna === '-' || itWarna === '-'));
                         if (found) found.sudahKirim += itQty;
                     }
                 });
             });
 
-            // Hitung sisa kebutuhan bahan baku dengan pembulatan ke atas 1 digit desimal (x,x)
+            // Hitung sisa kebutuhan bahan baku dengan pembulatan rapi (Sol = Integer, Lainnya = 1 desimal)
             const soleList = Object.values(soleMap).map(item => {
                 item.sisaSizes = [];
                 for (let i = 0; i < maxSlot; i++) {
-                    const req = item.sizes[i] || 0;
-                    const sent = item.sizesKirim[i] || 0;
+                    const req = Math.round(item.sizes[i] || 0);
+                    const sent = Math.round(item.sizesKirim[i] || 0);
+                    item.sizes[i] = req;
+                    item.sizesKirim[i] = sent;
                     item.sisaSizes[i] = Math.max(0, req - sent);
                 }
                 item.sudahKirim = item.sizesKirim.reduce((a, b) => a + b, 0);
+                item.totalPasang = item.sizes.reduce((a, b) => a + b, 0);
                 item.sisaKirim = item.sisaSizes.reduce((a, b) => a + b, 0);
                 return item;
             });
             const meteranList = Object.values(meteranMap).map(item => {
                 item.totalKebutuhan = roundUpOneDec(item.totalKebutuhan);
+                item.sudahKirim = roundUpOneDec(item.sudahKirim);
                 item.sisaKirim = Math.max(0, roundUpOneDec(item.totalKebutuhan - item.sudahKirim));
                 return item;
             });
             const aksesorisList = Object.values(aksesorisMap).map(item => {
                 item.totalKebutuhan = roundUpOneDec(item.totalKebutuhan);
+                item.sudahKirim = roundUpOneDec(item.sudahKirim);
                 item.sisaKirim = Math.max(0, roundUpOneDec(item.totalKebutuhan - item.sudahKirim));
                 return item;
             });
             const lembaranList = Object.values(lembaranMap).map(item => {
                 item.totalKebutuhan = roundUpOneDec(item.totalKebutuhan);
+                item.sudahKirim = roundUpOneDec(item.sudahKirim);
                 item.sisaKirim = Math.max(0, roundUpOneDec(item.totalKebutuhan - item.sudahKirim));
                 return item;
             });
@@ -16406,6 +16504,30 @@
             });
             const overallPct = grandTotalReq > 0 ? Math.min(100, Math.round((grandTotalSent / grandTotalReq) * 100)) : 0;
 
+            // Hitung Total Nilai Rupiah Bahan (Kebutuhan vs Terkirim)
+            let totalNilaiKebutuhan = 0;
+            let totalNilaiTerkirim = 0;
+            soleList.forEach(i => {
+                const p = parseFloat(i.harga) || 0;
+                totalNilaiKebutuhan += (i.totalPasang * p);
+                totalNilaiTerkirim += (i.sudahKirim * p);
+            });
+            meteranList.forEach(i => {
+                const p = parseFloat(i.harga) || 0;
+                totalNilaiKebutuhan += (i.totalKebutuhan * p);
+                totalNilaiTerkirim += (i.sudahKirim * p);
+            });
+            lembaranList.forEach(i => {
+                const p = parseFloat(i.harga) || 0;
+                totalNilaiKebutuhan += (i.totalKebutuhan * p);
+                totalNilaiTerkirim += (i.sudahKirim * p);
+            });
+            aksesorisList.forEach(i => {
+                const p = parseFloat(i.harga) || 0;
+                totalNilaiKebutuhan += (i.totalKebutuhan * p);
+                totalNilaiTerkirim += (i.sudahKirim * p);
+            });
+
             return {
                 po: po,
                 poList: poList,
@@ -16420,12 +16542,70 @@
                 kasbonList: kasbonList,
                 totalJatahKasbonMakloon: totalJatahKasbonMakloon,
                 avgKasbonPerPsg: avgKasbonPerPsg,
+                totalNilaiKebutuhan: Math.round(totalNilaiKebutuhan),
+                totalNilaiTerkirim: Math.round(totalNilaiTerkirim),
                 bomMatchedArticles: Array.from(bomMatchedArticles),
                 missingBomArticles: Array.from(missingBomArticles),
                 isBomComplete: missingBomArticles.size === 0 && bomMatchedArticles.size > 0,
                 shipmentsCount: shipments.length,
                 overallPct: overallPct
             };
+        }
+
+        // Helper: Hitung harga satuan BOM untuk item Surat Jalan
+        function getSJItemUnitPrice(item, sj) {
+            if (item && item.harga && parseFloat(item.harga) > 0) {
+                return parseFloat(item.harga);
+            }
+            const itBahanRaw = (item.bahan || '').trim();
+            const cleanBahan = (item.parentBahan || itBahanRaw).replace(/\s*[\-\(]\s*(?:Sz|Size)\s*[0-9A-Za-z]+[\)]?/i, '').trim().toUpperCase();
+
+            // Cek PO di SJ
+            const poIds = (sj && sj.poList && sj.poList.length > 0) ? sj.poList : ((sj && sj.noPO) ? sj.noPO.split(',').map(s => s.trim()) : []);
+            for (let pId of poIds) {
+                const po = (db_po || []).find(p => p.id === pId);
+                if (!po) continue;
+                const art = getPOArtikelDisplay(po).toUpperCase();
+                const mak = (po.makloon || (sj ? sj.makloon : '') || '').trim().toUpperCase();
+                const boms = (db_makloon_cost || []).filter(b => {
+                    const bArt = (b.artikel || '').trim().toUpperCase();
+                    const bMak = (b.makloon || '').trim().toUpperCase();
+                    return (bArt === art || art.includes(bArt) || bArt.includes(art)) && (!bMak || bMak === mak);
+                });
+                for (let b of boms) {
+                    for (let r of (b.rows || [])) {
+                        const rBahan = (r.bahan || '').trim().toUpperCase();
+                        if (rBahan && (rBahan === cleanBahan || cleanBahan.includes(rBahan) || rBahan.includes(cleanBahan))) {
+                            const price = parseFloat(r.harga) || 0;
+                            if (price > 0) return price;
+                        }
+                    }
+                }
+            }
+
+            // Global lookup di db_makloon_cost jika belum ketemu
+            for (let b of (db_makloon_cost || [])) {
+                for (let r of (b.rows || [])) {
+                    const rBahan = (r.bahan || '').trim().toUpperCase();
+                    if (rBahan && (rBahan === cleanBahan || cleanBahan === rBahan)) {
+                        const price = parseFloat(r.harga) || 0;
+                        if (price > 0) return price;
+                    }
+                }
+            }
+            return 0;
+        }
+
+        // Helper: Hitung total nilai rupiah bahan dalam sebuah Surat Jalan
+        function calculateSJTotalNilai(sj) {
+            if (!sj || !Array.isArray(sj.items)) return 0;
+            let total = 0;
+            sj.items.forEach(it => {
+                const qty = parseFloat(it.qty) || 0;
+                const price = getSJItemUnitPrice(it, sj);
+                total += (qty * price);
+            });
+            return Math.round(total);
         }
 
         // 6. Inisialisasi & Render Utama Modul Kirim Bahan
@@ -16501,10 +16681,11 @@
                 return;
             }
 
-            // 1. Header Summary Cards (5 Kolom Responsive)
+            // 1. Header Summary Cards (6 Kolom Responsive)
             if (containerSummary) {
                 const artDisplay = getPOArtikelDisplay(data.po);
                 const vendorArtDisplay = artDisplay ? `${data.po.makloon || '-'} - ${artDisplay}` : (data.po.makloon || '-');
+                containerSummary.className = "mt-4 pt-3 border-t border-gray-100 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3";
                 containerSummary.innerHTML = `
                     <div class="bg-blue-50/60 p-3 rounded-xl border border-blue-100">
                         <div class="text-[10px] uppercase font-bold text-blue-700">Vendor & Artikel</div>
@@ -16538,6 +16719,18 @@
                         </div>
                         <div class="text-[11px] text-teal-700 font-medium truncate" title="Rp ${data.avgKasbonPerPsg.toLocaleString('id-ID')} / Psg (O. + Overhead + Jasa)">
                             Rp ${data.avgKasbonPerPsg.toLocaleString('id-ID')} / Psg (O. + Overhead + Jasa)
+                        </div>
+                    </div>
+                    <div class="bg-violet-50/70 p-3 rounded-xl border border-violet-200">
+                        <div class="text-[10px] uppercase font-bold text-violet-800 flex justify-between items-center">
+                            <span>Nilai Bahan Terkirim</span>
+                            <span class="text-[10px] text-violet-600 font-bold">${data.shipmentsCount} SJ</span>
+                        </div>
+                        <div class="text-sm font-black text-violet-950 mt-0.5">
+                            Rp ${(data.totalNilaiTerkirim || 0).toLocaleString('id-ID')}
+                        </div>
+                        <div class="text-[11px] text-violet-700 font-medium truncate" title="Total Nilai Kebutuhan: Rp ${(data.totalNilaiKebutuhan || 0).toLocaleString('id-ID')}">
+                            Kebutuhan: Rp ${(data.totalNilaiKebutuhan || 0).toLocaleString('id-ID')}
                         </div>
                     </div>
                     <div class="bg-indigo-50/60 p-3 rounded-xl border border-indigo-100">
@@ -16606,9 +16799,10 @@
                 } else {
                     bodySole.innerHTML = data.soleSized.map((row, idx) => {
                         let sizeTds = row.sizes.map((req, i) => {
+                            req = Math.round(req || 0);
                             if (req <= 0) return `<td class="p-2 text-center text-gray-300">-</td>`;
-                            const sent = (row.sizesKirim && row.sizesKirim[i]) || 0;
-                            const sisa = (row.sisaSizes && row.sisaSizes[i] !== undefined) ? row.sisaSizes[i] : Math.max(0, req - sent);
+                            const sent = Math.round((row.sizesKirim && row.sizesKirim[i]) || 0);
+                            const sisa = Math.max(0, req - sent);
 
                             if (sent <= 0) {
                                 return `
@@ -16650,9 +16844,9 @@
                                     </span>
                                 </td>
                                 ${sizeTds}
-                                <td class="p-2.5 text-right font-extrabold text-orange-950 bg-orange-50/40">${row.totalPasang.toLocaleString('id-ID')}</td>
-                                <td class="p-2.5 text-right font-semibold text-emerald-600">${row.sudahKirim.toLocaleString('id-ID')}</td>
-                                <td class="p-2.5 text-right font-extrabold ${row.sisaKirim > 0 ? 'text-rose-600' : 'text-gray-400'}">${row.sisaKirim.toLocaleString('id-ID')}</td>
+                                <td class="p-2.5 text-right font-extrabold text-orange-950 bg-orange-50/40">${Math.round(row.totalPasang).toLocaleString('id-ID')}</td>
+                                <td class="p-2.5 text-right font-semibold text-emerald-600">${Math.round(row.sudahKirim).toLocaleString('id-ID')}</td>
+                                <td class="p-2.5 text-right font-extrabold ${row.sisaKirim > 0 ? 'text-rose-600' : 'text-gray-400'}">${Math.round(row.sisaKirim).toLocaleString('id-ID')}</td>
                                 <td class="p-2.5 text-center">${statusBadge}</td>
                             </tr>
                         `;
@@ -17167,6 +17361,7 @@
                                 satuan: 'PSG',
                                 sizeLabel: String(szLabel),
                                 sizeIndex: i,
+                                harga: row.harga || 0,
                                 ket: `Sisa ${sisaSz} Psg (PO: ${reqSz}, Terkirim: ${sentSz})`
                             });
                         }
@@ -17180,6 +17375,7 @@
                         warna: row.warna,
                         qty: row.sisaKirim,
                         satuan: 'PSG',
+                        harga: row.harga || 0,
                         ket: `Sisa ${row.sisaKirim} Psg`
                     });
                 }
@@ -17195,6 +17391,7 @@
                         warna: row.warna,
                         qty: row.sisaKirim,
                         satuan: row.satuan,
+                        harga: row.harga || 0,
                         ket: ''
                     });
                 }
@@ -17210,6 +17407,7 @@
                         warna: row.warna,
                         qty: row.sisaKirim,
                         satuan: row.satuan,
+                        harga: row.harga || 0,
                         ket: ''
                     });
                 }
@@ -17225,6 +17423,7 @@
                         warna: row.warna,
                         qty: row.sisaKirim,
                         satuan: 'LBR',
+                        harga: row.harga || 0,
                         ket: 'Cetak/Pond Lembaran'
                     });
                 }
@@ -17506,8 +17705,23 @@
                 );
             }
 
+            // Hitung ringkasan stats surat jalan
+            let grandTotalNilaiSJ = 0;
+            let grandTotalQtySJ = 0;
+            list.forEach(sj => {
+                grandTotalNilaiSJ += calculateSJTotalNilai(sj);
+                (sj.items || []).forEach(i => { grandTotalQtySJ += (parseFloat(i.qty) || 0); });
+            });
+
+            const statCount = document.getElementById('statSJCount');
+            const statQty = document.getElementById('statSJTotalQty');
+            const statNilai = document.getElementById('statSJTotalNilai');
+            if (statCount) statCount.innerText = `${list.length} SJ`;
+            if (statQty) statQty.innerText = `${formatNumberTwoDec(grandTotalQtySJ)} Item`;
+            if (statNilai) statNilai.innerText = `Rp ${grandTotalNilaiSJ.toLocaleString('id-ID')}`;
+
             if (list.length === 0) {
-                body.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-gray-400">Belum ada riwayat surat jalan pengiriman bahan baku.</td></tr>`;
+                body.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-gray-400">Belum ada riwayat surat jalan pengiriman bahan baku.</td></tr>`;
                 return;
             }
 
@@ -17515,6 +17729,7 @@
                 let totalItemsCount = (sj.items || []).length;
                 let totalQtySum = 0;
                 (sj.items || []).forEach(i => { totalQtySum += (parseFloat(i.qty) || 0); });
+                const sjTotalNilai = calculateSJTotalNilai(sj);
 
                 return `
                     <tr class="hover:bg-gray-50/80 transition">
@@ -17532,6 +17747,9 @@
                             <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-800">
                                 ${totalItemsCount} Macam (${formatNumberTwoDec(totalQtySum)})
                             </span>
+                        </td>
+                        <td class="p-3 text-right font-extrabold text-violet-900 bg-violet-50/30 whitespace-nowrap">
+                            Rp ${sjTotalNilai.toLocaleString('id-ID')}
                         </td>
                         <td class="p-3 text-gray-500 text-xs truncate max-w-xs">${sj.catatan || '-'}</td>
                         <td class="p-3 text-center">
@@ -17571,17 +17789,28 @@
             if (title) title.innerText = `Surat Jalan: ${sj.id}`;
             if (subTitle) subTitle.innerText = `Makloon: ${sj.makloon} • Tanggal: ${sj.tanggal || '-'} • Reff PO: ${sj.noPO}`;
 
+            let grandTotalNilai = 0;
+            let grandTotalQty = 0;
+
             let itemsRows = (sj.items || []).map((it, idx) => {
                 const szBadge = it.sizeLabel ? `<span class="ml-1.5 px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-extrabold text-[10px] border border-blue-200">Sz ${it.sizeLabel}</span>` : '';
+                const qty = parseFloat(it.qty) || 0;
+                const unitPrice = getSJItemUnitPrice(it, sj);
+                const subTotal = Math.round(qty * unitPrice);
+                grandTotalNilai += subTotal;
+                grandTotalQty += qty;
+
                 return `
                 <tr class="hover:bg-gray-50">
-                    <td class="p-2 text-center text-gray-400">${idx + 1}</td>
-                    <td class="p-2 text-gray-500">${it.kategori || '-'}</td>
-                    <td class="p-2 font-bold text-gray-800">${it.bahan} ${szBadge}</td>
-                    <td class="p-2 font-semibold text-gray-700">${it.warna || '-'}</td>
-                    <td class="p-2 text-right font-extrabold text-blue-700">${formatNumberTwoDec(it.qty)}</td>
-                    <td class="p-2 text-center font-bold text-gray-600">${it.satuan || 'PSG'}</td>
-                    <td class="p-2 text-gray-500 text-xs">${it.ket || '-'}</td>
+                    <td class="p-2.5 text-center text-gray-400 font-medium">${idx + 1}</td>
+                    <td class="p-2.5 text-gray-500">${it.kategori || '-'}</td>
+                    <td class="p-2.5 font-bold text-gray-800">${it.bahan} ${szBadge}</td>
+                    <td class="p-2.5 font-semibold text-gray-700">${it.warna || '-'}</td>
+                    <td class="p-2.5 text-right font-extrabold text-blue-700">${formatNumberTwoDec(it.qty)}</td>
+                    <td class="p-2.5 text-center font-bold text-gray-600">${it.satuan || 'PSG'}</td>
+                    <td class="p-2.5 text-right text-gray-700 font-semibold">${unitPrice > 0 ? 'Rp ' + unitPrice.toLocaleString('id-ID') : '-'}</td>
+                    <td class="p-2.5 text-right font-black text-violet-900 bg-violet-50/30">${subTotal > 0 ? 'Rp ' + subTotal.toLocaleString('id-ID') : '-'}</td>
+                    <td class="p-2.5 text-gray-500 text-xs">${it.ket || '-'}</td>
                 </tr>
             `;
             }).join('');
@@ -17594,7 +17823,12 @@
                         <div><span class="text-gray-400 font-bold block">Nomor PO Reff:</span> <b>${sj.noPO}</b></div>
                         <div><span class="text-gray-400 font-bold block">Vendor Makloon:</span> <b class="text-indigo-900">${sj.makloon}</b></div>
                         <div><span class="text-gray-400 font-bold block">Sopir / Kurir:</span> <b>${sj.driver || '-'}</b></div>
-                        <div class="md:col-span-3"><span class="text-gray-400 font-bold block">Catatan:</span> <i>${sj.catatan || '-'}</i></div>
+                        <div><span class="text-gray-400 font-bold block">Total Fisik Item:</span> <b class="text-gray-900">${formatNumberTwoDec(grandTotalQty)} Item</b></div>
+                        <div class="md:col-span-2 bg-violet-100/60 p-2 rounded-lg border border-violet-200 flex items-center justify-between">
+                            <span class="text-violet-800 font-bold">Total Nilai Bahan Kirim:</span>
+                            <span class="text-sm font-black text-violet-950">Rp ${grandTotalNilai.toLocaleString('id-ID')}</span>
+                        </div>
+                        <div class="md:col-span-4"><span class="text-gray-400 font-bold block">Catatan:</span> <i>${sj.catatan || '-'}</i></div>
                     </div>
 
                     <div class="border border-gray-200 rounded-xl overflow-hidden shadow-xs mt-3">
@@ -17607,12 +17841,23 @@
                                     <th class="p-2.5">Warna</th>
                                     <th class="p-2.5 text-right">Jumlah</th>
                                     <th class="p-2.5 text-center">Satuan</th>
+                                    <th class="p-2.5 text-right">Harga (BOM)</th>
+                                    <th class="p-2.5 text-right">Subtotal Nilai</th>
                                     <th class="p-2.5">Keterangan</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100">
                                 ${itemsRows}
                             </tbody>
+                            <tfoot class="bg-gray-50 border-t-2 border-gray-300 font-bold text-xs">
+                                <tr>
+                                    <td colspan="4" class="p-2.5 text-right uppercase text-gray-600">Grand Total:</td>
+                                    <td class="p-2.5 text-right text-blue-700 font-black">${formatNumberTwoDec(grandTotalQty)}</td>
+                                    <td colspan="2"></td>
+                                    <td class="p-2.5 text-right text-violet-950 font-black bg-violet-100/70 text-sm">Rp ${grandTotalNilai.toLocaleString('id-ID')}</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
                 `;
