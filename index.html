@@ -3763,15 +3763,26 @@
                     </div>
                 </div>
 
+                <!-- Status & Info Sisa Sol PO Banner -->
+                <div id="sjSisaSolBanner" class="p-3 bg-orange-50/90 border border-orange-200 rounded-xl text-xs text-orange-950 hidden">
+                    <!-- Populated dynamically -->
+                </div>
+
                 <!-- Section Items Table -->
                 <div class="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                    <div class="bg-gray-100 px-4 py-2.5 flex items-center justify-between border-b border-gray-200">
+                    <div class="bg-gray-100 px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 border-b border-gray-200">
                         <span class="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
                             <i class="fa-solid fa-boxes-stacked text-blue-600"></i> Rincian Bahan yang Dikirim
                         </span>
-                        <div class="flex items-center gap-2">
-                            <button type="button" onclick="autoFillSJRemaingItems()" class="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold transition shadow-xs flex items-center gap-1">
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <button type="button" onclick="autoFillSJRemaingItems()" class="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold transition shadow-xs flex items-center gap-1" title="Tarik seluruh sisa bahan PO (Sol otomatis dipecah per size yang tersisa)">
                                 <i class="fa-solid fa-bolt"></i> Tarik Otomatis Sisa Bahan PO
+                            </button>
+                            <button type="button" onclick="mergeSJSoleRows()" class="px-2.5 py-1 bg-white hover:bg-purple-50 text-purple-700 border border-purple-300 rounded-lg text-xs font-bold transition shadow-xs flex items-center gap-1" title="Gabung baris sol ber-size menjadi 1 baris">
+                                <i class="fa-solid fa-object-group"></i> Gabung Sol
+                            </button>
+                            <button type="button" onclick="splitSJSoleRows()" class="px-2.5 py-1 bg-white hover:bg-orange-50 text-orange-700 border border-orange-300 rounded-lg text-xs font-bold transition shadow-xs flex items-center gap-1" title="Pecah baris sol menjadi rincian per size">
+                                <i class="fa-solid fa-object-ungroup"></i> Pecah per Size
                             </button>
                             <button type="button" onclick="addManualSJRow()" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow-xs flex items-center gap-1">
                                 <i class="fa-solid fa-plus"></i> Tambah Baris
@@ -16216,31 +16227,69 @@
             shipments.forEach(sj => {
                 const sItems = sj.items || [];
                 sItems.forEach(it => {
-                    const itBahan = (it.bahan || '').trim().toUpperCase();
+                    const itBahanRaw = (it.bahan || '').trim();
                     const itWarna = (it.warna || '-').trim().toUpperCase();
                     const itSatuan = (it.satuan || '').trim().toUpperCase();
                     const itCat = it.kategori || categorizeMaterial(it.bagian, it.bahan, it.satuan);
                     const itQty = parseFloat(it.qty) || 0;
 
                     if (itCat === 'SOLE_SIZED') {
-                        const key = `${itBahan}|${itWarna}`;
-                        if (soleMap[key]) {
-                            soleMap[key].sudahKirim += itQty;
-                            if (Array.isArray(it.sizes)) {
+                        // Bersihkan nama bahan jika berformat "SOLE TRABAS - Sz 22" atau "SOLE TRABAS (Sz 22)"
+                        let baseBahan = (it.parentBahan || itBahanRaw).replace(/\s*[\-\(]\s*(?:Sz|Size)\s*[0-9A-Za-z]+[\)]?/i, '').trim().toUpperCase();
+
+                        // Cari soleMap yang cocok (cocokkan bahan dan warna)
+                        let foundKey = Object.keys(soleMap).find(k => {
+                            const [bBahan, bWarna] = k.split('|');
+                            return bBahan === baseBahan && (bWarna === itWarna || bWarna === '-' || itWarna === '-');
+                        });
+                        if (!foundKey && soleMap[`${baseBahan}|${itWarna}`]) {
+                            foundKey = `${baseBahan}|${itWarna}`;
+                        }
+
+                        if (foundKey && soleMap[foundKey]) {
+                            soleMap[foundKey].sudahKirim += itQty;
+
+                            // Cek apakah item ini spesifik untuk size tertentu
+                            let szIdx = -1;
+                            if (it.sizeIndex !== undefined && it.sizeIndex !== null && it.sizeIndex >= 0) {
+                                szIdx = parseInt(it.sizeIndex);
+                            } else if (it.sizeLabel) {
+                                szIdx = sizeLabels.findIndex(l => String(l).trim().toUpperCase() === String(it.sizeLabel).trim().toUpperCase());
+                            } else {
+                                const str = `${itBahanRaw} ${it.ket || ''}`;
+                                const m = str.match(/(?:Sz|Size|\-)\s*([0-9A-Za-z]+)/i);
+                                if (m) {
+                                    szIdx = sizeLabels.findIndex(l => String(l).trim().toUpperCase() === m[1].toUpperCase());
+                                }
+                            }
+
+                            if (szIdx >= 0 && szIdx < maxSlot) {
+                                soleMap[foundKey].sizesKirim[szIdx] += itQty;
+                            } else if (Array.isArray(it.sizes)) {
                                 for (let i = 0; i < maxSlot; i++) {
-                                    soleMap[key].sizesKirim[i] += (parseInt(it.sizes[i]) || 0);
+                                    soleMap[foundKey].sizesKirim[i] += (parseInt(it.sizes[i]) || 0);
+                                }
+                            } else {
+                                // Fallback: alokasikan itQty ke size yang masih membutuhkan
+                                let remNeeded = itQty;
+                                for (let i = 0; i < maxSlot; i++) {
+                                    if (remNeeded <= 0) break;
+                                    const needed = Math.max(0, soleMap[foundKey].sizes[i] - soleMap[foundKey].sizesKirim[i]);
+                                    const take = Math.min(needed, remNeeded);
+                                    soleMap[foundKey].sizesKirim[i] += take;
+                                    remNeeded -= take;
                                 }
                             }
                         }
                     } else if (itCat === 'LEMBARAN') {
                         // Match by bahan & warna
-                        const found = Object.values(lembaranMap).find(x => x.bahan === itBahan && (x.warna === itWarna || x.warna === '-' || itWarna === '-'));
+                        const found = Object.values(lembaranMap).find(x => x.bahan === itBahanRaw.toUpperCase() && (x.warna === itWarna || x.warna === '-' || itWarna === '-'));
                         if (found) found.sudahKirim += itQty;
                     } else if (itCat === 'METERAN') {
-                        const found = Object.values(meteranMap).find(x => x.bahan === itBahan && (x.warna === itWarna || x.warna === '-' || itWarna === '-'));
+                        const found = Object.values(meteranMap).find(x => x.bahan === itBahanRaw.toUpperCase() && (x.warna === itWarna || x.warna === '-' || itWarna === '-'));
                         if (found) found.sudahKirim += itQty;
                     } else if (itCat !== 'ONGKOS_JASA') {
-                        const found = Object.values(aksesorisMap).find(x => x.bahan === itBahan && (x.warna === itWarna || x.warna === '-' || itWarna === '-'));
+                        const found = Object.values(aksesorisMap).find(x => x.bahan === itBahanRaw.toUpperCase() && (x.warna === itWarna || x.warna === '-' || itWarna === '-'));
                         if (found) found.sudahKirim += itQty;
                     }
                 });
@@ -16248,7 +16297,14 @@
 
             // Hitung sisa kebutuhan bahan baku dengan pembulatan ke atas 1 digit desimal (x,x)
             const soleList = Object.values(soleMap).map(item => {
-                item.sisaKirim = Math.max(0, item.totalPasang - item.sudahKirim);
+                item.sisaSizes = [];
+                for (let i = 0; i < maxSlot; i++) {
+                    const req = item.sizes[i] || 0;
+                    const sent = item.sizesKirim[i] || 0;
+                    item.sisaSizes[i] = Math.max(0, req - sent);
+                }
+                item.sudahKirim = item.sizesKirim.reduce((a, b) => a + b, 0);
+                item.sisaKirim = item.sisaSizes.reduce((a, b) => a + b, 0);
                 return item;
             });
             const meteranList = Object.values(meteranMap).map(item => {
@@ -16486,7 +16542,36 @@
                     bodySole.innerHTML = `<tr><td colspan="12" class="p-6 text-center text-gray-400">Tidak ada komponen sole / insole pasang (PSG) dalam BOM PO ini.</td></tr>`;
                 } else {
                     bodySole.innerHTML = data.soleSized.map((row, idx) => {
-                        let sizeTds = row.sizes.map(qty => `<td class="p-2 text-center text-gray-700 font-semibold bg-orange-50/20">${qty > 0 ? qty.toLocaleString('id-ID') : '-'}</td>`).join('');
+                        let sizeTds = row.sizes.map((req, i) => {
+                            if (req <= 0) return `<td class="p-2 text-center text-gray-300">-</td>`;
+                            const sent = (row.sizesKirim && row.sizesKirim[i]) || 0;
+                            const sisa = (row.sisaSizes && row.sisaSizes[i] !== undefined) ? row.sisaSizes[i] : Math.max(0, req - sent);
+
+                            if (sent <= 0) {
+                                return `
+                                    <td class="p-2 text-center bg-orange-50/20">
+                                        <div class="font-bold text-gray-800">${req}</div>
+                                        <div class="text-[9px] text-gray-400">Sisa: ${sisa}</div>
+                                    </td>
+                                `;
+                            } else if (sisa <= 0) {
+                                return `
+                                    <td class="p-2 text-center bg-emerald-50/50">
+                                        <div class="font-bold text-emerald-700 flex items-center justify-center gap-0.5">
+                                            <i class="fa-solid fa-check text-[10px]"></i> ${sent}
+                                        </div>
+                                        <div class="text-[9px] text-emerald-600 font-semibold">Lengkap</div>
+                                    </td>
+                                `;
+                            } else {
+                                return `
+                                    <td class="p-2 text-center bg-amber-50/60">
+                                        <div class="font-bold text-rose-600">${sisa}</div>
+                                        <div class="text-[9px] text-amber-800 font-semibold">Kirim ${sent}/${req}</div>
+                                    </td>
+                                `;
+                            }
+                        }).join('');
                         let statusBadge = getShipmentStatusBadge(row.totalPasang, row.sudahKirim);
 
                         return `
@@ -16755,6 +16840,7 @@
                 autoFillSJRemaingItems();
             }
 
+            updateSJModalSisaInfo(poSelect ? poSelect.value : '');
             renderSJFormItems();
 
             modal.classList.remove('hidden');
@@ -16774,7 +16860,78 @@
             if (makloonInp && activePO) {
                 makloonInp.value = activePO.makloon || '';
             }
+            updateSJModalSisaInfo(poId);
             autoFillSJRemaingItems();
+        }
+
+        function updateSJModalSisaInfo(poId) {
+            const poSelect = document.getElementById('sjPOSelect');
+            const targetPoId = poId || (poSelect ? poSelect.value : currentMakloonBahanPOId);
+            const banner = document.getElementById('sjSisaSolBanner');
+            if (!banner) return;
+
+            if (!targetPoId) {
+                banner.classList.add('hidden');
+                banner.innerHTML = '';
+                return;
+            }
+
+            const calc = calculatePORequiredMaterials(targetPoId);
+            if (!calc || !calc.soleSized || calc.soleSized.length === 0) {
+                banner.classList.add('hidden');
+                banner.innerHTML = '';
+                return;
+            }
+
+            let solSummaryHtml = calc.soleSized.map(row => {
+                const sizePills = (row.sisaSizes || []).map((sisaSz, idx) => {
+                    const szLabel = (calc.sizeLabels && calc.sizeLabels[idx]) || (idx + 1);
+                    const reqSz = (row.sizes && row.sizes[idx]) || 0;
+                    const sentSz = (row.sizesKirim && row.sizesKirim[idx]) || 0;
+                    if (reqSz === 0) return '';
+                    const isDone = sisaSz <= 0;
+                    const badgeClass = isDone 
+                        ? 'bg-emerald-100 text-emerald-800 border-emerald-300' 
+                        : (sentSz > 0 ? 'bg-amber-100 text-amber-900 border-amber-300' : 'bg-rose-100 text-rose-900 border-rose-300');
+                    return `
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-[11px] font-bold ${badgeClass}">
+                            <span>Sz ${szLabel}:</span>
+                            <span>${isDone ? '✓ Lengkap' : `Sisa ${sisaSz}`}</span>
+                            <span class="text-[9px] font-normal opacity-75">(${sentSz}/${reqSz})</span>
+                        </span>
+                    `;
+                }).filter(Boolean).join(' ');
+
+                return `
+                    <div class="bg-white/85 p-2.5 rounded-lg border border-orange-200 mb-2 last:mb-0 shadow-xs">
+                        <div class="flex flex-wrap items-center justify-between gap-1 mb-1.5">
+                            <div class="font-extrabold text-gray-800 text-xs">
+                                <i class="fa-solid fa-shoe-prints text-orange-600 mr-1"></i> ${row.bahan} <span class="text-gray-500 font-semibold">(${row.warna || '-'})</span>
+                            </div>
+                            <div class="text-[11px]">
+                                Total Kebutuhan: <b>${formatNumberTwoDec(row.kebutuhan)} PSG</b> • 
+                                Terkirim: <b class="text-blue-700">${formatNumberTwoDec(row.sudahKirim)} PSG</b> • 
+                                Sisa: <b class="${row.sisaKirim > 0 ? 'text-rose-600 font-black' : 'text-emerald-600'}">${formatNumberTwoDec(row.sisaKirim)} PSG</b>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5 items-center">
+                            <span class="text-[10px] uppercase font-bold text-gray-500 mr-1">Status Per Size:</span>
+                            ${sizePills}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            banner.innerHTML = `
+                <div class="flex items-center justify-between mb-2">
+                    <div class="font-black text-orange-950 uppercase tracking-wide flex items-center gap-1.5 text-xs">
+                        <i class="fa-solid fa-circle-info text-orange-600"></i> Status Kebutuhan & Sisa Sol PO (${targetPoId})
+                    </div>
+                    <span class="text-[11px] text-orange-800 font-medium">Bahan sol di bawah otomatis disesuaikan per ukuran</span>
+                </div>
+                ${solSummaryHtml}
+            `;
+            banner.classList.remove('hidden');
         }
 
         function autoFillSJRemaingItems() {
@@ -16787,18 +16944,39 @@
 
             tempSJItems = [];
 
-            // 1. Sole Sized
+            // 1. Sole Sized (Dipecah otomatis per ukuran yang masih ada sisa)
             calc.soleSized.forEach(row => {
-                if (row.sisaKirim > 0) {
+                const hasSizes = row.sisaSizes && row.sisaSizes.some(s => s > 0);
+                if (hasSizes) {
+                    row.sisaSizes.forEach((sisaSz, i) => {
+                        if (sisaSz > 0) {
+                            const szLabel = (calc.sizeLabels && calc.sizeLabels[i]) ? calc.sizeLabels[i] : `Sz ${i+1}`;
+                            const reqSz = (row.sizes && row.sizes[i]) || 0;
+                            const sentSz = (row.sizesKirim && row.sizesKirim[i]) || 0;
+                            tempSJItems.push({
+                                kategori: 'SOLE_SIZED',
+                                bagian: row.bagian,
+                                parentBahan: row.bahan,
+                                bahan: `${row.bahan} (Sz ${szLabel})`,
+                                warna: row.warna,
+                                qty: sisaSz,
+                                satuan: 'PSG',
+                                sizeLabel: String(szLabel),
+                                sizeIndex: i,
+                                ket: `Sisa ${sisaSz} Psg (PO: ${reqSz}, Terkirim: ${sentSz})`
+                            });
+                        }
+                    });
+                } else if (row.sisaKirim > 0) {
                     tempSJItems.push({
                         kategori: 'SOLE_SIZED',
                         bagian: row.bagian,
+                        parentBahan: row.bahan,
                         bahan: row.bahan,
                         warna: row.warna,
                         qty: row.sisaKirim,
                         satuan: 'PSG',
-                        sizes: [...row.sizes],
-                        ket: `Sol Ukuran ${calc.sizeLabels.filter(Boolean).join(',')}`
+                        ket: `Sisa ${row.sisaKirim} Psg`
                     });
                 }
             });
@@ -16849,7 +17027,116 @@
             });
 
             renderSJFormItems();
+            updateSJModalSisaInfo(poId);
             if (typeof showToast === 'function') showToast(`Tarik data otomatis: ${tempSJItems.length} item sisa dimuat!`, "info");
+        }
+
+        function splitSJSoleRows() {
+            const poSelect = document.getElementById('sjPOSelect');
+            const targetPoId = poSelect ? poSelect.value : currentMakloonBahanPOId;
+            const calc = targetPoId ? calculatePORequiredMaterials(targetPoId) : null;
+
+            let newItems = [];
+            let modified = false;
+
+            tempSJItems.forEach(item => {
+                if (item.kategori === 'SOLE_SIZED' && (!item.sizeLabel || item.sizeLabel === '')) {
+                    const cleanName = (item.parentBahan || item.bahan || '').replace(/\s*[\-\(]\s*(?:Sz|Size)\s*[0-9A-Za-z]+[\)]?/i, '').trim().toUpperCase();
+                    const matchSole = calc ? (calc.soleSized || []).find(s => s.bahan.trim().toUpperCase() === cleanName) : null;
+
+                    if (matchSole && matchSole.sisaSizes && matchSole.sisaSizes.some(s => s > 0)) {
+                        modified = true;
+                        matchSole.sisaSizes.forEach((sisaSz, i) => {
+                            if (sisaSz > 0) {
+                                const szLabel = (calc.sizeLabels && calc.sizeLabels[i]) ? calc.sizeLabels[i] : `Sz ${i+1}`;
+                                const reqSz = (matchSole.sizes && matchSole.sizes[i]) || 0;
+                                const sentSz = (matchSole.sizesKirim && matchSole.sizesKirim[i]) || 0;
+                                newItems.push({
+                                    kategori: 'SOLE_SIZED',
+                                    bagian: item.bagian || matchSole.bagian,
+                                    parentBahan: matchSole.bahan,
+                                    bahan: `${matchSole.bahan} (Sz ${szLabel})`,
+                                    warna: item.warna || matchSole.warna,
+                                    qty: sisaSz,
+                                    satuan: item.satuan || 'PSG',
+                                    sizeLabel: String(szLabel),
+                                    sizeIndex: i,
+                                    ket: `Sisa ${sisaSz} Psg (PO: ${reqSz}, Terkirim: ${sentSz})`
+                                });
+                            }
+                        });
+                    } else if (matchSole && matchSole.sizes && matchSole.sizes.some(s => s > 0)) {
+                        modified = true;
+                        matchSole.sizes.forEach((szQty, i) => {
+                            if (szQty > 0) {
+                                const szLabel = (calc.sizeLabels && calc.sizeLabels[i]) ? calc.sizeLabels[i] : `Sz ${i+1}`;
+                                newItems.push({
+                                    kategori: 'SOLE_SIZED',
+                                    bagian: item.bagian || matchSole.bagian,
+                                    parentBahan: matchSole.bahan,
+                                    bahan: `${matchSole.bahan} (Sz ${szLabel})`,
+                                    warna: item.warna || matchSole.warna,
+                                    qty: szQty,
+                                    satuan: item.satuan || 'PSG',
+                                    sizeLabel: String(szLabel),
+                                    sizeIndex: i,
+                                    ket: `PO: ${szQty} Psg`
+                                });
+                            }
+                        });
+                    } else {
+                        newItems.push(item);
+                    }
+                } else {
+                    newItems.push(item);
+                }
+            });
+
+            if (modified) {
+                tempSJItems = newItems;
+                renderSJFormItems();
+                if (typeof showToast === 'function') showToast("Item Sol berhasil dipecah berdasarkan ukuran!", "success");
+            } else {
+                if (typeof showToast === 'function') showToast("Tidak ada item sol gabungan yang perlu dipecah atau data PO tidak memiliki ukuran.", "info");
+            }
+        }
+
+        function mergeSJSoleRows() {
+            let soleGroups = {};
+            let otherItems = [];
+            let countSoleRows = 0;
+
+            tempSJItems.forEach(item => {
+                if (item.kategori === 'SOLE_SIZED') {
+                    countSoleRows++;
+                    const baseName = (item.parentBahan || item.bahan || '').replace(/\s*[\-\(]\s*(?:Sz|Size)\s*[0-9A-Za-z]+[\)]?/i, '').trim().toUpperCase();
+                    const key = `${baseName}|${(item.warna || '').trim().toUpperCase()}`;
+                    if (!soleGroups[key]) {
+                        soleGroups[key] = {
+                            kategori: 'SOLE_SIZED',
+                            bagian: item.bagian || 'SOLE',
+                            bahan: baseName,
+                            parentBahan: baseName,
+                            warna: item.warna || '',
+                            qty: 0,
+                            satuan: item.satuan || 'PSG',
+                            ket: 'Total Gabungan Semua Size'
+                        };
+                    }
+                    soleGroups[key].qty += (parseFloat(item.qty) || 0);
+                } else {
+                    otherItems.push(item);
+                }
+            });
+
+            const mergedSoles = Object.values(soleGroups);
+            if (countSoleRows > mergedSoles.length) {
+                tempSJItems = [...mergedSoles, ...otherItems];
+                renderSJFormItems();
+                if (typeof showToast === 'function') showToast(`Sol berhasil digabung menjadi ${mergedSoles.length} baris total!`, "success");
+            } else {
+                if (typeof showToast === 'function') showToast("Item Sol sudah dalam bentuk gabungan atau tidak ada sol yang ber-size.", "info");
+            }
         }
 
         function addManualSJRow(initData) {
@@ -16880,6 +17167,9 @@
             }
 
             body.innerHTML = tempSJItems.map((item, idx) => {
+                const isSole = item.kategori === 'SOLE_SIZED';
+                const szBadge = item.sizeLabel ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-black bg-blue-100 text-blue-800 border border-blue-200">Sz ${item.sizeLabel}</span>` : '';
+
                 return `
                     <tr class="hover:bg-gray-50 transition">
                         <td class="p-2 text-center text-gray-400 font-medium">${idx + 1}</td>
@@ -16892,7 +17182,10 @@
                             </select>
                         </td>
                         <td class="p-2">
-                            <input type="text" value="${item.bahan || ''}" onchange="tempSJItems[${idx}].bahan = this.value.toUpperCase();" placeholder="Nama Bahan..." class="w-full bg-white border border-gray-200 rounded px-2 py-1 text-xs font-bold uppercase">
+                            <div class="flex items-center gap-1">
+                                <input type="text" value="${item.bahan || ''}" onchange="tempSJItems[${idx}].bahan = this.value.toUpperCase();" placeholder="Nama Bahan..." class="w-full bg-white border border-gray-200 rounded px-2 py-1 text-xs font-bold uppercase">
+                                ${szBadge}
+                            </div>
                         </td>
                         <td class="p-2">
                             <input type="text" value="${item.warna || ''}" onchange="tempSJItems[${idx}].warna = this.value.toUpperCase();" placeholder="Warna..." class="w-full bg-white border border-gray-200 rounded px-2 py-1 text-xs uppercase">
@@ -17071,17 +17364,20 @@
             if (title) title.innerText = `Surat Jalan: ${sj.id}`;
             if (subTitle) subTitle.innerText = `Makloon: ${sj.makloon} • Tanggal: ${sj.tanggal || '-'} • Reff PO: ${sj.noPO}`;
 
-            let itemsRows = (sj.items || []).map((it, idx) => `
+            let itemsRows = (sj.items || []).map((it, idx) => {
+                const szBadge = it.sizeLabel ? `<span class="ml-1.5 px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-extrabold text-[10px] border border-blue-200">Sz ${it.sizeLabel}</span>` : '';
+                return `
                 <tr class="hover:bg-gray-50">
                     <td class="p-2 text-center text-gray-400">${idx + 1}</td>
                     <td class="p-2 text-gray-500">${it.kategori || '-'}</td>
-                    <td class="p-2 font-bold text-gray-800">${it.bahan}</td>
+                    <td class="p-2 font-bold text-gray-800">${it.bahan} ${szBadge}</td>
                     <td class="p-2 font-semibold text-gray-700">${it.warna || '-'}</td>
                     <td class="p-2 text-right font-extrabold text-blue-700">${formatNumberTwoDec(it.qty)}</td>
                     <td class="p-2 text-center font-bold text-gray-600">${it.satuan || 'PSG'}</td>
                     <td class="p-2 text-gray-500 text-xs">${it.ket || '-'}</td>
                 </tr>
-            `).join('');
+            `;
+            }).join('');
 
             if (content) {
                 content.innerHTML = `
@@ -17169,16 +17465,19 @@
             const sj = (db_makloon_kirim || []).find(x => x.id === sjId);
             if (!sj) return;
 
-            let rowsHtml = (sj.items || []).map((it, idx) => `
+            let rowsHtml = (sj.items || []).map((it, idx) => {
+                const szBadge = it.sizeLabel ? `<span style="display:inline-block; margin-left:6px; padding:1px 6px; background:#e0e7ff; color:#1e3a8a; border:1px solid #c7d2fe; border-radius:4px; font-size:10px; font-weight:bold;">Sz ${it.sizeLabel}</span>` : '';
+                return `
                 <tr>
                     <td style="padding:6px; border:1px solid #333; text-align:center;">${idx + 1}</td>
-                    <td style="padding:6px; border:1px solid #333; font-weight:bold;">${it.bahan}</td>
+                    <td style="padding:6px; border:1px solid #333; font-weight:bold;">${it.bahan} ${szBadge}</td>
                     <td style="padding:6px; border:1px solid #333; text-align:center;">${it.warna || '-'}</td>
                     <td style="padding:6px; border:1px solid #333; text-align:right; font-weight:bold; font-size:12px;">${formatNumberTwoDec(it.qty)}</td>
                     <td style="padding:6px; border:1px solid #333; text-align:center; font-weight:bold;">${it.satuan || 'PSG'}</td>
                     <td style="padding:6px; border:1px solid #333;">${it.ket || '-'}</td>
                 </tr>
-            `).join('');
+            `;
+            }).join('');
 
             const printContent = `
                 <!DOCTYPE html>
