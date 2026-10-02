@@ -1174,6 +1174,122 @@
                     </div>
                 </div>
 
+                <!-- MODAL PENGATURAN PEMBAGIAN SPK & KUPON -->
+                <div id="modal-spk-config" class="fixed inset-0 z-[10000] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+                    <div class="fixed inset-0 bg-black/60 backdrop-blur-xs" onclick="closeSPKConfigModal()"></div>
+                    <div class="bg-white rounded-2xl shadow-2xl z-10 w-11/12 max-w-lg transform scale-95 transition-transform duration-300 flex flex-col overflow-hidden">
+                        <!-- Header -->
+                        <div class="p-4 border-b border-gray-100 bg-gradient-to-r from-purple-700 to-indigo-700 text-white flex justify-between items-center">
+                            <div>
+                                <h3 class="font-bold text-base flex items-center gap-2">
+                                    <i class="fa-solid fa-file-contract"></i> Pengaturan Cetak SPK Pabrik
+                                </h3>
+                                <div class="text-[11px] text-purple-200 mt-0.5">
+                                    Atur cara pembagian kupon SPK & seri ukuran
+                                </div>
+                            </div>
+                            <button onclick="closeSPKConfigModal()" class="text-purple-200 hover:text-white p-1">
+                                <i class="fa-solid fa-xmark text-lg"></i>
+                            </button>
+                        </div>
+
+                        <!-- Body -->
+                        <div class="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
+                            <!-- Info Singkat PO -->
+                            <div class="bg-purple-50/70 p-3 rounded-xl border border-purple-100 text-xs flex justify-between items-center">
+                                <div>
+                                    <div class="text-gray-500 text-[10px] uppercase font-bold">Nomor PO</div>
+                                    <div class="font-extrabold text-purple-900" id="spkCfgPoId">-</div>
+                                </div>
+                                <div>
+                                    <div class="text-gray-500 text-[10px] uppercase font-bold">Total Pasang</div>
+                                    <div class="font-extrabold text-purple-900" id="spkCfgTotalPairs">0 Psg</div>
+                                </div>
+                                <div>
+                                    <div class="text-gray-500 text-[10px] uppercase font-bold">Jumlah Size</div>
+                                    <div class="font-extrabold text-purple-900" id="spkCfgActiveCount">0 Size</div>
+                                </div>
+                            </div>
+
+                            <div class="text-xs font-bold text-gray-700 uppercase tracking-wider">Pilih Metode Pembagian Kupon SPK:</div>
+
+                            <!-- Opsi 1: Mode Seri Campur (Proporsional) -->
+                            <label class="block cursor-pointer p-3.5 border-2 rounded-xl transition bg-purple-50/30 border-purple-600 shadow-xs relative" id="cardModeSeri">
+                                <div class="flex items-start gap-3">
+                                    <input type="radio" name="spkSplitMode" id="modeSplitSeri" value="SERI" checked onchange="onSelectSPKSplitMode('SERI')" class="mt-1 text-purple-600 focus:ring-purple-500">
+                                    <div class="flex-1">
+                                        <div class="flex items-center justify-between">
+                                            <span class="font-bold text-sm text-gray-900">1. Mode Seri Campur (Rekomendasi)</span>
+                                            <span class="text-[10px] bg-purple-100 text-purple-800 font-bold px-2 py-0.5 rounded-full">Standar Pabrik</span>
+                                        </div>
+                                        <p class="text-xs text-gray-600 mt-1 leading-relaxed">
+                                            Dibuat seri rata per ukuran terlebih dahulu. Sisa ukuran yang tidak genap diserikan otomatis digabung ke kupon sisa hingga sekitar 16–20 pasang sampai habis tuntas.
+                                        </p>
+                                        
+                                        <!-- Sub Settings Opsi 1 -->
+                                        <div class="mt-3 pt-3 border-t border-purple-100 grid grid-cols-2 gap-3" id="subSettingsSeri">
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-gray-700 mb-1">Maks. Seri Rata / Size</label>
+                                                <div class="flex items-center gap-1.5">
+                                                    <input type="number" id="spkCfgSeriQty" min="1" max="10" value="2" oninput="updateSPKSeriNote()" class="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs font-bold text-center bg-white">
+                                                    <span class="text-xs text-gray-500 font-medium">Psg</span>
+                                                </div>
+                                                <div class="text-[10px] text-gray-500 mt-0.5" id="spkCfgSeriNote">8 size x 2 = 16 psg/seri</div>
+                                            </div>
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-gray-700 mb-1">Target Kupon Sisa</label>
+                                                <div class="flex items-center gap-1.5">
+                                                    <input type="number" id="spkCfgTargetKupon" min="5" max="40" value="16" class="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs font-bold text-center bg-white">
+                                                    <span class="text-xs text-gray-500 font-medium">Psg</span>
+                                                </div>
+                                                <div class="text-[10px] text-gray-500 mt-0.5">Kapasitas kupon campur</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <!-- Opsi 2: Mode Single Size (1 SPK 1 Nomor Ukuran) -->
+                            <label class="block cursor-pointer p-3.5 border-2 rounded-xl transition bg-white border-gray-200 relative" id="cardModeSingle">
+                                <div class="flex items-start gap-3">
+                                    <input type="radio" name="spkSplitMode" id="modeSplitSingle" value="SINGLE" onchange="onSelectSPKSplitMode('SINGLE')" class="mt-1 text-purple-600 focus:ring-purple-500">
+                                    <div class="flex-1">
+                                        <div class="flex items-center justify-between">
+                                            <span class="font-bold text-sm text-gray-900">2. Mode 1 SPK 1 Nomor Ukuran</span>
+                                            <span class="text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full">Single Size</span>
+                                        </div>
+                                        <p class="text-xs text-gray-600 mt-1 leading-relaxed">
+                                            Tiap kupon SPK khusus berisi 1 nomor ukuran tertentu (misal: 1 kupon isi 20 pasang Size 38). Sangat pas jika jumlah tiap ukuran tidak rata / produksi cetakan per nomor.
+                                        </p>
+
+                                        <!-- Sub Settings Opsi 2 -->
+                                        <div class="mt-3 pt-3 border-t border-gray-100 hidden" id="subSettingsSingle">
+                                            <div class="max-w-[200px]">
+                                                <label class="block text-[11px] font-bold text-gray-700 mb-1">Kapasitas per SPK (1 Nomor)</label>
+                                                <div class="flex items-center gap-1.5">
+                                                    <input type="number" id="spkCfgSingleSizeQty" min="5" max="50" value="20" class="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs font-bold text-center bg-white">
+                                                    <span class="text-xs text-gray-500 font-medium">Psg</span>
+                                                </div>
+                                                <div class="text-[10px] text-gray-500 mt-0.5">Contoh: 20 psg per SPK</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-2.5">
+                            <button type="button" onclick="closeSPKConfigModal()" class="px-4 py-2 border border-gray-300 rounded-xl text-xs font-semibold text-gray-700 hover:bg-gray-100 transition">
+                                Batal
+                            </button>
+                            <button type="button" onclick="applySPKConfigAndOpen()" class="px-5 py-2 bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-2">
+                                <i class="fa-solid fa-eye"></i> Generate & Lihat SPK
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- MODAL SPK KHUSUS -->
                 <div id="modal-spk-detail" class="fixed inset-0 z-[9999] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
                     <!-- Backdrop -->
@@ -1187,9 +1303,14 @@
                             <button onclick="closeSPKDetail()" class="text-gray-600 hover:text-purple-700 font-semibold px-3 py-1.5 bg-white border border-gray-200 rounded-lg transition flex items-center shadow-sm text-xs md:text-sm">
                                 <i class="fa-solid fa-arrow-left mr-2"></i> Kembali
                             </button>
-                            <button class="bg-purple-700 hover:bg-purple-900 text-white px-4 py-1.5 rounded-lg shadow-sm text-xs md:text-sm font-bold transition flex items-center" onclick="printSPKAction()">
-                                <i class="fa-solid fa-print mr-2"></i> Cetak SPK Pabrik
-                            </button>
+                            <div class="flex items-center gap-2">
+                                <button type="button" onclick="openSPKConfigModal(currentSPKId)" class="bg-white hover:bg-purple-100 text-purple-700 border border-purple-300 px-3 py-1.5 rounded-lg shadow-sm text-xs md:text-sm font-bold transition flex items-center">
+                                    <i class="fa-solid fa-sliders mr-2"></i> Ubah Pembagian SPK
+                                </button>
+                                <button class="bg-purple-700 hover:bg-purple-900 text-white px-4 py-1.5 rounded-lg shadow-sm text-xs md:text-sm font-bold transition flex items-center" onclick="printSPKAction()">
+                                    <i class="fa-solid fa-print mr-2"></i> Cetak SPK Pabrik
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Area Kertas Cetak -->
@@ -3161,8 +3282,8 @@
                                         <i class="fa-solid fa-box-open"></i>
                                     </span>
                                     <div>
-                                        <h3 class="text-sm font-bold text-gray-800">3. Aksesoris, Kemasan & Pendukung (PCS / SET / DUS / LEM)</h3>
-                                        <p class="text-[11px] text-gray-500">Ring buckle, kancing, boneka/ornamen, lem, hangtag, dus sepatu Davclar.</p>
+                                        <h3 class="text-sm font-bold text-gray-800">3. Aksesoris, Kemasan, Lem & Bahan Pendukung (PCS / SET / DUS / LEM / KG)</h3>
+                                        <p class="text-[11px] text-gray-500">Ring buckle, kancing, boneka/ornamen, lem, hangtag, dus sepatu Davclar, bahan kiloan (KG).</p>
                                     </div>
                                 </div>
                                 <span id="badgeCountAksesoris" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">0 Item</span>
@@ -5659,7 +5780,7 @@
                         <td class="flex flex-col md:flex-row !py-1.5 px-2 md:px-4 text-center space-x-1 whitespace-nowrap align-middle">
                             <button onclick="viewPODetail('${po.id}')" title="Lihat/Cetak" class="text-blue-600 hover:text-white hover:bg-blue-600 bg-blue-50 px-2 py-1.5 rounded transition"><i class="fa-solid fa-eye text-xs"></i></button>
                             <button onclick="editPO('${po.id}')" title="Edit PO" class="text-amber-500 hover:text-white hover:bg-amber-500 bg-amber-50 px-2 py-1.5 rounded transition"><i class="fa-solid fa-pen text-xs"></i></button>
-                            <button onclick="viewSPKDetail('${po.id}', 'SPK')" title="Print SPK" class="text-purple-600 hover:text-white hover:bg-purple-600 bg-purple-50 px-2 py-1.5 rounded transition"><i class="fa-solid fa-file-contract text-xs"></i></button>
+                            <button onclick="openSPKConfigModal('${po.id}')" title="Print SPK" class="text-purple-600 hover:text-white hover:bg-purple-600 bg-purple-50 px-2 py-1.5 rounded transition"><i class="fa-solid fa-file-contract text-xs"></i></button>
                             <button onclick="sendPOToBarcode('${po.id}')" title="Print Barcode" class="text-emerald-600 hover:text-white hover:bg-emerald-600 bg-emerald-50 px-2 py-1.5 rounded transition"><i class="fa-solid fa-barcode text-xs"></i></button>
                             <button onclick="deletePO('${po.id}')" title="Hapus PO" class="text-red-500 hover:bg-red-100 px-2 py-1.5 rounded transition"><i class="fa-solid fa-trash text-xs"></i></button>
                         </td>
@@ -6248,9 +6369,165 @@
         }
 
         let currentSPKId = "";
+        let currentConfigPOId = "";
+        let currentSPKConfig = null;
+
+        // Buka Modal Pengaturan Cetak & Pembagian SPK
+        function openSPKConfigModal(poId) {
+            const po = db_po.find(p => p.id === poId);
+            if (!po) return;
+
+            currentConfigPOId = poId;
+
+            // Hitung Size Aktif & Total Pasang PO
+            let rawLabels = po.sizeLabels || [];
+            let activeSizes = [];
+            for (let i = 0; i < 8; i++) {
+                let lbl = rawLabels[i] ? String(rawLabels[i]).trim() : '';
+                let hasQty = (po.items || []).some(it => (parseInt(it[`s${i+1}`]) || 0) > 0);
+                if (lbl !== '' || hasQty) {
+                    activeSizes.push({ index: i + 1, label: lbl || `S${i+1}` });
+                }
+            }
+            if (activeSizes.length === 0) {
+                activeSizes = [
+                    { index: 1, label: '31' }, { index: 2, label: '32' },
+                    { index: 3, label: '33' }, { index: 4, label: '34' },
+                    { index: 5, label: '35' }
+                ];
+            }
+
+            const activeCount = activeSizes.length;
+            let totalPairs = (po.items || []).reduce((sum, it) => {
+                let sSum = activeSizes.reduce((s, sz) => s + (parseInt(it[`s${sz.index}`]) || 0), 0);
+                return sum + (sSum > 0 ? sSum : (parseInt(it.total) || 0));
+            }, 0);
+
+            // Update UI Ringkasan PO
+            const elPoId = document.getElementById('spkCfgPoId');
+            const elTotal = document.getElementById('spkCfgTotalPairs');
+            const elCount = document.getElementById('spkCfgActiveCount');
+            if (elPoId) elPoId.innerText = po.id;
+            if (elTotal) elTotal.innerText = `${totalPairs.toLocaleString('id-ID')} Psg`;
+            if (elCount) elCount.innerText = `${activeCount} Size`;
+
+            // Default pengaturan: Jika > 6 size => 2 psg/size (16 psg), jika <= 6 size => 4 psg/size (20-24 psg)
+            const inputSeriQty = document.getElementById('spkCfgSeriQty');
+            const inputTargetKupon = document.getElementById('spkCfgTargetKupon');
+            const inputSingleQty = document.getElementById('spkCfgSingleSizeQty');
+
+            if (currentSPKConfig && currentSPKConfig.poId === poId) {
+                if (inputSeriQty) inputSeriQty.value = currentSPKConfig.seriQty || (activeCount > 6 ? 2 : 4);
+                if (inputTargetKupon) inputTargetKupon.value = currentSPKConfig.targetCapacity || (activeCount > 6 ? 16 : (activeCount * 4));
+                if (inputSingleQty) inputSingleQty.value = currentSPKConfig.singleSizeQty || 20;
+                onSelectSPKSplitMode(currentSPKConfig.mode || 'SERI');
+            } else {
+                const defaultSeriQty = activeCount > 6 ? 2 : 4;
+                const defaultTargetCap = activeCount > 6 ? 16 : (activeCount * 4);
+                if (inputSeriQty) inputSeriQty.value = defaultSeriQty;
+                if (inputTargetKupon) inputTargetKupon.value = defaultTargetCap;
+                if (inputSingleQty) inputSingleQty.value = 20;
+                onSelectSPKSplitMode('SERI');
+            }
+
+            updateSPKSeriNote();
+
+            const modal = document.getElementById('modal-spk-config');
+            if (modal) {
+                modal.classList.remove('hidden');
+                setTimeout(() => modal.classList.remove('opacity-0'), 10);
+            }
+        }
+
+        function closeSPKConfigModal() {
+            const modal = document.getElementById('modal-spk-config');
+            if (modal) {
+                modal.classList.add('opacity-0');
+                setTimeout(() => modal.classList.add('hidden'), 300);
+            }
+        }
+
+        function onSelectSPKSplitMode(mode) {
+            const radioSeri = document.getElementById('modeSplitSeri');
+            const radioSingle = document.getElementById('modeSplitSingle');
+            const cardSeri = document.getElementById('cardModeSeri');
+            const cardSingle = document.getElementById('cardModeSingle');
+            const subSeri = document.getElementById('subSettingsSeri');
+            const subSingle = document.getElementById('subSettingsSingle');
+
+            if (mode === 'SINGLE') {
+                if (radioSingle) radioSingle.checked = true;
+                if (cardSingle) {
+                    cardSingle.classList.add('bg-purple-50/30', 'border-purple-600', 'shadow-xs');
+                    cardSingle.classList.remove('border-gray-200');
+                }
+                if (cardSeri) {
+                    cardSeri.classList.remove('bg-purple-50/30', 'border-purple-600', 'shadow-xs');
+                    cardSeri.classList.add('border-gray-200');
+                }
+                if (subSingle) subSingle.classList.remove('hidden');
+                if (subSeri) subSeri.classList.add('hidden');
+            } else {
+                if (radioSeri) radioSeri.checked = true;
+                if (cardSeri) {
+                    cardSeri.classList.add('bg-purple-50/30', 'border-purple-600', 'shadow-xs');
+                    cardSeri.classList.remove('border-gray-200');
+                }
+                if (cardSingle) {
+                    cardSingle.classList.remove('bg-purple-50/30', 'border-purple-600', 'shadow-xs');
+                    cardSingle.classList.add('border-gray-200');
+                }
+                if (subSeri) subSeri.classList.remove('hidden');
+                if (subSingle) subSingle.classList.add('hidden');
+            }
+        }
+
+        function updateSPKSeriNote() {
+            const qtyInput = document.getElementById('spkCfgSeriQty');
+            const targetInput = document.getElementById('spkCfgTargetKupon');
+            const noteEl = document.getElementById('spkCfgSeriNote');
+            if (!qtyInput || !noteEl) return;
+
+            const seriQty = parseInt(qtyInput.value) || 2;
+            const po = db_po.find(p => p.id === currentConfigPOId);
+            let activeCount = 8;
+            if (po) {
+                let rawLabels = po.sizeLabels || [];
+                let count = 0;
+                for (let i = 0; i < 8; i++) {
+                    let lbl = rawLabels[i] ? String(rawLabels[i]).trim() : '';
+                    let hasQty = (po.items || []).some(it => (parseInt(it[`s${i+1}`]) || 0) > 0);
+                    if (lbl !== '' || hasQty) count++;
+                }
+                if (count > 0) activeCount = count;
+            }
+            const totalPerSeri = activeCount * seriQty;
+            noteEl.innerText = `${activeCount} size x ${seriQty} = ${totalPerSeri} psg/seri`;
+            if (targetInput && (!targetInput.value || parseInt(targetInput.value) < totalPerSeri)) {
+                targetInput.value = totalPerSeri;
+            }
+        }
+
+        function applySPKConfigAndOpen() {
+            const mode = document.querySelector('input[name="spkSplitMode"]:checked')?.value || 'SERI';
+            const seriQty = parseInt(document.getElementById('spkCfgSeriQty')?.value) || 2;
+            const targetCapacity = parseInt(document.getElementById('spkCfgTargetKupon')?.value) || 16;
+            const singleSizeQty = parseInt(document.getElementById('spkCfgSingleSizeQty')?.value) || 20;
+
+            currentSPKConfig = {
+                poId: currentConfigPOId,
+                mode,
+                seriQty,
+                targetCapacity,
+                singleSizeQty
+            };
+
+            closeSPKConfigModal();
+            viewSPKDetail(currentConfigPOId, currentSPKConfig);
+        }
 
         // 1. Fungsi Buka Modal SPK & Generate Lembar SPK Control + Kupon
-        function viewSPKDetail(poId) {
+        function viewSPKDetail(poId, config) {
             const po = db_po.find(p => p.id === poId);
             if(!po) return;
 
@@ -6285,10 +6562,24 @@
             }
 
             const activeCount = activeSizes.length;
-            // 1 Seri = 10 pcs (untuk 5 size @ 2 pcs) atau 12 pcs (untuk 6 size @ 2 pcs)
-            // 1 Kupon SPK Standar = 2 Seri (20 pcs untuk 5 size @ 4 pcs, 24 pcs untuk 6 size @ 4 pcs)
-            const fullQtyPerSize = 4;
-            const kuponCapacity = activeCount * fullQtyPerSize;
+
+            // Default config jika belum diset
+            if (!config) {
+                if (currentSPKConfig && currentSPKConfig.poId === poId) {
+                    config = currentSPKConfig;
+                } else {
+                    const defaultSeriQty = activeCount > 6 ? 2 : 4;
+                    const defaultTargetCap = activeCount > 6 ? 16 : (activeCount * 4);
+                    config = {
+                        poId: poId,
+                        mode: 'SERI',
+                        seriQty: defaultSeriQty,
+                        targetCapacity: defaultTargetCap,
+                        singleSizeQty: 20
+                    };
+                    currentSPKConfig = config;
+                }
+            }
 
             // 2. Generate Daftar Kupon SPK dari po.items
             let spkList = [];
@@ -6315,54 +6606,145 @@
                 }
                 totalAllPcs += itemTotal;
 
-                // Loop pembagian kupon: jika sisa > kuponCapacity (misal > 20), buat kupon penuh 4 per size (20pcs).
-                // Jika sisa <= kuponCapacity (misal 10pcs), buat 1 kupon sisa (minimum 10pcs).
-                let loopSafety = 0;
-                while (loopSafety++ < 1000) {
-                    let currentRemTotal = activeSizes.reduce((sum, s) => sum + (remSizes[s.index] || 0), 0);
-                    if (currentRemTotal <= 0) break;
+                const mode = config.mode || 'SERI';
 
-                    let kSizes = {};
-                    let kTotal = 0;
-
-                    if (currentRemTotal > kuponCapacity) {
-                        activeSizes.forEach(s => {
-                            let take = Math.min(remSizes[s.index] || 0, fullQtyPerSize);
+                if (mode === 'SINGLE') {
+                    // MODE 1 SPK 1 NOMOR UKURAN (Single Size)
+                    const singleTarget = parseInt(config.singleSizeQty) || 20;
+                    activeSizes.forEach(s => {
+                        let qty = remSizes[s.index] || 0;
+                        while (qty > 0) {
+                            let take = Math.min(qty, singleTarget);
+                            let kSizes = {};
                             kSizes[`s${s.index}`] = take;
-                            remSizes[s.index] -= take;
-                            kTotal += take;
-                        });
-                        if (kTotal === 0) {
-                            activeSizes.forEach(s => {
-                                let take = remSizes[s.index] || 0;
-                                kSizes[`s${s.index}`] = take;
-                                remSizes[s.index] = 0;
-                                kTotal += take;
+                            qty -= take;
+                            remSizes[s.index] = qty;
+
+                            spkList.push({
+                                no: globalNo++,
+                                merk: item.merk || po.makloon || '-',
+                                artikel: item.artikel || item.namaBarang || '-',
+                                warna: item.warna || '-',
+                                sole: item.sole || '',
+                                insole: item.insole || '',
+                                poId: po.id,
+                                sizes: kSizes,
+                                total: take
                             });
                         }
-                    } else {
-                        // Kupon sisa terakhir (misal 10 pcs @ 2 per size, atau <= 20 pcs)
-                        activeSizes.forEach(s => {
-                            let take = remSizes[s.index] || 0;
-                            kSizes[`s${s.index}`] = take;
-                            remSizes[s.index] = 0;
-                            kTotal += take;
-                        });
+                    });
+                } else {
+                    // MODE SERI CAMPUR (Proporsional Seri Rata + Kupon Sisa)
+                    const seriQty = parseInt(config.seriQty) || (activeCount > 6 ? 2 : 4);
+                    const targetCapacity = parseInt(config.targetCapacity) || (activeCount > 6 ? 16 : 20);
+
+                    // Tahap 1: Ekstraksi Seri Rata Lengkap untuk size yang memiliki kuantitas
+                    let itemActiveSizes = activeSizes.filter(s => (remSizes[s.index] || 0) > 0);
+                    if (itemActiveSizes.length > 0) {
+                        let fullSeriCount = Math.min(...itemActiveSizes.map(s => Math.floor(remSizes[s.index] / seriQty)));
+                        for (let f = 0; f < fullSeriCount; f++) {
+                            let kSizes = {};
+                            let kTotal = 0;
+                            itemActiveSizes.forEach(s => {
+                                kSizes[`s${s.index}`] = seriQty;
+                                remSizes[s.index] -= seriQty;
+                                kTotal += seriQty;
+                            });
+                            spkList.push({
+                                no: globalNo++,
+                                merk: item.merk || po.makloon || '-',
+                                artikel: item.artikel || item.namaBarang || '-',
+                                warna: item.warna || '-',
+                                sole: item.sole || '',
+                                insole: item.insole || '',
+                                poId: po.id,
+                                sizes: kSizes,
+                                total: kTotal
+                            });
+                        }
                     }
 
-                    if (kTotal <= 0) break;
+                    // Tahap 2: Pembagian Kupon Sisa Campur
+                    let loopSafety = 0;
+                    while (loopSafety++ < 2000) {
+                        let currentRemTotal = activeSizes.reduce((sum, s) => sum + (remSizes[s.index] || 0), 0);
+                        if (currentRemTotal <= 0) break;
 
-                    spkList.push({
-                        no: globalNo++,
-                        merk: item.merk || po.makloon || '-',
-                        artikel: item.artikel || item.namaBarang || '-',
-                        warna: item.warna || '-',
-                        sole: item.sole || '',
-                        insole: item.insole || '',
-                        poId: po.id,
-                        sizes: kSizes,
-                        total: kTotal
-                    });
+                        let kSizes = {};
+                        let kTotal = 0;
+
+                        if (currentRemTotal <= targetCapacity) {
+                            // Seluruh sisa muat dalam 1 kupon sisa
+                            activeSizes.forEach(s => {
+                                let take = remSizes[s.index] || 0;
+                                if (take > 0) {
+                                    kSizes[`s${s.index}`] = take;
+                                    remSizes[s.index] = 0;
+                                    kTotal += take;
+                                }
+                            });
+                        } else {
+                            // Ambil hingga targetCapacity dari size yang bersisa terbanyak
+                            let needed = targetCapacity;
+                            let sizesWithStock = activeSizes.filter(s => (remSizes[s.index] || 0) > 0)
+                                .sort((a, b) => (remSizes[b.index] || 0) - (remSizes[a.index] || 0));
+
+                            let stepTake = Math.max(1, seriQty);
+                            let innerSafety = 0;
+                            while (needed > 0 && innerSafety++ < 500) {
+                                let tookInRound = false;
+                                for (let s of sizesWithStock) {
+                                    if (needed <= 0) break;
+                                    let alreadyInKupon = kSizes[`s${s.index}`] || 0;
+                                    let available = (remSizes[s.index] || 0) - alreadyInKupon;
+                                    if (available > 0) {
+                                        let take = Math.min(available, needed, stepTake);
+                                        kSizes[`s${s.index}`] = alreadyInKupon + take;
+                                        needed -= take;
+                                        kTotal += take;
+                                        tookInRound = true;
+                                    }
+                                }
+                                if (!tookInRound) {
+                                    // Ambil 1 per 1 jika stepTake > needed
+                                    for (let s of sizesWithStock) {
+                                        if (needed <= 0) break;
+                                        let alreadyInKupon = kSizes[`s${s.index}`] || 0;
+                                        let available = (remSizes[s.index] || 0) - alreadyInKupon;
+                                        if (available > 0) {
+                                            kSizes[`s${s.index}`] = alreadyInKupon + 1;
+                                            needed -= 1;
+                                            kTotal += 1;
+                                            tookInRound = true;
+                                        }
+                                    }
+                                    if (!tookInRound) break;
+                                }
+                            }
+
+                            // Kurangi dari remSizes
+                            activeSizes.forEach(s => {
+                                let taken = kSizes[`s${s.index}`] || 0;
+                                if (taken > 0) {
+                                    remSizes[s.index] -= taken;
+                                }
+                            });
+                        }
+
+                        if (kTotal <= 0) break;
+
+                        spkList.push({
+                            no: globalNo++,
+                            merk: item.merk || po.makloon || '-',
+                            artikel: item.artikel || item.namaBarang || '-',
+                            warna: item.warna || '-',
+                            sole: item.sole || '',
+                            insole: item.insole || '',
+                            poId: po.id,
+                            sizes: kSizes,
+                            total: kTotal
+                        });
+                    }
                 }
             });
 
@@ -14835,6 +15217,7 @@
                             <option value="LEM" ${row.satuan === 'LEM' ? 'selected' : ''}>LEM</option>
                             <option value="ROLL" ${row.satuan === 'ROLL' ? 'selected' : ''}>ROLL</option>
                             <option value="LBR" ${row.satuan === 'LBR' ? 'selected' : ''}>LBR</option>
+                            <option value="KG" ${row.satuan === 'KG' ? 'selected' : ''}>KG</option>
                         </select>
                     </td>
                     
@@ -16438,7 +16821,7 @@
                             <select onchange="tempSJItems[${idx}].kategori = this.value; renderSJFormItems();" class="w-full bg-white border border-gray-200 rounded px-2 py-1 text-xs font-semibold">
                                 <option value="SOLE_SIZED" ${item.kategori === 'SOLE_SIZED' ? 'selected' : ''}>Sol / Insole (PSG)</option>
                                 <option value="METERAN" ${item.kategori === 'METERAN' ? 'selected' : ''}>Meteran (M/YARD)</option>
-                                <option value="AKSESORIS" ${item.kategori === 'AKSESORIS' ? 'selected' : ''}>Aksesoris/Dus (PCS)</option>
+                                <option value="AKSESORIS" ${item.kategori === 'AKSESORIS' ? 'selected' : ''}>Aksesoris/Dus/KG (PCS/KG)</option>
                                 <option value="LEMBARAN" ${item.kategori === 'LEMBARAN' ? 'selected' : ''}>Lembaran (LBR)</option>
                             </select>
                         </td>
