@@ -3622,7 +3622,7 @@
                                         Buku Hutang & Pelunasan Makloon
                                         <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">AP Makloon</span>
                                     </h2>
-                                    <p class="text-xs text-gray-500">Hitung pelunasan makloon: (Total PO &times; Tarif) &minus; Bahan Baku Kirim &minus; Kasbon &minus; Bayar.</p>
+                                    <p class="text-xs text-gray-500">Hitung pelunasan makloon: ((Total PO &minus; Reject QC) &times; Tarif) &minus; Bahan Baku Kirim &minus; Kasbon &minus; Bayar.</p>
                                 </div>
                             </div>
                             
@@ -19370,10 +19370,21 @@
             return parseFloat(String(el.value).replace(/[^0-9]/g, '')) || 0;
         }
 
-        // Kalkulasi Bruto Tagihan PO (Total Pasang x Tarif)
+        // Hitung total reject BS dari modul QC makloon untuk suatu PO
+        function getPOQCRejectTotal(poId) {
+            if (!poId || !Array.isArray(db_makloon_qc)) return 0;
+            return db_makloon_qc
+                .filter(q => q.poId === poId)
+                .reduce((sum, q) => sum + (parseInt(q.totalRejectBS) || 0), 0);
+        }
+
+        // Kalkulasi Bruto Tagihan PO ((Total Pasang PO - Total Reject BS) x Tarif)
         function getPOMakloonBruto(po) {
             if (!po) return 0;
             const totalPairs = (po.items || []).reduce((sum, it) => sum + (parseInt(it.total) || 0), 0);
+            const totalReject = getPOQCRejectTotal(po.id);
+            const payablePairs = Math.max(0, totalPairs - totalReject);
+
             let tarif = parseFloat(po.harga) || 0;
             if (tarif <= 0 && typeof getMakloonTarifFromRecord === 'function' && Array.isArray(db_makloon_cost)) {
                 const art = getPOArtikelDisplay(po).toUpperCase();
@@ -19387,7 +19398,7 @@
                     tarif = getMakloonTarifFromRecord(bom, art);
                 }
             }
-            return Math.round(totalPairs * tarif);
+            return Math.round(payablePairs * tarif);
         }
 
         // Akumulasi Nilai Bahan Baku Kirim yang dialokasikan ke suatu PO
@@ -19473,13 +19484,17 @@
             const vendorPOs = (db_po || []).filter(p => (p.makloon || '').trim().toUpperCase() === vName);
             
             let totalPasang = 0;
+            let totalReject = 0;
             let brutoTagihan = 0;
             vendorPOs.forEach(p => {
                 const pairs = (p.items || []).reduce((s, it) => s + (parseInt(it.total) || 0), 0);
+                const rej = getPOQCRejectTotal(p.id);
                 totalPasang += pairs;
+                totalReject += rej;
                 brutoTagihan += getPOMakloonBruto(p);
             });
 
+            const pasangDibayar = Math.max(0, totalPasang - totalReject);
             const bahanKirim = getVendorBahanKirimNilai(vName);
             const kasbon = getVendorKasbonNilai(vName);
             const sudahBayar = getVendorSudahBayarNilai(vName);
@@ -19489,6 +19504,8 @@
                 vendor: vName,
                 poCount: vendorPOs.length,
                 totalPasang,
+                totalReject,
+                pasangDibayar,
                 brutoTagihan,
                 bahanKirim,
                 kasbon,
@@ -19504,7 +19521,23 @@
             if (!po) return null;
 
             const totalPasang = (po.items || []).reduce((s, it) => s + (parseInt(it.total) || 0), 0);
-            const tarif = parseFloat(po.harga) || 0;
+            const totalReject = getPOQCRejectTotal(poId);
+            const pasangDibayar = Math.max(0, totalPasang - totalReject);
+            
+            let tarif = parseFloat(po.harga) || 0;
+            if (tarif <= 0 && typeof getMakloonTarifFromRecord === 'function' && Array.isArray(db_makloon_cost)) {
+                const art = getPOArtikelDisplay(po).toUpperCase();
+                const bom = db_makloon_cost.find(c => {
+                    if (Array.isArray(c.articles) && c.articles.some(a => a.trim().toUpperCase() === art)) return true;
+                    if ((c.model || '').trim().toUpperCase() === art) return true;
+                    if ((c.artikel || '').trim().toUpperCase() === art) return true;
+                    return false;
+                });
+                if (bom) {
+                    tarif = getMakloonTarifFromRecord(bom, art);
+                }
+            }
+
             const brutoPO = getPOMakloonBruto(po);
             const bahanKirim = getPOBahanKirimNilai(poId);
             const kasbon = getPOKasbonNilai(poId);
@@ -19517,6 +19550,8 @@
                 tanggal: po.tanggal,
                 makloon: (po.makloon || '').trim().toUpperCase(),
                 totalPasang,
+                totalReject,
+                pasangDibayar,
                 tarif,
                 brutoPO,
                 bahanKirim,
@@ -19605,7 +19640,7 @@
         }
 
         // Update 4 Kartu KPI Ringkasan Hutang Pabrik Secara Dinamis (Mengikuti Filter & Tab Aktif)
-        function updateHutangKPICards({ bruto = 0, poCount = 0, pasang = 0, bahanKirim = 0, sjCount = 0, kasbon = 0, kasbonCount = 0, bayar = 0, sisaHutang = 0 } = {}) {
+        function updateHutangKPICards({ bruto = 0, poCount = 0, pasang = 0, reject = 0, bahanKirim = 0, sjCount = 0, kasbon = 0, kasbonCount = 0, bayar = 0, sisaHutang = 0 } = {}) {
             const elBruto = document.getElementById('statHutangBruto');
             const elBrutoSub = document.getElementById('statHutangBrutoSub');
             const elBahan = document.getElementById('statHutangBahan');
@@ -19616,7 +19651,14 @@
             const elSudahBayarSub = document.getElementById('statHutangSudahBayarSub');
 
             if (elBruto) elBruto.innerText = `Rp ${Math.round(bruto).toLocaleString('id-ID')}`;
-            if (elBrutoSub) elBrutoSub.innerText = `${poCount} PO (${Math.round(pasang).toLocaleString('id-ID')} Pasang)`;
+            if (elBrutoSub) {
+                const netPairs = Math.max(0, pasang - reject);
+                if (reject > 0) {
+                    elBrutoSub.innerHTML = `${poCount} PO (<b>${netPairs.toLocaleString('id-ID')}</b> psg dibayar <span class="text-rose-600 font-bold" title="Reject BS QC: ${reject.toLocaleString('id-ID')} psg">- BS ${reject.toLocaleString('id-ID')}</span>)`;
+                } else {
+                    elBrutoSub.innerText = `${poCount} PO (${Math.round(pasang).toLocaleString('id-ID')} Pasang)`;
+                }
+            }
 
             if (elBahan) elBahan.innerText = `Rp ${Math.round(bahanKirim).toLocaleString('id-ID')}`;
             if (elBahanSub) elBahanSub.innerText = `${sjCount} Surat Jalan Terkirim`;
@@ -19667,16 +19709,17 @@
             }
 
             if (summaries.length === 0) {
-                updateHutangKPICards({ bruto: 0, poCount: 0, pasang: 0, bahanKirim: 0, sjCount: 0, kasbon: 0, kasbonCount: 0, bayar: 0, sisaHutang: 0 });
+                updateHutangKPICards({ bruto: 0, poCount: 0, pasang: 0, reject: 0, bahanKirim: 0, sjCount: 0, kasbon: 0, kasbonCount: 0, bayar: 0, sisaHutang: 0 });
                 tbody.innerHTML = `<tr><td colspan="11" class="p-8 text-center text-gray-400">Tidak ada data buku hutang makloon yang sesuai kriteria filter.</td></tr>`;
                 return;
             }
 
             // Hitung KPI dinamis untuk Rekap per Makloon
-            let totalBruto = 0, totalPasang = 0, totalPOCount = 0, totalBahan = 0, totalKasbon = 0, totalBayar = 0, totalSisa = 0;
+            let totalBruto = 0, totalPasang = 0, totalReject = 0, totalPOCount = 0, totalBahan = 0, totalKasbon = 0, totalBayar = 0, totalSisa = 0;
             summaries.forEach(s => {
                 totalBruto += (s.brutoTagihan || 0);
                 totalPasang += (s.totalPasang || 0);
+                totalReject += (s.totalReject || 0);
                 totalPOCount += (s.poCount || 0);
                 totalBahan += (s.bahanKirim || 0);
                 totalKasbon += (s.kasbon || 0);
@@ -19697,6 +19740,7 @@
                 bruto: totalBruto,
                 poCount: totalPOCount,
                 pasang: totalPasang,
+                reject: totalReject,
                 bahanKirim: totalBahan,
                 sjCount: sjCount,
                 kasbon: totalKasbon,
@@ -19723,7 +19767,10 @@
                             <div class="font-extrabold text-gray-800 text-xs">${s.vendor}</div>
                         </td>
                         <td class="p-3 text-center font-bold text-gray-700">${s.poCount} PO</td>
-                        <td class="p-3 text-right font-bold text-gray-700">${s.totalPasang.toLocaleString('id-ID')} psg</td>
+                        <td class="p-3 text-right">
+                            <div class="font-bold text-gray-700">${s.pasangDibayar.toLocaleString('id-ID')} psg</div>
+                            ${s.totalReject > 0 ? `<div class="text-[10px] text-rose-600 font-semibold" title="Target PO: ${s.totalPasang.toLocaleString('id-ID')} psg | Reject BS: ${s.totalReject.toLocaleString('id-ID')} psg">(BS: -${s.totalReject.toLocaleString('id-ID')})</div>` : ''}
+                        </td>
                         <td class="p-3 text-right font-bold text-blue-900">Rp ${s.brutoTagihan.toLocaleString('id-ID')}</td>
                         <td class="p-3 text-right font-bold text-purple-700">Rp ${s.bahanKirim.toLocaleString('id-ID')}</td>
                         <td class="p-3 text-right font-bold text-amber-700">Rp ${s.kasbon.toLocaleString('id-ID')}</td>
@@ -19789,18 +19836,19 @@
             }
 
             if (summaries.length === 0) {
-                updateHutangKPICards({ bruto: 0, poCount: 0, pasang: 0, bahanKirim: 0, sjCount: 0, kasbon: 0, kasbonCount: 0, bayar: 0, sisaHutang: 0 });
+                updateHutangKPICards({ bruto: 0, poCount: 0, pasang: 0, reject: 0, bahanKirim: 0, sjCount: 0, kasbon: 0, kasbonCount: 0, bayar: 0, sisaHutang: 0 });
                 tbody.innerHTML = `<tr><td colspan="13" class="p-8 text-center text-gray-400">Tidak ada data PO yang sesuai kriteria filter.</td></tr>`;
                 return;
             }
 
             // Hitung KPI dinamis untuk Rincian per PO
-            let totalBruto = 0, totalPasang = 0, totalPOCount = summaries.length, totalBahan = 0, totalKasbon = 0, totalBayar = 0, totalSisa = 0;
+            let totalBruto = 0, totalPasang = 0, totalReject = 0, totalPOCount = summaries.length, totalBahan = 0, totalKasbon = 0, totalBayar = 0, totalSisa = 0;
             const targetPoIds = summaries.map(s => s.poId);
 
             summaries.forEach(s => {
                 totalBruto += (s.brutoPO || 0);
                 totalPasang += (s.totalPasang || 0);
+                totalReject += (s.totalReject || 0);
                 totalBahan += (s.bahanKirim || 0);
                 totalKasbon += (s.kasbon || 0);
                 totalBayar += (s.sudahBayar || 0);
@@ -19824,6 +19872,7 @@
                 bruto: totalBruto,
                 poCount: totalPOCount,
                 pasang: totalPasang,
+                reject: totalReject,
                 bahanKirim: totalBahan,
                 sjCount: sjCount,
                 kasbon: totalKasbon,
@@ -19855,9 +19904,12 @@
                         </td>
                         <td class="p-3 font-extrabold text-indigo-900">${s.makloon || '-'}</td>
                         <td class="p-3 font-bold text-gray-800 max-w-xs truncate" title="${artName}">${artName}</td>
-                        <td class="p-3 text-right font-bold text-gray-700">${s.totalPasang.toLocaleString('id-ID')} psg</td>
+                        <td class="p-3 text-right">
+                            <div class="font-bold text-gray-700">${s.pasangDibayar.toLocaleString('id-ID')} psg</div>
+                            ${s.totalReject > 0 ? `<div class="text-[10px] text-rose-600 font-semibold" title="Target PO: ${s.totalPasang.toLocaleString('id-ID')} psg, Reject BS QC: ${s.totalReject.toLocaleString('id-ID')} psg">(BS: -${s.totalReject.toLocaleString('id-ID')})</div>` : ''}
+                        </td>
                         <td class="p-3 text-right font-medium text-gray-500">Rp ${s.tarif.toLocaleString('id-ID')}</td>
-                        <td class="p-3 text-right font-bold text-blue-900">Rp ${s.brutoPO.toLocaleString('id-ID')}</td>
+                        <td class="p-3 text-right font-bold text-blue-900" title="${s.pasangDibayar.toLocaleString('id-ID')} psg &times; Rp ${s.tarif.toLocaleString('id-ID')}">Rp ${s.brutoPO.toLocaleString('id-ID')}</td>
                         <td class="p-3 text-right font-bold text-purple-700">Rp ${s.bahanKirim.toLocaleString('id-ID')}</td>
                         <td class="p-3 text-right font-bold text-amber-700">Rp ${s.kasbon.toLocaleString('id-ID')}</td>
                         <td class="p-3 text-right font-bold text-emerald-700">Rp ${s.sudahBayar.toLocaleString('id-ID')}</td>
@@ -19904,18 +19956,19 @@
             }
 
             if (list.length === 0) {
-                updateHutangKPICards({ bruto: 0, poCount: 0, pasang: 0, bahanKirim: 0, sjCount: 0, kasbon: 0, kasbonCount: 0, bayar: 0, sisaHutang: 0 });
+                updateHutangKPICards({ bruto: 0, poCount: 0, pasang: 0, reject: 0, bahanKirim: 0, sjCount: 0, kasbon: 0, kasbonCount: 0, bayar: 0, sisaHutang: 0 });
                 tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-gray-400">Belum ada catatan kasbon makloon.</td></tr>`;
                 return;
             }
 
             // Hitung KPI dinamis untuk Buku Kasbon
             const vendorsInKasbon = fVendor ? [fVendor] : Array.from(new Set(list.map(k => (k.makloon || '').trim().toUpperCase()).filter(Boolean)));
-            let tBruto = 0, tPasang = 0, tPO = 0, tBahan = 0, tBayar = 0;
+            let tBruto = 0, tPasang = 0, tReject = 0, tPO = 0, tBahan = 0, tBayar = 0;
             vendorsInKasbon.forEach(v => {
                 const vs = getVendorHutangSummary(v);
                 tBruto += vs.brutoTagihan;
                 tPasang += vs.totalPasang;
+                tReject += vs.totalReject;
                 tPO += vs.poCount;
                 tBahan += vs.bahanKirim;
                 tBayar += vs.sudahBayar;
@@ -19927,6 +19980,7 @@
                 bruto: tBruto,
                 poCount: tPO,
                 pasang: tPasang,
+                reject: tReject,
                 bahanKirim: tBahan,
                 sjCount: tSJ,
                 kasbon: tKasbon,
@@ -19997,18 +20051,19 @@
             }
 
             if (list.length === 0) {
-                updateHutangKPICards({ bruto: 0, poCount: 0, pasang: 0, bahanKirim: 0, sjCount: 0, kasbon: 0, kasbonCount: 0, bayar: 0, sisaHutang: 0 });
+                updateHutangKPICards({ bruto: 0, poCount: 0, pasang: 0, reject: 0, bahanKirim: 0, sjCount: 0, kasbon: 0, kasbonCount: 0, bayar: 0, sisaHutang: 0 });
                 tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-gray-400">Belum ada riwayat pembayaran makloon.</td></tr>`;
                 return;
             }
 
             // Hitung KPI dinamis untuk Riwayat Bayar
             const vendorsInBayar = fVendor ? [fVendor] : Array.from(new Set(list.map(b => (b.makloon || '').trim().toUpperCase()).filter(Boolean)));
-            let tBruto = 0, tPasang = 0, tPO = 0, tBahan = 0, tKasbon = 0;
+            let tBruto = 0, tPasang = 0, tReject = 0, tPO = 0, tBahan = 0, tKasbon = 0;
             vendorsInBayar.forEach(v => {
                 const vs = getVendorHutangSummary(v);
                 tBruto += vs.brutoTagihan;
                 tPasang += vs.totalPasang;
+                tReject += vs.totalReject;
                 tPO += vs.poCount;
                 tBahan += vs.bahanKirim;
                 tKasbon += vs.kasbon;
@@ -20021,6 +20076,7 @@
                 bruto: tBruto,
                 poCount: tPO,
                 pasang: tPasang,
+                reject: tReject,
                 bahanKirim: tBahan,
                 sjCount: tSJ,
                 kasbon: tKasbon,
@@ -20559,7 +20615,7 @@
                         Formula Perhitungan Pelunasan Makloon:
                     </div>
                     <div class="font-mono text-gray-800 text-[11px] bg-white/80 p-2 rounded-lg border border-blue-100">
-                        <b>Pelunasan Makloon</b> = (<b>Total PO</b> &times; <b>Tarif Makloon</b>) &minus; <b>Total Bahan Kirim</b> &minus; <b>Kasbon</b> &minus; <b>Sudah Dibayar</b>
+                        <b>Pelunasan Makloon</b> = ((<b>Target PO</b> &minus; <b>Reject BS QC</b>) &times; <b>Tarif Makloon</b>) &minus; <b>Total Bahan Kirim</b> &minus; <b>Kasbon</b> &minus; <b>Sudah Dibayar</b>
                     </div>
                 </div>
 
@@ -20567,15 +20623,22 @@
                 <div class="bg-gray-50 border border-gray-200 rounded-xl p-3">
                     <div class="flex justify-between items-center text-xs font-bold text-gray-800 pb-2 border-b border-gray-200">
                         <span class="flex items-center gap-1.5 text-blue-800">
-                            <i class="fa-solid fa-coins"></i> 1. Hak Ongkos Makloon (Bruto)
+                            <i class="fa-solid fa-coins"></i> 1. Hak Ongkos Makloon (Bruto Layak Bayar)
                         </span>
                         <span class="text-sm font-black text-blue-900">Rp ${s.brutoPO.toLocaleString('id-ID')}</span>
                     </div>
-                    <div class="grid grid-cols-3 gap-2 mt-2 text-[11px] text-gray-600">
-                        <div><span class="text-gray-400">Total Kuantitas:</span> <b class="text-gray-800">${s.totalPasang.toLocaleString('id-ID')} Pasang</b></div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2 text-[11px] text-gray-600">
+                        <div><span class="text-gray-400">Target PO:</span> <b class="text-gray-800">${s.totalPasang.toLocaleString('id-ID')} Pasang</b></div>
+                        <div><span class="text-gray-400">Reject BS (QC):</span> <b class="${s.totalReject > 0 ? 'text-rose-600 font-bold' : 'text-gray-800'}">(-) ${s.totalReject.toLocaleString('id-ID')} Psg</b></div>
+                        <div><span class="text-gray-400">Layak Dibayar:</span> <b class="text-emerald-700 font-bold">${s.pasangDibayar.toLocaleString('id-ID')} Pasang</b></div>
                         <div><span class="text-gray-400">Tarif Makloon:</span> <b class="text-gray-800">Rp ${s.tarif.toLocaleString('id-ID')} / psg</b></div>
-                        <div><span class="text-gray-400">Tanggal PO:</span> <b class="text-gray-800">${s.tanggal || '-'}</b></div>
                     </div>
+                    ${s.totalReject > 0 ? `
+                    <div class="mt-2.5 p-2 bg-rose-50 border border-rose-200 rounded-lg text-[11px] text-rose-700 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-exclamation text-rose-500"></i>
+                        <span>Dipotong <b>${s.totalReject.toLocaleString('id-ID')} pasang Reject (BS Pabrik)</b> dari QC: Kuantitas hak makloon = <b>${s.totalPasang.toLocaleString('id-ID')} &minus; ${s.totalReject.toLocaleString('id-ID')} = ${s.pasangDibayar.toLocaleString('id-ID')} pasang</b>.</span>
+                    </div>
+                    ` : ''}
                 </div>
 
                 <!-- Bagian 2: Potongan Surat Jalan Bahan Baku -->
@@ -20756,7 +20819,11 @@
                         <td style="font-weight:bold;">Artikel Produk</td><td>: ${artName}</td>
                     </tr>
                     <tr>
-                        <td style="font-weight:bold;">Total Qty</td><td>: <b>${s.totalPasang.toLocaleString('id-ID')} Pasang</b></td>
+                        <td style="font-weight:bold;">Target PO</td><td>: ${s.totalPasang.toLocaleString('id-ID')} Pasang</td>
+                        <td style="font-weight:bold;">Reject BS (QC)</td><td>: <span style="color:${s.totalReject > 0 ? '#b91c1c' : '#333'}; font-weight:bold;">${s.totalReject > 0 ? `(-) ${s.totalReject.toLocaleString('id-ID')} Pasang` : '0 Pasang'}</span></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight:bold;">Qty Layak Bayar</td><td>: <b style="color:#047857;">${s.pasangDibayar.toLocaleString('id-ID')} Pasang</b></td>
                         <td style="font-weight:bold;">Tarif Ongkos</td><td>: <b>Rp ${s.tarif.toLocaleString('id-ID')} / pasang</b></td>
                     </tr>
                 </table>
@@ -20764,12 +20831,17 @@
                 <div class="sec-title">1. HAK ONGKOS MAKLOON (BRUTO)</div>
                 <table class="data">
                     <thead>
-                        <tr><th>Keterangan</th><th>Qty Pasang</th><th>Tarif / Psg</th><th style="text-align:right;">Subtotal Hak Makloon</th></tr>
+                        <tr><th>Keterangan</th><th>Target PO</th><th>Reject BS (-)</th><th>Qty Dibayar</th><th>Tarif / Psg</th><th style="text-align:right;">Subtotal Hak Makloon</th></tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td style="padding:6px; border:1px solid #333; font-weight:bold;">Ongkos Jahit / Assembling Seri ${artName}</td>
+                            <td style="padding:6px; border:1px solid #333; font-weight:bold;">
+                                Ongkos Jahit / Assembling Seri ${artName}
+                                ${s.totalReject > 0 ? `<br><small style="color:#b91c1c; font-weight:normal;">*Target: ${s.totalPasang.toLocaleString('id-ID')} psg &minus; Reject BS QC: ${s.totalReject.toLocaleString('id-ID')} psg = ${s.pasangDibayar.toLocaleString('id-ID')} psg</small>` : ''}
+                            </td>
                             <td style="padding:6px; border:1px solid #333; text-align:center;">${s.totalPasang.toLocaleString('id-ID')} psg</td>
+                            <td style="padding:6px; border:1px solid #333; text-align:center; color:${s.totalReject > 0 ? '#b91c1c' : '#555'}; font-weight:${s.totalReject > 0 ? 'bold' : 'normal'};">${s.totalReject > 0 ? `-${s.totalReject.toLocaleString('id-ID')}` : '0'}</td>
+                            <td style="padding:6px; border:1px solid #333; text-align:center; font-weight:bold; color:#047857;">${s.pasangDibayar.toLocaleString('id-ID')} psg</td>
                             <td style="padding:6px; border:1px solid #333; text-align:right;">Rp ${s.tarif.toLocaleString('id-ID')}</td>
                             <td style="padding:6px; border:1px solid #333; text-align:right; font-weight:bold;">Rp ${s.brutoPO.toLocaleString('id-ID')}</td>
                         </tr>
@@ -20795,7 +20867,7 @@
                 </table>
 
                 <div class="summary-box">
-                    <div class="summary-row"><span>Total Bruto Hak Ongkos Makloon:</span> <b>Rp ${s.brutoPO.toLocaleString('id-ID')}</b></div>
+                    <div class="summary-row"><span>Total Hak Ongkos Makloon (${s.pasangDibayar.toLocaleString('id-ID')} psg &times; Rp ${s.tarif.toLocaleString('id-ID')}):</span> <b>Rp ${s.brutoPO.toLocaleString('id-ID')}</b></div>
                     <div class="summary-row"><span>(-) Total Potongan Bahan Baku Terkirim:</span> <b style="color:#6b21a8;">Rp ${s.bahanKirim.toLocaleString('id-ID')}</b></div>
                     <div class="summary-row"><span>(-) Total Potongan Kasbon Makloon:</span> <b style="color:#b45309;">Rp ${s.kasbon.toLocaleString('id-ID')}</b></div>
                     <div class="summary-row"><span>(-) Total Yang Sudah Dibayarkan:</span> <b style="color:#047857;">Rp ${s.sudahBayar.toLocaleString('id-ID')}</b></div>
@@ -20838,9 +20910,11 @@
 
             let summaries = allVendors.map(v => getVendorHutangSummary(v));
 
-            let totalBruto = 0, totalBahan = 0, totalKasbon = 0, totalBayar = 0, totalSisa = 0;
+            let totalBruto = 0, totalBahan = 0, totalKasbon = 0, totalBayar = 0, totalSisa = 0, totalPasangNet = 0, totalRejectAll = 0;
             let rowsHtml = summaries.map((s, idx) => {
                 totalBruto += s.brutoTagihan;
+                totalPasangNet += s.pasangDibayar;
+                totalRejectAll += s.totalReject;
                 totalBahan += s.bahanKirim;
                 totalKasbon += s.kasbon;
                 totalBayar += s.sudahBayar;
@@ -20851,7 +20925,8 @@
                     <td style="padding:6px; border:1px solid #333; text-align:center;">${idx + 1}</td>
                     <td style="padding:6px; border:1px solid #333; font-weight:bold;">${s.vendor}</td>
                     <td style="padding:6px; border:1px solid #333; text-align:center;">${s.poCount} PO</td>
-                    <td style="padding:6px; border:1px solid #333; text-align:right;">${s.totalPasang.toLocaleString('id-ID')} psg</td>
+                    <td style="padding:6px; border:1px solid #333; text-align:right;">${s.pasangDibayar.toLocaleString('id-ID')} psg</td>
+                    <td style="padding:6px; border:1px solid #333; text-align:right; color:${s.totalReject > 0 ? '#b91c1c' : '#555'}; font-weight:${s.totalReject > 0 ? 'bold' : 'normal'};">${s.totalReject > 0 ? `-${s.totalReject.toLocaleString('id-ID')}` : '0'} psg</td>
                     <td style="padding:6px; border:1px solid #333; text-align:right;">Rp ${s.brutoTagihan.toLocaleString('id-ID')}</td>
                     <td style="padding:6px; border:1px solid #333; text-align:right;">Rp ${s.bahanKirim.toLocaleString('id-ID')}</td>
                     <td style="padding:6px; border:1px solid #333; text-align:right;">Rp ${s.kasbon.toLocaleString('id-ID')}</td>
@@ -20889,7 +20964,8 @@
                             <th style="width:30px;">No</th>
                             <th>Vendor Makloon</th>
                             <th>Jml PO</th>
-                            <th>Pasang</th>
+                            <th>Pasang (Net)</th>
+                            <th>Reject BS (-)</th>
                             <th>Bruto PO</th>
                             <th>Potongan Bahan (-)</th>
                             <th>Potongan Kasbon (-)</th>
@@ -20901,7 +20977,9 @@
                     <tbody>${rowsHtml}</tbody>
                     <tfoot>
                         <tr>
-                            <th colspan="4" style="text-align:right; font-weight:bold;">GRAND TOTAL:</th>
+                            <th colspan="3" style="text-align:right; font-weight:bold;">GRAND TOTAL:</th>
+                            <th style="text-align:right;">${totalPasangNet.toLocaleString('id-ID')} psg</th>
+                            <th style="text-align:right; color:#b91c1c;">${totalRejectAll > 0 ? `-${totalRejectAll.toLocaleString('id-ID')}` : '0'} psg</th>
                             <th style="text-align:right;">Rp ${totalBruto.toLocaleString('id-ID')}</th>
                             <th style="text-align:right;">Rp ${totalBahan.toLocaleString('id-ID')}</th>
                             <th style="text-align:right;">Rp ${totalKasbon.toLocaleString('id-ID')}</th>
@@ -21877,6 +21955,7 @@
 
             closeModalMakloonQC();
             renderMakloonQCModule();
+            if (typeof renderHutangMakloonModule === 'function') renderHutangMakloonModule();
             if (typeof showToast === 'function') showToast(`Penerimaan ${noVal} (${totalDatang.toLocaleString('id-ID')} pasang) berhasil disimpan!`, "success");
         }
 
@@ -21895,6 +21974,7 @@
                     window.firebaseWrite('davclar_makloon_qc', db_makloon_qc);
                 }
                 renderMakloonQCModule();
+                if (typeof renderHutangMakloonModule === 'function') renderHutangMakloonModule();
                 if (typeof showToast === 'function') showToast(`Dokumen QC ${id} berhasil dihapus!`, "success");
             }
         }
