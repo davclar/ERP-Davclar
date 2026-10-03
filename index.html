@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -204,7 +204,7 @@
                         <i class="fa-solid fa-clipboard-check w-5 text-center shrink-0"></i> <span>Penerimaan & QC</span>
                     </button>
                     <button onclick="openTab('tab-hutang')" id="btn-tab-hutang" class="menu-btn w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition text-left text-sm">
-                        <i class="fa-solid fa-hand-holding-hand w-5 text-center shrink-0"></i> <span>Hutang Pabrik (AP)</span>
+                        <i class="fa-solid fa-hand-holding-hand w-5 text-center shrink-0"></i> <span>Hutang Pabrik</span>
                     </button>
                 </div>
 
@@ -3608,7 +3608,7 @@
                     </div>
                 </section>
 
-                <!-- TAB: HUTANG PABRIK & PELUNASAN MAKLOON (AP) -->
+                <!-- TAB: HUTANG PABRIK & PELUNASAN MAKLOON -->
                 <section id="tab-hutang" class="tab-content hidden-tab p-2 h-full">
                     <div class="w-full flex flex-col space-y-4">
                         <!-- Header Nav & Title -->
@@ -3681,7 +3681,7 @@
                             <!-- Card 4: Sisa Hutang Bersih (Net AP) -->
                             <div class="bg-gradient-to-br from-rose-50/80 to-red-50/50 p-4 rounded-xl border border-rose-100 flex items-center justify-between shadow-xs">
                                 <div>
-                                    <div class="text-[10px] uppercase font-bold text-rose-700 tracking-wider">4. Sisa Hutang Bersih (AP)</div>
+                                    <div class="text-[10px] uppercase font-bold text-rose-700 tracking-wider">4. Sisa Hutang Bersih</div>
                                     <div id="statHutangNetPayable" class="text-xl font-black text-rose-950 mt-1">Rp 0</div>
                                     <div id="statHutangSudahBayarSub" class="text-[11px] text-emerald-700 font-semibold mt-0.5">Sudah Bayar: Rp 0</div>
                                 </div>
@@ -3746,7 +3746,7 @@
                                             <th class="p-3 text-right">Potongan Bahan (-)</th>
                                             <th class="p-3 text-right">Potongan Kasbon (-)</th>
                                             <th class="p-3 text-right">Sudah Dibayar (-)</th>
-                                            <th class="p-3 text-right bg-emerald-50/50">Sisa Hutang (AP)</th>
+                                            <th class="p-3 text-right bg-emerald-50/50">Sisa Hutang</th>
                                             <th class="p-3 text-center">Status</th>
                                             <th class="p-3 text-center w-36">Aksi</th>
                                         </tr>
@@ -11115,7 +11115,7 @@
             { id: 'tab-makloon-cost', label: 'Setting Cost Makloon', group: 'KELOLA MAKLOON' },
             { id: 'tab-makloon-bahan', label: 'Kirim Bahan Baku', group: 'KELOLA MAKLOON' },
             { id: 'tab-makloon-qc', label: 'Penerimaan & QC', group: 'KELOLA MAKLOON' },
-            { id: 'tab-hutang', label: 'Hutang Pabrik (AP)', group: 'KELOLA MAKLOON' },
+            { id: 'tab-hutang', label: 'Hutang Pabrik', group: 'KELOLA MAKLOON' },
             { id: 'tab-labarugi', label: 'Laba Rugi (P&L)', group: 'LAPORAN' },
             { id: 'tab-usersetting', label: 'User Management', group: 'SISTEM' },
             { id: 'menu-database', label: 'Backup Data (JSON)', group: 'DATABASE' }
@@ -19298,7 +19298,7 @@
         }
 
         // =================================================================
-        // MODUL 4: BUKU HUTANG PABRIK & PELUNASAN MAKLOON (AP)
+        // MODUL 4: BUKU HUTANG PABRIK & PELUNASAN MAKLOON
         // Formula: Sisa = (Total PO x Tarif) - Nilai Bahan Kirim - Kasbon - Sudah Bayar
         // =================================================================
 
@@ -20746,7 +20746,7 @@
                     <div class="summary-row"><span>(-) Total Potongan Kasbon Makloon:</span> <b style="color:#b45309;">Rp ${s.kasbon.toLocaleString('id-ID')}</b></div>
                     <div class="summary-row"><span>(-) Total Yang Sudah Dibayarkan:</span> <b style="color:#047857;">Rp ${s.sudahBayar.toLocaleString('id-ID')}</b></div>
                     <div class="summary-total">
-                        <span>SISA BERSIH YANG WAJIB DIBAYARKAN (AP):</span>
+                        <span>SISA BERSIH YANG WAJIB DIBAYARKAN:</span>
                         <span>Rp ${s.sisaHutang.toLocaleString('id-ID')}</span>
                     </div>
                 </div>
@@ -20840,7 +20840,7 @@
                             <th>Potongan Bahan (-)</th>
                             <th>Potongan Kasbon (-)</th>
                             <th>Sudah Bayar (-)</th>
-                            <th>Sisa Hutang (AP)</th>
+                            <th>Sisa Hutang</th>
                             <th>Status</th>
                         </tr>
                     </thead>
