@@ -16491,6 +16491,9 @@
             const bg  = (bagian || '').trim().toUpperCase();
             const bh  = (bahan || '').trim().toUpperCase();
 
+            // Pengecualian mutlak: STIKER, LABEL, HANGTAG bukan sol berukuran (kategori AKSESORIS)
+            if (bh.includes('STIKER') || bh.includes('STICKER') || bh.includes('LABEL') || bh.includes('HANGTAG')) return false;
+
             // Pengecualian mutlak: Jika satuan LBR (lembaran dipond), TIDAK dipecah per ukuran!
             if (sat === 'LBR') return false;
 
@@ -16534,6 +16537,10 @@
         }
 
         function categorizeMaterial(bagian, bahan, satuan) {
+            const bh = (bahan || '').trim().toUpperCase();
+            // Pengecualian mutlak: STIKER (termasuk STIKER SOLE), LABEL, HANGTAG selalu masuk kategori AKSESORIS
+            if (bh.includes('STIKER') || bh.includes('STICKER') || bh.includes('LABEL') || bh.includes('HANGTAG')) return 'AKSESORIS';
+
             if (isOngkosOrJasaOrOverhead(bagian, bahan)) return 'ONGKOS_JASA';
             if (isSizedComponent(bagian, bahan, satuan)) return 'SOLE_SIZED';
             const sat = (satuan || '').trim().toUpperCase();
@@ -16892,8 +16899,8 @@
                 sItems.forEach(it => {
                     const itBahanRaw = (it.bahan || '').trim();
                     const itWarna = (it.warna || '-').trim().toUpperCase();
-                    const itSatuan = (it.satuan || '').trim().toUpperCase();
-                    const itCat = it.kategori || categorizeMaterial(it.bagian, it.bahan, it.satuan);
+                    const isStikerOrAccessory = (itBahanRaw && (itBahanRaw.toUpperCase().includes('STIKER') || itBahanRaw.toUpperCase().includes('STICKER') || itBahanRaw.toUpperCase().includes('LABEL') || itBahanRaw.toUpperCase().includes('HANGTAG')));
+                    const itCat = isStikerOrAccessory ? 'AKSESORIS' : (it.kategori || categorizeMaterial(it.bagian, it.bahan, it.satuan));
                     const itRawQty = parseFloat(it.qty) || 0;
 
                     if (itCat === 'SOLE_SIZED') {
