@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -16884,6 +16884,52 @@
             return Array.from(artikels).join(', ');
         }
 
+        // Helper untuk mengambil nama merk dari objek PO
+        function getPOMerkDisplay(po) {
+            if (!po) return '';
+            if (po.merk && String(po.merk).trim()) return String(po.merk).trim().toUpperCase();
+            const merks = new Set();
+            if (Array.isArray(po.items) && po.items.length > 0) {
+                po.items.forEach(it => {
+                    let mrk = (it.merk || '').trim();
+                    if (!mrk && (it.prodId || it.barangId)) {
+                        const targetId = it.prodId || it.barangId;
+                        const brg = (typeof db_databarang !== 'undefined' ? db_databarang : []).find(b => b.prodId === targetId || b.id === targetId);
+                        if (brg && brg.merk) mrk = brg.merk.trim();
+                    }
+                    if (!mrk && it.artikel) {
+                        const artUpper = it.artikel.trim().toUpperCase();
+                        const brg = (typeof db_databarang !== 'undefined' ? db_databarang : []).find(b => (b.artikel || '').trim().toUpperCase() === artUpper);
+                        if (brg && brg.merk) mrk = brg.merk.trim();
+                    }
+                    if (!mrk && it.artikel && Array.isArray(db_makloon_cost)) {
+                        const artUpper = it.artikel.trim().toUpperCase();
+                        const bom = db_makloon_cost.find(c => {
+                            if (Array.isArray(c.articles) && c.articles.some(a => a.trim().toUpperCase() === artUpper)) return true;
+                            if ((c.model || '').trim().toUpperCase() === artUpper) return true;
+                            if ((c.artikel || '').trim().toUpperCase() === artUpper) return true;
+                            return false;
+                        });
+                        if (bom && bom.merk) mrk = bom.merk.trim();
+                    }
+                    if (mrk) merks.add(mrk.toUpperCase());
+                });
+            }
+            if (merks.size === 0 && Array.isArray(db_makloon_cost)) {
+                const artDisp = getPOArtikelDisplay(po).toUpperCase();
+                if (artDisp) {
+                    const bom = db_makloon_cost.find(c => {
+                        if (Array.isArray(c.articles) && c.articles.some(a => artDisp.includes(a.trim().toUpperCase()))) return true;
+                        if (c.model && artDisp.includes(c.model.trim().toUpperCase())) return true;
+                        if (c.artikel && artDisp.includes(c.artikel.trim().toUpperCase())) return true;
+                        return false;
+                    });
+                    if (bom && bom.merk) merks.add(bom.merk.trim().toUpperCase());
+                }
+            }
+            return Array.from(merks).join(', ');
+        }
+
         function categorizeMaterial(bagian, bahan, satuan) {
             const bh = (bahan || '').trim().toUpperCase();
             // Pengecualian mutlak: STIKER (termasuk STIKER SOLE), LABEL, HANGTAG selalu masuk kategori AKSESORIS
@@ -17619,7 +17665,9 @@
                         let totalQty = 0;
                         (p.items || []).forEach(it => { totalQty += (parseInt(it.total) || 0); });
                         const artDisplay = getPOArtikelDisplay(p);
-                        const vendorArt = artDisplay ? `${p.makloon || 'PABRIK'} - ${artDisplay}` : (p.makloon || 'PABRIK');
+                        const merkDisplay = getPOMerkDisplay(p);
+                        const artWithMerk = (merkDisplay && artDisplay) ? `${merkDisplay} - ${artDisplay}` : (merkDisplay || artDisplay);
+                        const vendorArt = artWithMerk ? `${p.makloon || 'PABRIK'} - ${artWithMerk}` : (p.makloon || 'PABRIK');
                         return `<option value="${p.id}" ${p.id === currentVal ? 'selected' : ''}>
                             PO: ${p.id} • ${vendorArt} • ${totalQty.toLocaleString('id-ID')} Psg • Tgl: ${p.tanggal || '-'}
                         </option>`;
@@ -17661,11 +17709,13 @@
             // 1. Header Summary Cards (6 Kolom Responsive)
             if (containerSummary) {
                 const artDisplay = getPOArtikelDisplay(data.po);
-                const vendorArtDisplay = artDisplay ? `${data.po.makloon || '-'} - ${artDisplay}` : (data.po.makloon || '-');
+                const merkDisplay = getPOMerkDisplay(data.po);
+                const artWithMerk = (merkDisplay && artDisplay) ? `${merkDisplay} - ${artDisplay}` : (merkDisplay || artDisplay);
+                const vendorArtDisplay = artWithMerk ? `${data.po.makloon || '-'} - ${artWithMerk}` : (data.po.makloon || '-');
                 containerSummary.className = "mt-4 pt-3 border-t border-gray-100 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3";
                 containerSummary.innerHTML = `
                     <div class="bg-blue-50/60 p-3 rounded-xl border border-blue-100">
-                        <div class="text-[10px] uppercase font-bold text-blue-700">Vendor & Artikel</div>
+                        <div class="text-[10px] uppercase font-bold text-blue-700">Vendor, Merk & Artikel</div>
                         <div class="text-sm font-extrabold text-gray-800 truncate" title="${vendorArtDisplay}">${vendorArtDisplay}</div>
                         <div class="text-[11px] text-gray-500 font-medium">Tgl: ${data.po.tanggal || '-'}</div>
                     </div>
@@ -19069,7 +19119,9 @@
             `).join('');
 
             const artDisplay = getPOArtikelDisplay(data.po);
-            const vendorDisplay = artDisplay ? `${data.po.makloon || 'PABRIK'} - ${artDisplay}` : (data.po.makloon || 'PABRIK');
+            const merkDisplay = getPOMerkDisplay(data.po);
+            const artWithMerk = (merkDisplay && artDisplay) ? `${merkDisplay} - ${artDisplay}` : (merkDisplay || artDisplay);
+            const vendorDisplay = artWithMerk ? `${data.po.makloon || 'PABRIK'} - ${artWithMerk}` : (data.po.makloon || 'PABRIK');
 
             const printContent = `
                 <!DOCTYPE html>
@@ -19288,7 +19340,9 @@
             XLSX.utils.book_append_sheet(wb, wsKasbon, "Jatah_Kasbon_Makloon");
 
             const artDisplay = getPOArtikelDisplay(data.po);
-            const safeArt = artDisplay ? `_${artDisplay.replace(/[^A-Za-z0-9_-]/g, '_')}` : '';
+            const merkDisplay = getPOMerkDisplay(data.po);
+            const artWithMerk = (merkDisplay && artDisplay) ? `${merkDisplay}_${artDisplay}` : (merkDisplay || artDisplay);
+            const safeArt = artWithMerk ? `_${artWithMerk.replace(/[^A-Za-z0-9_-]/g, '_')}` : '';
             XLSX.writeFile(wb, `Kebutuhan_Bahan_PO_${data.po.id}${safeArt}.xlsx`);
             if (typeof showToast === 'function') showToast("File Excel Kebutuhan Bahan berhasil diunduh!", "success");
             } catch (err) {
