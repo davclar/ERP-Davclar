@@ -19141,26 +19141,11 @@
                     allVendors.map(v => `<option value="${v}" ${v === curVal ? 'selected' : ''}>${v}</option>`).join('');
             }
 
-            // Hitung Grand Total KPI
-            let grandBruto = 0;
-            let grandPasang = 0;
-            let grandPOCount = 0;
-            (db_po || []).forEach(p => {
-                grandPOCount++;
-                const pairs = (p.items || []).reduce((s, it) => s + (parseInt(it.total) || 0), 0);
-                grandPasang += pairs;
-                grandBruto += getPOMakloonBruto(p);
-            });
+            switchHutangSubtab(currentHutangSubtab);
+        }
 
-            let grandBahan = 0;
-            (db_makloon_kirim || []).forEach(sj => {
-                grandBahan += calculateSJTotalNilai(sj);
-            });
-
-            let grandKasbon = (db_makloon_kasbon || []).reduce((s, k) => s + (parseFloat(k.nominal) || 0), 0);
-            let grandBayar = (db_makloon_bayar || []).reduce((s, b) => s + (parseFloat(b.nominal) || 0), 0);
-            let grandNetAP = grandBruto - grandBahan - grandKasbon - grandBayar;
-
+        // Update 4 Kartu KPI Ringkasan Hutang Pabrik Secara Dinamis (Mengikuti Filter & Tab Aktif)
+        function updateHutangKPICards({ bruto = 0, poCount = 0, pasang = 0, bahanKirim = 0, sjCount = 0, kasbon = 0, kasbonCount = 0, bayar = 0, sisaHutang = 0 } = {}) {
             const elBruto = document.getElementById('statHutangBruto');
             const elBrutoSub = document.getElementById('statHutangBrutoSub');
             const elBahan = document.getElementById('statHutangBahan');
@@ -19170,19 +19155,23 @@
             const elNetAP = document.getElementById('statHutangNetPayable');
             const elSudahBayarSub = document.getElementById('statHutangSudahBayarSub');
 
-            if (elBruto) elBruto.innerText = `Rp ${grandBruto.toLocaleString('id-ID')}`;
-            if (elBrutoSub) elBrutoSub.innerText = `${grandPOCount} PO (${grandPasang.toLocaleString('id-ID')} Pasang)`;
+            if (elBruto) elBruto.innerText = `Rp ${Math.round(bruto).toLocaleString('id-ID')}`;
+            if (elBrutoSub) elBrutoSub.innerText = `${poCount} PO (${Math.round(pasang).toLocaleString('id-ID')} Pasang)`;
 
-            if (elBahan) elBahan.innerText = `Rp ${grandBahan.toLocaleString('id-ID')}`;
-            if (elBahanSub) elBahanSub.innerText = `${(db_makloon_kirim || []).length} Surat Jalan Terkirim`;
+            if (elBahan) elBahan.innerText = `Rp ${Math.round(bahanKirim).toLocaleString('id-ID')}`;
+            if (elBahanSub) elBahanSub.innerText = `${sjCount} Surat Jalan Terkirim`;
 
-            if (elKasbon) elKasbon.innerText = `Rp ${grandKasbon.toLocaleString('id-ID')}`;
-            if (elKasbonSub) elKasbonSub.innerText = `${(db_makloon_kasbon || []).length} Voucher Kasbon`;
+            if (elKasbon) elKasbon.innerText = `Rp ${Math.round(kasbon).toLocaleString('id-ID')}`;
+            if (elKasbonSub) elKasbonSub.innerText = `${kasbonCount} Voucher Kasbon`;
 
-            if (elNetAP) elNetAP.innerText = `Rp ${grandNetAP.toLocaleString('id-ID')}`;
-            if (elSudahBayarSub) elSudahBayarSub.innerText = `Sudah Bayar: Rp ${grandBayar.toLocaleString('id-ID')}`;
-
-            switchHutangSubtab(currentHutangSubtab);
+            if (elNetAP) {
+                if (sisaHutang < 0) {
+                    elNetAP.innerText = `-Rp ${Math.abs(Math.round(sisaHutang)).toLocaleString('id-ID')}`;
+                } else {
+                    elNetAP.innerText = `Rp ${Math.round(sisaHutang).toLocaleString('id-ID')}`;
+                }
+            }
+            if (elSudahBayarSub) elSudahBayarSub.innerText = `Sudah Bayar: Rp ${Math.round(bayar).toLocaleString('id-ID')}`;
         }
 
         // Render Sub-Tab 1: Rekap per Vendor Makloon
@@ -19218,9 +19207,43 @@
             }
 
             if (summaries.length === 0) {
+                updateHutangKPICards({ bruto: 0, poCount: 0, pasang: 0, bahanKirim: 0, sjCount: 0, kasbon: 0, kasbonCount: 0, bayar: 0, sisaHutang: 0 });
                 tbody.innerHTML = `<tr><td colspan="11" class="p-8 text-center text-gray-400">Tidak ada data buku hutang makloon yang sesuai kriteria filter.</td></tr>`;
                 return;
             }
+
+            // Hitung KPI dinamis untuk Rekap per Makloon
+            let totalBruto = 0, totalPasang = 0, totalPOCount = 0, totalBahan = 0, totalKasbon = 0, totalBayar = 0, totalSisa = 0;
+            summaries.forEach(s => {
+                totalBruto += (s.brutoTagihan || 0);
+                totalPasang += (s.totalPasang || 0);
+                totalPOCount += (s.poCount || 0);
+                totalBahan += (s.bahanKirim || 0);
+                totalKasbon += (s.kasbon || 0);
+                totalBayar += (s.sudahBayar || 0);
+                totalSisa += (s.sisaHutang || 0);
+            });
+
+            const vendorNames = summaries.map(s => s.vendor);
+            const sjCount = (db_makloon_kirim || []).filter(sj => 
+                vendorNames.includes((sj.makloon || '').trim().toUpperCase())
+            ).length;
+
+            const kasbonCount = (db_makloon_kasbon || []).filter(k => 
+                vendorNames.includes((k.makloon || '').trim().toUpperCase())
+            ).length;
+
+            updateHutangKPICards({
+                bruto: totalBruto,
+                poCount: totalPOCount,
+                pasang: totalPasang,
+                bahanKirim: totalBahan,
+                sjCount: sjCount,
+                kasbon: totalKasbon,
+                kasbonCount: kasbonCount,
+                bayar: totalBayar,
+                sisaHutang: totalSisa
+            });
 
             tbody.innerHTML = summaries.map((s, idx) => {
                 const statusBadge = s.sisaHutang <= 0 && s.brutoTagihan > 0
@@ -19306,9 +19329,48 @@
             }
 
             if (summaries.length === 0) {
+                updateHutangKPICards({ bruto: 0, poCount: 0, pasang: 0, bahanKirim: 0, sjCount: 0, kasbon: 0, kasbonCount: 0, bayar: 0, sisaHutang: 0 });
                 tbody.innerHTML = `<tr><td colspan="13" class="p-8 text-center text-gray-400">Tidak ada data PO yang sesuai kriteria filter.</td></tr>`;
                 return;
             }
+
+            // Hitung KPI dinamis untuk Rincian per PO
+            let totalBruto = 0, totalPasang = 0, totalPOCount = summaries.length, totalBahan = 0, totalKasbon = 0, totalBayar = 0, totalSisa = 0;
+            const targetPoIds = summaries.map(s => s.poId);
+
+            summaries.forEach(s => {
+                totalBruto += (s.brutoPO || 0);
+                totalPasang += (s.totalPasang || 0);
+                totalBahan += (s.bahanKirim || 0);
+                totalKasbon += (s.kasbon || 0);
+                totalBayar += (s.sudahBayar || 0);
+                totalSisa += (s.sisaHutang || 0);
+            });
+
+            const matchedSJ = (db_makloon_kirim || []).filter(sj => {
+                const allPos = (Array.isArray(sj.poList) && sj.poList.length > 0)
+                    ? sj.poList
+                    : (sj.noPO || '').split(',').map(str => str.trim()).filter(Boolean);
+                return allPos.some(p => targetPoIds.includes(p));
+            });
+            const sjCount = matchedSJ.length;
+
+            const matchedKasbon = (db_makloon_kasbon || []).filter(k => 
+                targetPoIds.includes((k.noPO || '').trim().toUpperCase())
+            );
+            const kasbonCount = matchedKasbon.length;
+
+            updateHutangKPICards({
+                bruto: totalBruto,
+                poCount: totalPOCount,
+                pasang: totalPasang,
+                bahanKirim: totalBahan,
+                sjCount: sjCount,
+                kasbon: totalKasbon,
+                kasbonCount: kasbonCount,
+                bayar: totalBayar,
+                sisaHutang: totalSisa
+            });
 
             tbody.innerHTML = summaries.map((s, idx) => {
                 const artName = getPOArtikelDisplay(s.po);
@@ -19382,9 +19444,36 @@
             }
 
             if (list.length === 0) {
+                updateHutangKPICards({ bruto: 0, poCount: 0, pasang: 0, bahanKirim: 0, sjCount: 0, kasbon: 0, kasbonCount: 0, bayar: 0, sisaHutang: 0 });
                 tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-gray-400">Belum ada catatan kasbon makloon.</td></tr>`;
                 return;
             }
+
+            // Hitung KPI dinamis untuk Buku Kasbon
+            const vendorsInKasbon = fVendor ? [fVendor] : Array.from(new Set(list.map(k => (k.makloon || '').trim().toUpperCase()).filter(Boolean)));
+            let tBruto = 0, tPasang = 0, tPO = 0, tBahan = 0, tBayar = 0;
+            vendorsInKasbon.forEach(v => {
+                const vs = getVendorHutangSummary(v);
+                tBruto += vs.brutoTagihan;
+                tPasang += vs.totalPasang;
+                tPO += vs.poCount;
+                tBahan += vs.bahanKirim;
+                tBayar += vs.sudahBayar;
+            });
+            const tKasbon = list.reduce((s, k) => s + (parseFloat(k.nominal) || 0), 0);
+            const tSJ = (db_makloon_kirim || []).filter(sj => vendorsInKasbon.includes((sj.makloon || '').trim().toUpperCase())).length;
+
+            updateHutangKPICards({
+                bruto: tBruto,
+                poCount: tPO,
+                pasang: tPasang,
+                bahanKirim: tBahan,
+                sjCount: tSJ,
+                kasbon: tKasbon,
+                kasbonCount: list.length,
+                bayar: tBayar,
+                sisaHutang: tBruto - tBahan - tKasbon - tBayar
+            });
 
             tbody.innerHTML = list.map((k, idx) => {
                 const nom = parseFloat(k.nominal) || 0;
@@ -19448,9 +19537,37 @@
             }
 
             if (list.length === 0) {
+                updateHutangKPICards({ bruto: 0, poCount: 0, pasang: 0, bahanKirim: 0, sjCount: 0, kasbon: 0, kasbonCount: 0, bayar: 0, sisaHutang: 0 });
                 tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-gray-400">Belum ada riwayat pembayaran makloon.</td></tr>`;
                 return;
             }
+
+            // Hitung KPI dinamis untuk Riwayat Bayar
+            const vendorsInBayar = fVendor ? [fVendor] : Array.from(new Set(list.map(b => (b.makloon || '').trim().toUpperCase()).filter(Boolean)));
+            let tBruto = 0, tPasang = 0, tPO = 0, tBahan = 0, tKasbon = 0;
+            vendorsInBayar.forEach(v => {
+                const vs = getVendorHutangSummary(v);
+                tBruto += vs.brutoTagihan;
+                tPasang += vs.totalPasang;
+                tPO += vs.poCount;
+                tBahan += vs.bahanKirim;
+                tKasbon += vs.kasbon;
+            });
+            const tBayar = list.reduce((s, b) => s + (parseFloat(b.nominal) || 0), 0);
+            const tSJ = (db_makloon_kirim || []).filter(sj => vendorsInBayar.includes((sj.makloon || '').trim().toUpperCase())).length;
+            const tKasbonCount = (db_makloon_kasbon || []).filter(k => vendorsInBayar.includes((k.makloon || '').trim().toUpperCase())).length;
+
+            updateHutangKPICards({
+                bruto: tBruto,
+                poCount: tPO,
+                pasang: tPasang,
+                bahanKirim: tBahan,
+                sjCount: tSJ,
+                kasbon: tKasbon,
+                kasbonCount: tKasbonCount,
+                bayar: tBayar,
+                sisaHutang: tBruto - tBahan - tKasbon - tBayar
+            });
 
             tbody.innerHTML = list.map((b, idx) => {
                 const nom = parseFloat(b.nominal) || 0;
