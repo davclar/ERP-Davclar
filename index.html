@@ -17247,8 +17247,9 @@
                 sItems.forEach(it => {
                     const itBahanRaw = (it.bahan || '').trim();
                     const itWarna = (it.warna || '-').trim().toUpperCase();
+                    const itSatuan = (it.satuan || '').trim().toUpperCase();
                     const isStikerOrAccessory = (itBahanRaw && (itBahanRaw.toUpperCase().includes('STIKER') || itBahanRaw.toUpperCase().includes('STICKER') || itBahanRaw.toUpperCase().includes('LABEL') || itBahanRaw.toUpperCase().includes('HANGTAG')));
-                    const itCat = isStikerOrAccessory ? 'AKSESORIS' : (it.kategori || categorizeMaterial(it.bagian, it.bahan, it.satuan));
+                    const itCat = isStikerOrAccessory ? 'AKSESORIS' : (it.kategori || categorizeMaterial(it.bagian, it.bahan, itSatuan));
                     const itRawQty = parseFloat(it.qty) || 0;
 
                     if (itCat === 'SOLE_SIZED') {
@@ -17647,14 +17648,15 @@
 
         // 7. Render Seluruh Tabel & Kartu Kalkulasi Bahan PO
         function renderPOBahanCalculations(poId) {
-            const data = calculatePORequiredMaterials(poId);
-            const containerSummary = document.getElementById('mrpPOHeaderSummary');
-            const alertBox = document.getElementById('mrpBOMAlert');
+            try {
+                const data = calculatePORequiredMaterials(poId);
+                const containerSummary = document.getElementById('mrpPOHeaderSummary');
+                const alertBox = document.getElementById('mrpBOMAlert');
 
-            if (!data) {
-                if (containerSummary) containerSummary.innerHTML = '';
-                return;
-            }
+                if (!data) {
+                    if (containerSummary) containerSummary.innerHTML = '';
+                    return;
+                }
 
             // 1. Header Summary Cards (6 Kolom Responsive)
             if (containerSummary) {
@@ -17924,6 +17926,10 @@
                     }).join('');
                 }
             }
+            } catch (err) {
+                console.error("Error in renderPOBahanCalculations:", err);
+                if (typeof showToast === 'function') showToast("Gagal memuat kalkulasi bahan PO: " + err.message, "error");
+            }
         }
 
         // Helper Badge Status Pengiriman
@@ -18014,76 +18020,81 @@
         let currentSJSelectedPOs = [];
 
         function openModalBuatSuratJalan(editId) {
-            const modal = document.getElementById('modal-makloon-sj-form');
-            if (!modal) return;
+            try {
+                const modal = document.getElementById('modal-makloon-sj-form');
+                if (!modal) return;
 
-            const uName = (localStorage.getItem('davclar_user') || '').toUpperCase();
-            const access = (window.currentUserAccess && window.currentUserAccess['tab-makloon-bahan']) ? window.currentUserAccess['tab-makloon-bahan'] : (uName === 'ADMIN' ? 'FULL' : 'READ');
-            if (access !== 'FULL') {
-                if (typeof showToast === 'function') showToast("Akses Ditolak: Anda hanya memiliki hak akses LIHAT!", "warning");
-                return;
-            }
-
-            const title = document.getElementById('sjModalTitle');
-            const editInp = document.getElementById('sjEditId');
-            const noInp = document.getElementById('sjNoInput');
-            const tglInp = document.getElementById('sjTglInput');
-            const driverInp = document.getElementById('sjDriverInput');
-            const catatanInp = document.getElementById('sjCatatanInput');
-
-            tempSJItems = [];
-            currentSJSelectedPOs = [];
-
-            const todayStr = new Date().toISOString().split('T')[0];
-
-            if (editId) {
-                const sj = (db_makloon_kirim || []).find(x => x.id === editId);
-                if (!sj) return;
-                if (title) title.innerText = "Edit Surat Jalan Kirim Bahan";
-                if (editInp) editInp.value = sj.id;
-                if (noInp) noInp.value = sj.id;
-                if (tglInp) tglInp.value = sj.tanggal || todayStr;
-                if (driverInp) driverInp.value = sj.driver || '';
-                if (catatanInp) catatanInp.value = sj.catatan || '';
-
-                if (Array.isArray(sj.poList) && sj.poList.length > 0) {
-                    currentSJSelectedPOs = [...sj.poList];
-                } else if (sj.noPO) {
-                    currentSJSelectedPOs = sj.noPO.split(',').map(s => s.trim()).filter(Boolean);
+                const uName = (localStorage.getItem('davclar_user') || '').toUpperCase();
+                const access = (window.currentUserAccess && window.currentUserAccess['tab-makloon-bahan']) ? window.currentUserAccess['tab-makloon-bahan'] : (uName === 'ADMIN' ? 'FULL' : 'READ');
+                if (access !== 'FULL') {
+                    if (typeof showToast === 'function') showToast("Akses Ditolak: Anda hanya memiliki hak akses LIHAT!", "warning");
+                    return;
                 }
 
-                tempSJItems = JSON.parse(JSON.stringify(sj.items || []));
-            } else {
-                if (title) title.innerText = "Buat Surat Jalan Kirim Bahan Baku";
-                if (editInp) editInp.value = '';
-                
-                // Auto generate No Surat Jalan: SJ-BB-YYMM-XXX
-                const yy = String(new Date().getFullYear()).slice(-2);
-                const mm = String(new Date().getMonth() + 1).padStart(2, '0');
-                const prefix = `SJ-BB-${yy}${mm}-`;
-                const countThisMonth = (db_makloon_kirim || []).filter(s => s.id && s.id.startsWith(prefix)).length + 1;
-                const autoNo = `${prefix}${String(countThisMonth).padStart(3, '0')}`;
+                const title = document.getElementById('sjModalTitle');
+                const editInp = document.getElementById('sjEditId');
+                const noInp = document.getElementById('sjNoInput');
+                const tglInp = document.getElementById('sjTglInput');
+                const driverInp = document.getElementById('sjDriverInput');
+                const catatanInp = document.getElementById('sjCatatanInput');
 
-                if (noInp) noInp.value = autoNo;
-                if (tglInp) tglInp.value = todayStr;
-                if (driverInp) driverInp.value = '';
-                if (catatanInp) catatanInp.value = '';
+                tempSJItems = [];
+                currentSJSelectedPOs = [];
 
-                // Default PO pertama dari PO yang sedang dilihat di modul
-                if (currentMakloonBahanPOId) {
-                    currentSJSelectedPOs = [currentMakloonBahanPOId];
+                const todayStr = new Date().toISOString().split('T')[0];
+
+                if (editId) {
+                    const sj = (db_makloon_kirim || []).find(x => x.id === editId);
+                    if (!sj) return;
+                    if (title) title.innerText = "Edit Surat Jalan Kirim Bahan";
+                    if (editInp) editInp.value = sj.id;
+                    if (noInp) noInp.value = sj.id;
+                    if (tglInp) tglInp.value = sj.tanggal || todayStr;
+                    if (driverInp) driverInp.value = sj.driver || '';
+                    if (catatanInp) catatanInp.value = sj.catatan || '';
+
+                    if (Array.isArray(sj.poList) && sj.poList.length > 0) {
+                        currentSJSelectedPOs = [...sj.poList];
+                    } else if (sj.noPO) {
+                        currentSJSelectedPOs = sj.noPO.split(',').map(s => s.trim()).filter(Boolean);
+                    }
+
+                    tempSJItems = JSON.parse(JSON.stringify(sj.items || []));
+                } else {
+                    if (title) title.innerText = "Buat Surat Jalan Kirim Bahan Baku";
+                    if (editInp) editInp.value = '';
+                    
+                    // Auto generate No Surat Jalan: SJ-BB-YYMM-XXX
+                    const yy = String(new Date().getFullYear()).slice(-2);
+                    const mm = String(new Date().getMonth() + 1).padStart(2, '0');
+                    const prefix = `SJ-BB-${yy}${mm}-`;
+                    const countThisMonth = (db_makloon_kirim || []).filter(s => s.id && s.id.startsWith(prefix)).length + 1;
+                    const autoNo = `${prefix}${String(countThisMonth).padStart(3, '0')}`;
+
+                    if (noInp) noInp.value = autoNo;
+                    if (tglInp) tglInp.value = todayStr;
+                    if (driverInp) driverInp.value = '';
+                    if (catatanInp) catatanInp.value = '';
+
+                    // Default PO pertama dari PO yang sedang dilihat di modul
+                    if (currentMakloonBahanPOId) {
+                        currentSJSelectedPOs = [currentMakloonBahanPOId];
+                    }
+
+                    // Tarik otomatis item sisa kebutuhan bahan PO
+                    autoFillSJRemaingItems();
                 }
 
-                // Tarik otomatis item sisa kebutuhan bahan PO
-                autoFillSJRemaingItems();
+                renderSJPOSelection();
+                updateSJModalSisaInfo(currentSJSelectedPOs);
+                renderSJFormItems();
+
+                modal.classList.remove('hidden');
+                setTimeout(() => { modal.classList.remove('opacity-0'); }, 10);
+            } catch (err) {
+                console.error("Error opening Surat Jalan modal:", err);
+                if (typeof showToast === 'function') showToast("Gagal membuka form Surat Jalan: " + err.message, "error");
             }
-
-            renderSJPOSelection();
-            updateSJModalSisaInfo(currentSJSelectedPOs);
-            renderSJFormItems();
-
-            modal.classList.remove('hidden');
-            setTimeout(() => { modal.classList.remove('opacity-0'); }, 10);
         }
 
         function closeMakloonSJModal() {
@@ -18993,9 +19004,10 @@
 
         // Print Rekap Kebutuhan PO (BOM Order Sheet)
         function printPOBahanRequirements(poId) {
-            poId = poId || currentMakloonBahanPOId;
-            const data = calculatePORequiredMaterials(poId);
-            if (!data) return;
+            try {
+                poId = poId || currentMakloonBahanPOId;
+                const data = calculatePORequiredMaterials(poId);
+                if (!data) return;
 
             let sizeColsTh = data.sizeLabels.map(l => `<th style="padding:4px; border:1px solid #333; text-align:center;">${l}</th>`).join('');
 
@@ -19187,13 +19199,18 @@
                 printWin.focus();
                 setTimeout(() => { printWin.print(); }, 500);
             }
+            } catch (err) {
+                console.error("Error printing PO requirements:", err);
+                if (typeof showToast === 'function') showToast("Gagal mencetak rincian bahan: " + err.message, "error");
+            }
         }
 
         // Export Kebutuhan Bahan PO ke Excel
         function exportBahanPOExcel(poId) {
-            poId = poId || currentMakloonBahanPOId;
-            const data = calculatePORequiredMaterials(poId);
-            if (!data) return;
+            try {
+                poId = poId || currentMakloonBahanPOId;
+                const data = calculatePORequiredMaterials(poId);
+                if (!data) return;
 
             if (typeof XLSX === 'undefined') {
                 alert("Pustaka XLSX belum termuat. Silakan periksa koneksi internet.");
@@ -19274,6 +19291,10 @@
             const safeArt = artDisplay ? `_${artDisplay.replace(/[^A-Za-z0-9_-]/g, '_')}` : '';
             XLSX.writeFile(wb, `Kebutuhan_Bahan_PO_${data.po.id}${safeArt}.xlsx`);
             if (typeof showToast === 'function') showToast("File Excel Kebutuhan Bahan berhasil diunduh!", "success");
+            } catch (err) {
+                console.error("Error exporting PO materials to Excel:", err);
+                if (typeof showToast === 'function') showToast("Gagal export Excel: " + err.message, "error");
+            }
         }
 
         // =================================================================
