@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -3415,13 +3415,172 @@
 
                 <!-- TAB: PENERIMAAN & QC -->
                 <section id="tab-makloon-qc" class="tab-content hidden-tab p-2 h-full">
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col items-center justify-center h-full p-8 text-center">
-                        <div class="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mb-6 border border-gray-100 shadow-inner">
-                            <i class="fa-solid fa-clipboard-check text-4xl text-gray-400"></i>
+                    <div class="w-full flex flex-col space-y-4">
+                        <!-- Header Nav & Title -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 shrink-0">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center font-bold text-lg shadow-sm">
+                                    <i class="fa-solid fa-clipboard-check"></i>
+                                </div>
+                                <div>
+                                    <h2 class="text-lg md:text-xl font-black text-gray-800 tracking-tight flex items-center gap-2">
+                                        Penerimaan & Quality Control (QC)
+                                        <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">Sepatu Jadi</span>
+                                    </h2>
+                                    <p class="text-xs text-gray-500">Pencatatan kedatangan sepatu jadi dari pabrik makloon, sortir per-size Grade A (Lolos), Rework (Perbaikan), dan Reject (BS).</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Action Buttons -->
+                            <div class="flex flex-wrap items-center gap-2">
+                                <button onclick="printRekapQCMakloon()" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-bold transition flex items-center gap-2 shadow-xs">
+                                    <i class="fa-solid fa-print"></i> Cetak Rekap QC
+                                </button>
+                                <button onclick="openModalMakloonQC()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-2 shadow-md">
+                                    <i class="fa-solid fa-plus-circle"></i> + Penerimaan Sepatu Baru
+                                </button>
+                            </div>
                         </div>
-                        <h2 class="text-2xl font-bold text-gray-800">Penerimaan & Quality Control (QC)</h2>
-                        <p class="text-sm text-gray-500 mt-2 max-w-md">Catat sepatu jadi yang datang dari pabrik makloon, sortir Grade A, barang perbaikan (rework), dan reject (BS).</p>
-                        <span class="mt-6 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-2 rounded-full text-xs font-bold tracking-wider uppercase shadow-sm"><i class="fa-solid fa-person-digging mr-2"></i>Tahap Pengembangan</span>
+
+                        <!-- 4 KPI Summary Cards (Dinamis Mengikuti Filter) -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 shrink-0">
+                            <!-- Card 1: Total Sepatu Tiba / Diterima -->
+                            <div class="bg-gradient-to-br from-blue-50/80 to-indigo-50/50 p-4 rounded-xl border border-blue-100 flex items-center justify-between shadow-xs">
+                                <div>
+                                    <div class="text-[10px] uppercase font-bold text-blue-700 tracking-wider">1. Total Sepatu Tiba</div>
+                                    <div id="statQCTotalDatang" class="text-xl font-black text-blue-950 mt-1">0 Pasang</div>
+                                    <div id="statQCTotalDatangSub" class="text-[11px] text-blue-600 font-semibold mt-0.5">0 Transaksi Penerimaan</div>
+                                </div>
+                                <div class="w-11 h-11 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center font-bold text-lg">
+                                    <i class="fa-solid fa-boxes-packing"></i>
+                                </div>
+                            </div>
+
+                            <!-- Card 2: Lolos QC (Grade A / Masuk Stok) -->
+                            <div class="bg-gradient-to-br from-emerald-50/80 to-teal-50/50 p-4 rounded-xl border border-emerald-100 flex items-center justify-between shadow-xs">
+                                <div>
+                                    <div class="text-[10px] uppercase font-bold text-emerald-700 tracking-wider">2. Lolos QC (Grade A)</div>
+                                    <div id="statQCGradeA" class="text-xl font-black text-emerald-950 mt-1">0 Pasang</div>
+                                    <div id="statQCGradeASub" class="text-[11px] text-emerald-700 font-semibold mt-0.5">Siap Masuk Stok Gudang</div>
+                                </div>
+                                <div class="w-11 h-11 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold text-lg">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                </div>
+                            </div>
+
+                            <!-- Card 3: Rework / Perbaikan Makloon -->
+                            <div class="bg-gradient-to-br from-amber-50/80 to-orange-50/50 p-4 rounded-xl border border-amber-100 flex items-center justify-between shadow-xs">
+                                <div>
+                                    <div class="text-[10px] uppercase font-bold text-amber-700 tracking-wider">3. Rework (Perbaikan)</div>
+                                    <div id="statQCRework" class="text-xl font-black text-amber-950 mt-1">0 Pasang</div>
+                                    <div id="statQCReworkSub" class="text-[11px] text-amber-700 font-semibold mt-0.5">Kembalikan Sementara ke Pabrik</div>
+                                </div>
+                                <div class="w-11 h-11 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center font-bold text-lg">
+                                    <i class="fa-solid fa-screwdriver-wrench"></i>
+                                </div>
+                            </div>
+
+                            <!-- Card 4: Reject / BS Pabrik -->
+                            <div class="bg-gradient-to-br from-rose-50/80 to-red-50/50 p-4 rounded-xl border border-rose-100 flex items-center justify-between shadow-xs">
+                                <div>
+                                    <div class="text-[10px] uppercase font-bold text-rose-700 tracking-wider">4. Reject / BS Pabrik</div>
+                                    <div id="statQCReject" class="text-xl font-black text-rose-950 mt-1">0 Pasang</div>
+                                    <div id="statQCRejectSub" class="text-[11px] text-rose-700 font-semibold mt-0.5">Cacat Fatal / Potong Tagihan</div>
+                                </div>
+                                <div class="w-11 h-11 rounded-xl bg-rose-500/10 text-rose-600 flex items-center justify-center font-bold text-lg">
+                                    <i class="fa-solid fa-triangle-exclamation"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Subtabs Switcher & Filter Bar -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-3 flex flex-col md:flex-row md:items-center justify-between gap-3 shrink-0">
+                            <!-- Subtabs Button Group -->
+                            <div class="flex items-center space-x-1.5 overflow-x-auto pb-1 md:pb-0">
+                                <button id="btnQCSubtabPO" onclick="switchQCSubtab('po')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 bg-blue-600 text-white shadow-xs whitespace-nowrap">
+                                    <i class="fa-solid fa-list-check"></i> Status Penerimaan per PO
+                                </button>
+                                <button id="btnQCSubtabHistory" onclick="switchQCSubtab('history')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 bg-gray-100 text-gray-600 hover:bg-gray-200 whitespace-nowrap">
+                                    <i class="fa-solid fa-clock-rotate-left"></i> Riwayat Surat Jalan QC
+                                    <span id="badgeQCHistory" class="px-1.5 py-0.2 bg-blue-100 text-blue-800 rounded-full text-[10px] font-bold">0</span>
+                                </button>
+                            </div>
+
+                            <!-- Filter Controls -->
+                            <div class="flex flex-wrap items-center gap-2">
+                                <div class="w-40 sm:w-48">
+                                    <select id="filterQCMakloon" onchange="applyQCFilters()" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-bold text-gray-700 bg-gray-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                        <option value="">Semua Vendor Makloon</option>
+                                    </select>
+                                </div>
+                                <div class="w-32 sm:w-40">
+                                    <select id="filterQCStatus" onchange="applyQCFilters()" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-bold text-gray-700 bg-gray-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                        <option value="ALL">Semua Status PO</option>
+                                        <option value="UNRECEIVED">Belum Ada Masuk</option>
+                                        <option value="PARTIAL">Masuk Sebagian (Parsial)</option>
+                                        <option value="COMPLETED">Selesai / Lengkap</option>
+                                    </select>
+                                </div>
+                                <div class="relative w-44 sm:w-56">
+                                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-400 text-xs"></i>
+                                    <input type="text" id="searchQC" oninput="applyQCFilters()" placeholder="Cari vendor, no PO, QC..." class="w-full pl-8 pr-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SUBTAB 1 CONTENT: STATUS PENERIMAAN PER PO -->
+                        <div id="subtab-content-qc-po" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs">
+                                    <thead class="bg-gray-50 border-b border-gray-200 text-gray-600 font-bold uppercase tracking-wider text-[11px]">
+                                        <tr>
+                                            <th class="p-3 text-center w-12">No</th>
+                                            <th class="p-3">No. PO & Tanggal</th>
+                                            <th class="p-3">Vendor Makloon</th>
+                                            <th class="p-3">Artikel Produk</th>
+                                            <th class="p-3 text-right">Total PO</th>
+                                            <th class="p-3 text-right text-blue-900 bg-blue-50/30">Tiba (Psg)</th>
+                                            <th class="p-3 text-right text-rose-700">Sisa Kurang</th>
+                                            <th class="p-3 text-right text-emerald-700">Grade A (Lolos)</th>
+                                            <th class="p-3 text-right text-amber-700">Rework</th>
+                                            <th class="p-3 text-right text-rose-700">Reject BS</th>
+                                            <th class="p-3 text-center">Status Kedatangan</th>
+                                            <th class="p-3 text-center w-36">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="bodyQCPOProgressTable" class="divide-y divide-gray-100">
+                                        <tr><td colspan="12" class="p-8 text-center text-gray-400">Memuat data progres kedatangan sepatu PO...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- SUBTAB 2 CONTENT: RIWAYAT SURAT JALAN QC -->
+                        <div id="subtab-content-qc-history" class="hidden bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs">
+                                    <thead class="bg-gray-50 border-b border-gray-200 text-gray-600 font-bold uppercase tracking-wider text-[11px]">
+                                        <tr>
+                                            <th class="p-3 text-center w-12">No</th>
+                                            <th class="p-3">No. Dokumen QC & Tgl</th>
+                                            <th class="p-3">No. SJ Pabrik</th>
+                                            <th class="p-3">No. PO</th>
+                                            <th class="p-3">Vendor Makloon</th>
+                                            <th class="p-3">Artikel Produk</th>
+                                            <th class="p-3 text-right font-black text-blue-950 bg-blue-50/30">Total Tiba</th>
+                                            <th class="p-3 text-right text-emerald-700">Grade A</th>
+                                            <th class="p-3 text-right text-amber-700">Rework</th>
+                                            <th class="p-3 text-right text-rose-700">Reject BS</th>
+                                            <th class="p-3 text-gray-600">Pemeriksa QC</th>
+                                            <th class="p-3 text-center w-36">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="bodyQCHistoryTable" class="divide-y divide-gray-100">
+                                        <tr><td colspan="12" class="p-8 text-center text-gray-400">Belum ada riwayat penerimaan sepatu makloon.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </section>
 
@@ -3695,6 +3854,185 @@
                         </div>
                     </div>
                 </section>
+
+                <!-- MODAL: INPUT / EDIT PENERIMAAN & SORTIR QC MAKLOON -->
+                <div id="modal-makloon-qc" class="fixed inset-0 z-[9999] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+                    <div class="fixed inset-0 bg-black/60 backdrop-blur-sm" onclick="closeModalMakloonQC()"></div>
+                    <div class="bg-white rounded-2xl shadow-2xl z-10 w-11/12 max-w-4xl transform scale-95 transition-transform duration-300 flex flex-col max-h-[94vh] overflow-hidden">
+                        <!-- Modal Header -->
+                        <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-blue-50 to-indigo-50 shrink-0">
+                            <div class="flex items-center space-x-2.5">
+                                <span class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center text-sm font-bold shadow-sm">
+                                    <i class="fa-solid fa-clipboard-check"></i>
+                                </span>
+                                <div>
+                                    <h3 id="qcModalTitle" class="text-sm md:text-base font-extrabold text-gray-800">Catat Penerimaan Sepatu Jadi & Sortir QC</h3>
+                                    <p class="text-[11px] text-gray-500">Sortir per-ukuran pasang: Grade A (Lolos QC), Rework (Perbaikan), dan Reject (BS).</p>
+                                </div>
+                            </div>
+                            <button onclick="closeModalMakloonQC()" class="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-white/80 transition">
+                                <i class="fa-solid fa-xmark text-lg"></i>
+                            </button>
+                        </div>
+
+                        <!-- Modal Body Form -->
+                        <div class="p-4 md:p-5 overflow-y-auto flex-1 space-y-4">
+                            <input type="hidden" id="qcEditId">
+
+                            <!-- Top Info Grid -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 bg-gray-50/70 p-3.5 rounded-xl border border-gray-100">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-gray-600 uppercase mb-1">No. Bukti QC</label>
+                                    <input type="text" id="qcNo" readonly class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-mono font-bold bg-white text-blue-700">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-gray-600 uppercase mb-1">Tanggal Tiba *</label>
+                                    <input type="date" id="qcTanggal" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold bg-white focus:ring-1 focus:ring-blue-500 focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-gray-600 uppercase mb-1">No. SJ dari Pabrik</label>
+                                    <input type="text" id="qcNoSJPabrik" placeholder="Misal: SJ-123 / Supir" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold bg-white focus:ring-1 focus:ring-blue-500 focus:outline-none uppercase">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-gray-600 uppercase mb-1">Petugas QC *</label>
+                                    <input type="text" id="qcPemeriksa" value="Admin QC" class="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold bg-white focus:ring-1 focus:ring-blue-500 focus:outline-none">
+                                </div>
+                            </div>
+
+                            <!-- PO Selection & Context Card -->
+                            <div class="bg-blue-50/50 p-3.5 rounded-xl border border-blue-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                                <div class="flex-1">
+                                    <label class="block text-[11px] font-bold text-blue-900 uppercase mb-1">Pilih Nomor PO Produksi Makloon *</label>
+                                    <select id="qcPOSelect" onchange="onQCPOSelectChange()" class="w-full px-3 py-1.5 border border-blue-200 rounded-lg text-xs font-bold text-blue-950 bg-white focus:ring-1 focus:ring-blue-500 focus:outline-none">
+                                        <option value="">-- Pilih Nomor PO --</option>
+                                    </select>
+                                </div>
+                                <div id="qcPOContextBadge" class="hidden md:flex items-center gap-3 shrink-0 text-xs bg-white px-3 py-2 rounded-lg border border-blue-200 shadow-2xs">
+                                    <div>
+                                        <div class="text-[10px] text-gray-400 font-bold uppercase">Vendor Makloon</div>
+                                        <div id="qcInfoVendor" class="font-extrabold text-blue-900">-</div>
+                                    </div>
+                                    <div class="border-l border-gray-200 pl-3">
+                                        <div class="text-[10px] text-gray-400 font-bold uppercase">Artikel & Warna</div>
+                                        <div id="qcInfoArtikel" class="font-extrabold text-gray-800">-</div>
+                                    </div>
+                                    <div class="border-l border-gray-200 pl-3">
+                                        <div class="text-[10px] text-gray-400 font-bold uppercase">Total PO / Sisa</div>
+                                        <div id="qcInfoPOPairs" class="font-extrabold text-indigo-700">-</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Size Matrix Table & Quick Actions -->
+                            <div>
+                                <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                                    <div class="text-xs font-black text-gray-800 uppercase tracking-wide flex items-center gap-1.5">
+                                        <i class="fa-solid fa-shoe-prints text-blue-600"></i> Rincian Kedatangan & Sortir QC per Ukuran (Size)
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                        <button type="button" onclick="autoFillQCSisaAll()" class="px-2.5 py-1 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-lg text-[11px] font-bold transition flex items-center gap-1">
+                                            <i class="fa-solid fa-wand-magic-sparkles"></i> Isi Penuh Sisa
+                                        </button>
+                                        <button type="button" onclick="resetQCSizeInputs()" class="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg text-[11px] font-bold transition">
+                                            Reset Input
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="overflow-x-auto border border-gray-200 rounded-xl bg-white shadow-2xs">
+                                    <table class="w-full text-left text-xs">
+                                        <thead class="bg-gray-50 border-b border-gray-200 text-gray-600 font-bold uppercase tracking-wider text-[11px]">
+                                            <tr>
+                                                <th class="p-2.5 text-center w-12">Sz</th>
+                                                <th class="p-2.5 text-center">Ukuran</th>
+                                                <th class="p-2.5 text-right">Target PO</th>
+                                                <th class="p-2.5 text-right text-gray-500">Tiba Lalu</th>
+                                                <th class="p-2.5 text-right text-blue-700 font-bold">Sisa Kurang</th>
+                                                <th class="p-2.5 text-center w-28 bg-blue-50/70 font-extrabold text-blue-900">Datang Sekarang</th>
+                                                <th class="p-2.5 text-center w-28 bg-emerald-50/70 font-extrabold text-emerald-900">Grade A (Lolos)</th>
+                                                <th class="p-2.5 text-center w-28 bg-amber-50/70 font-extrabold text-amber-900">Rework (Perbaikan)</th>
+                                                <th class="p-2.5 text-center w-28 bg-rose-50/70 font-extrabold text-rose-900">Reject (BS)</th>
+                                                <th class="p-2.5 text-center w-24">Cek Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="qcSizeTableBody" class="divide-y divide-gray-100 font-medium">
+                                            <tr><td colspan="10" class="p-6 text-center text-gray-400 italic">Silakan pilih Nomor PO terlebih dahulu di atas.</td></tr>
+                                        </tbody>
+                                        <tfoot id="qcSizeTableFoot" class="bg-gray-50/90 font-black border-t border-gray-200 text-xs">
+                                            <tr>
+                                                <td colspan="2" class="p-2.5 text-center">TOTAL</td>
+                                                <td id="qcFootTargetPO" class="p-2.5 text-right">0</td>
+                                                <td id="qcFootTibaLalu" class="p-2.5 text-right text-gray-500">0</td>
+                                                <td id="qcFootSisaKurang" class="p-2.5 text-right text-blue-700">0</td>
+                                                <td id="qcFootDatang" class="p-2.5 text-center text-blue-900 bg-blue-100/50">0</td>
+                                                <td id="qcFootGradeA" class="p-2.5 text-center text-emerald-800 bg-emerald-100/50">0</td>
+                                                <td id="qcFootRework" class="p-2.5 text-center text-amber-800 bg-amber-100/50">0</td>
+                                                <td id="qcFootReject" class="p-2.5 text-center text-rose-800 bg-rose-100/50">0</td>
+                                                <td id="qcFootBalance" class="p-2.5 text-center text-[10px] text-emerald-700">✓ PAS</td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Catatan Kondisi Barang -->
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-600 uppercase mb-1">Catatan QC / Kondisi Fisik Sepatu</label>
+                                <textarea id="qcCatatan" rows="2" placeholder="Catatan kondisi sepatu, detail rework/cacat BS, atau keterangan pengiriman supir..." class="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Modal Footer -->
+                        <div class="p-4 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3 bg-gray-50 rounded-b-2xl shrink-0">
+                            <div class="text-xs text-gray-500 flex items-center gap-2">
+                                <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                                <span>Sepatu <b>Grade A</b> otomatis siap diintegrasikan ke Stok Gudang.</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button type="button" onclick="closeModalMakloonQC()" class="px-4 py-2 border border-gray-200 hover:bg-gray-100 text-gray-700 rounded-lg text-xs font-bold transition">
+                                    Batal
+                                </button>
+                                <button type="button" onclick="saveMakloonQC()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow-sm flex items-center gap-1.5">
+                                    <i class="fa-solid fa-floppy-disk"></i> Simpan Penerimaan & QC
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODAL: DETAIL & CETAK SLIP PENERIMAAN QC -->
+                <div id="modal-makloon-qc-detail" class="fixed inset-0 z-[9999] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+                    <div class="fixed inset-0 bg-black/60 backdrop-blur-sm" onclick="closeModalMakloonQCDetail()"></div>
+                    <div class="bg-white rounded-2xl shadow-2xl z-10 w-11/12 max-w-3xl transform scale-95 transition-transform duration-300 flex flex-col max-h-[92vh] overflow-hidden">
+                        <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
+                            <div class="flex items-center space-x-2.5">
+                                <span class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center text-sm font-bold shadow-sm">
+                                    <i class="fa-solid fa-file-invoice"></i>
+                                </span>
+                                <div>
+                                    <h3 id="qcDetailTitle" class="text-sm md:text-base font-extrabold text-gray-800">Slip Bukti Penerimaan & QC</h3>
+                                    <p class="text-[11px] text-gray-500" id="qcDetailSubtitle">-</p>
+                                </div>
+                            </div>
+                            <button onclick="closeModalMakloonQCDetail()" class="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-white transition">
+                                <i class="fa-solid fa-xmark text-lg"></i>
+                            </button>
+                        </div>
+
+                        <div id="qcDetailContent" class="p-5 overflow-y-auto flex-1 space-y-4">
+                            <!-- Injected by renderQCDetailModal() -->
+                        </div>
+
+                        <div class="p-4 border-t border-gray-100 flex items-center justify-between bg-gray-50 rounded-b-2xl shrink-0">
+                            <button onclick="closeModalMakloonQCDetail()" class="px-4 py-2 border border-gray-200 hover:bg-gray-100 text-gray-700 rounded-lg text-xs font-bold transition">
+                                Tutup
+                            </button>
+                            <button id="btnQCDetailPrint" onclick="" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                                <i class="fa-solid fa-print"></i> Cetak Slip QC (A4)
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- MODAL: INPUT / EDIT KASBON MAKLOON -->
                 <div id="modal-makloon-kasbon" class="fixed inset-0 z-[9999] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
@@ -4439,6 +4777,7 @@
         let db_makloon_kirim = getSafeArray('davclar_makloon_kirim');
         let db_makloon_kasbon = getSafeArray('davclar_makloon_kasbon');
         let db_makloon_bayar  = getSafeArray('davclar_makloon_bayar');
+        let db_makloon_qc     = getSafeArray('davclar_makloon_qc');
 
         // ==========================================
         // FITUR RESPONSIVE (SIDEBAR TOGGLE MOBILE & PC)
@@ -4565,7 +4904,7 @@
         };
 
         // 3. Definisikan dbKeys & Listener Firebase
-        const dbKeys = ['davclar_barang', 'davclar_customer', 'davclar_po', 'davclar_so', 'davclar_invoice', 'davclar_payment', 'davclar_kontrabon', 'davclar_sales_cp', 'davclar_kasbon', 'davclar_users', 'davclar_makloon_cost', 'davclar_makloon_kirim', 'davclar_makloon_kasbon', 'davclar_makloon_bayar'];
+        const dbKeys = ['davclar_barang', 'davclar_customer', 'davclar_po', 'davclar_so', 'davclar_invoice', 'davclar_payment', 'davclar_kontrabon', 'davclar_sales_cp', 'davclar_kasbon', 'davclar_users', 'davclar_makloon_cost', 'davclar_makloon_kirim', 'davclar_makloon_kasbon', 'davclar_makloon_bayar', 'davclar_makloon_qc'];
 
         if (window.firebaseDB) {
             // Debounce render — UI auto-refresh 1x setelah semua key Firebase selesai diupdate
@@ -4585,6 +4924,7 @@
                     if (typeof renderMakloonCostTable === 'function') renderMakloonCostTable();
                     if (typeof renderMakloonBahanModule === 'function') renderMakloonBahanModule();
                     if (typeof renderHutangMakloonModule === 'function') renderHutangMakloonModule();
+                    if (typeof renderMakloonQCModule === 'function') renderMakloonQCModule();
                 }, 500);
             }
 
@@ -4639,6 +4979,7 @@
                     if(key === 'davclar_makloon_kirim') db_makloon_kirim = cleanData;
                     if(key === 'davclar_makloon_kasbon') db_makloon_kasbon = cleanData;
                     if(key === 'davclar_makloon_bayar') db_makloon_bayar = cleanData;
+                    if(key === 'davclar_makloon_qc') db_makloon_qc = cleanData;
                     
                     // Tulis ke localStorage TANPA memicu Firebase sync (pakai originalSetItem)
                     window.originalSetItem.call(window.localStorage, key, JSON.stringify(cleanData));
@@ -5009,6 +5350,10 @@
 
             if(tabId === 'tab-makloon-bahan') { 
                 if(typeof renderMakloonBahanModule === 'function') renderMakloonBahanModule();
+            }
+
+            if(tabId === 'tab-makloon-qc') { 
+                if(typeof renderMakloonQCModule === 'function') renderMakloonQCModule();
             }
 
             if(tabId === 'tab-hutang') { 
@@ -11191,7 +11536,8 @@
                 davclar_makloon_cost: typeof db_makloon_cost !== 'undefined' ? db_makloon_cost : [],
                 davclar_makloon_kirim: typeof db_makloon_kirim !== 'undefined' ? db_makloon_kirim : [],
                 davclar_makloon_kasbon: typeof db_makloon_kasbon !== 'undefined' ? db_makloon_kasbon : [],
-                davclar_makloon_bayar: typeof db_makloon_bayar !== 'undefined' ? db_makloon_bayar : []
+                davclar_makloon_bayar: typeof db_makloon_bayar !== 'undefined' ? db_makloon_bayar : [],
+                davclar_makloon_qc: typeof db_makloon_qc !== 'undefined' ? db_makloon_qc : []
             };
 
             // 2. Ubah jadi format JSON Text yang rapi
@@ -11271,6 +11617,8 @@
             window.firebaseWrite('davclar_makloon_kasbon', data.davclar_makloon_kasbon);
                         if(data.davclar_makloon_bayar) localStorage.setItem('davclar_makloon_bayar', JSON.stringify(data.davclar_makloon_bayar));
             window.firebaseWrite('davclar_makloon_bayar', data.davclar_makloon_bayar);
+                        if(data.davclar_makloon_qc) localStorage.setItem('davclar_makloon_qc', JSON.stringify(data.davclar_makloon_qc));
+            window.firebaseWrite('davclar_makloon_qc', data.davclar_makloon_qc);
 
                         if(typeof showToast === "function") showToast("Restore Berhasil! Memuat ulang sistem...", "success");
                         
@@ -20624,6 +20972,1225 @@
             setTimeout(() => { win.print(); }, 250);
         }
 
+        // =================================================================
+        // MODUL 5: PENERIMAAN & QUALITY CONTROL (QC) MAKLOON
+        // =================================================================
+        let currentQCSubtab = 'po'; // 'po' atau 'history'
+
+        // Switch Sub-Tab Penerimaan & QC
+        function switchQCSubtab(tabName) {
+            currentQCSubtab = tabName;
+            const btnPO = document.getElementById('btnQCSubtabPO');
+            const btnHist = document.getElementById('btnQCSubtabHistory');
+            const contentPO = document.getElementById('subtab-content-qc-po');
+            const contentHist = document.getElementById('subtab-content-qc-history');
+
+            if (tabName === 'po') {
+                if (btnPO) {
+                    btnPO.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 bg-blue-600 text-white shadow-xs whitespace-nowrap";
+                }
+                if (btnHist) {
+                    btnHist.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 bg-gray-100 text-gray-600 hover:bg-gray-200 whitespace-nowrap";
+                }
+                if (contentPO) contentPO.classList.remove('hidden');
+                if (contentHist) contentHist.classList.add('hidden');
+            } else {
+                if (btnPO) {
+                    btnPO.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 bg-gray-100 text-gray-600 hover:bg-gray-200 whitespace-nowrap";
+                }
+                if (btnHist) {
+                    btnHist.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 bg-blue-600 text-white shadow-xs whitespace-nowrap";
+                }
+                if (contentPO) contentPO.classList.add('hidden');
+                if (contentHist) contentHist.classList.remove('hidden');
+            }
+
+            applyQCFilters();
+        }
+
+        // Apply filters & render active subtab
+        function applyQCFilters() {
+            if (currentQCSubtab === 'po') {
+                renderQCPOProgressTable();
+            } else {
+                renderQCHistoryTable();
+            }
+        }
+
+        // Main Module Render
+        function renderMakloonQCModule() {
+            const filterVendor = document.getElementById('filterQCMakloon');
+            const badgeHist = document.getElementById('badgeQCHistory');
+
+            if (badgeHist) badgeHist.innerText = (db_makloon_qc || []).length;
+
+            // Kumpulkan seluruh vendor makloon unik dari PO dan QC
+            const allVendors = Array.from(new Set([
+                ...(db_po || []).map(p => (p.makloon || '').trim().toUpperCase()),
+                ...(db_makloon_qc || []).map(q => (q.makloon || '').trim().toUpperCase())
+            ].filter(Boolean))).sort();
+
+            if (filterVendor) {
+                const curVal = filterVendor.value;
+                filterVendor.innerHTML = '<option value="">Semua Vendor Makloon</option>' +
+                    allVendors.map(v => `<option value="${v}" ${v === curVal ? 'selected' : ''}>${v}</option>`).join('');
+            }
+
+            switchQCSubtab(currentQCSubtab);
+        }
+
+        // Update 4 Kartu KPI Ringkasan QC Dinamis
+        function updateQCKPICards({ totalDatang = 0, totalGradeA = 0, totalRework = 0, totalReject = 0, countInfo = '0 Transaksi Penerimaan' } = {}) {
+            const elDatang = document.getElementById('statQCTotalDatang');
+            const elDatangSub = document.getElementById('statQCTotalDatangSub');
+            const elGradeA = document.getElementById('statQCGradeA');
+            const elGradeASub = document.getElementById('statQCGradeASub');
+            const elRework = document.getElementById('statQCRework');
+            const elReworkSub = document.getElementById('statQCReworkSub');
+            const elReject = document.getElementById('statQCReject');
+            const elRejectSub = document.getElementById('statQCRejectSub');
+
+            if (elDatang) elDatang.innerText = `${Math.round(totalDatang).toLocaleString('id-ID')} Pasang`;
+            if (elDatangSub) elDatangSub.innerText = countInfo;
+
+            const pctA = totalDatang > 0 ? ((totalGradeA / totalDatang) * 100).toFixed(1) : '0';
+            const pctRework = totalDatang > 0 ? ((totalRework / totalDatang) * 100).toFixed(1) : '0';
+            const pctReject = totalDatang > 0 ? ((totalReject / totalDatang) * 100).toFixed(1) : '0';
+
+            if (elGradeA) elGradeA.innerText = `${Math.round(totalGradeA).toLocaleString('id-ID')} Pasang`;
+            if (elGradeASub) elGradeASub.innerText = `${pctA}% Masuk Stok Gudang`;
+
+            if (elRework) elRework.innerText = `${Math.round(totalRework).toLocaleString('id-ID')} Pasang`;
+            if (elReworkSub) elReworkSub.innerText = `${pctRework}% Perbaikan ke Pabrik`;
+
+            if (elReject) elReject.innerText = `${Math.round(totalReject).toLocaleString('id-ID')} Pasang`;
+            if (elRejectSub) elRejectSub.innerText = `${pctReject}% BS / Cacat Fatal`;
+        }
+
+        // Helper: Hitung Progres QC & Size Breakdown satu PO
+        function getPOQCSummary(poId, excludeQCId = null) {
+            const po = (db_po || []).find(p => p.id === poId);
+            if (!po) return null;
+
+            // Hitung target per-size dari po.items
+            const sizeDetails = [];
+            let totalTargetPO = 0;
+
+            for (let i = 1; i <= 8; i++) {
+                const label = (po.sizeLabels && po.sizeLabels[i - 1]) ? String(po.sizeLabels[i - 1]).trim() : `S${i}`;
+                let qtyPO = 0;
+                (po.items || []).forEach(it => {
+                    const szArr = Array.isArray(it.sizes) && it.sizes.length > 0 ? it.sizes : [
+                        parseInt(it.s1) || 0, parseInt(it.s2) || 0, parseInt(it.s3) || 0, parseInt(it.s4) || 0,
+                        parseInt(it.s5) || 0, parseInt(it.s6) || 0, parseInt(it.s7) || 0, parseInt(it.s8) || 0
+                    ];
+                    qtyPO += (szArr[i - 1] || 0);
+                });
+                totalTargetPO += qtyPO;
+
+                sizeDetails.push({
+                    sizeIndex: i,
+                    sizeLabel: label,
+                    targetPO: qtyPO,
+                    tibaLalu: 0,
+                    gradeALalu: 0,
+                    reworkLalu: 0,
+                    rejectLalu: 0,
+                    sisaKurang: qtyPO
+                });
+            }
+
+            // Ambil semua surat penerimaan QC untuk PO ini
+            const qcReceipts = (db_makloon_qc || []).filter(q => q.poId === poId && (!excludeQCId || q.id !== excludeQCId));
+
+            let totalTiba = 0, totalGradeA = 0, totalRework = 0, totalReject = 0;
+
+            qcReceipts.forEach(rc => {
+                totalTiba += (rc.totalDatang || 0);
+                totalGradeA += (rc.totalGradeA || 0);
+                totalRework += (rc.totalRework || 0);
+                totalReject += (rc.totalRejectBS || 0);
+
+                if (Array.isArray(rc.sizes)) {
+                    rc.sizes.forEach(sz => {
+                        const targetSz = sizeDetails.find(s => s.sizeIndex === sz.sizeIndex);
+                        if (targetSz) {
+                            targetSz.tibaLalu += (sz.datang || 0);
+                            targetSz.gradeALalu += (sz.gradeA || 0);
+                            targetSz.reworkLalu += (sz.rework || 0);
+                            targetSz.rejectLalu += (sz.rejectBS || 0);
+                        }
+                    });
+                }
+            });
+
+            sizeDetails.forEach(sz => {
+                sz.sisaKurang = Math.max(0, sz.targetPO - sz.tibaLalu);
+            });
+
+            const sisaKurangPO = Math.max(0, totalTargetPO - totalTiba);
+            let status = 'UNRECEIVED';
+            if (totalTiba >= totalTargetPO && totalTargetPO > 0) {
+                status = 'COMPLETED';
+            } else if (totalTiba > 0) {
+                status = 'PARTIAL';
+            }
+
+            return {
+                po,
+                poId,
+                makloon: (po.makloon || '').trim().toUpperCase(),
+                artikel: getPOArtikelDisplay(po) || '(Tanpa Artikel)',
+                totalTargetPO,
+                totalTiba,
+                sisaKurang: sisaKurangPO,
+                totalGradeA,
+                totalRework,
+                totalReject,
+                status,
+                sizeDetails,
+                receiptsCount: qcReceipts.length
+            };
+        }
+
+        // Render Sub-Tab 1: Status Penerimaan per PO
+        function renderQCPOProgressTable() {
+            const tbody = document.getElementById('bodyQCPOProgressTable');
+            if (!tbody) return;
+
+            const fVendor = (document.getElementById('filterQCMakloon')?.value || '').trim().toUpperCase();
+            const fStatus = document.getElementById('filterQCStatus')?.value || 'ALL';
+            const fSearch = (document.getElementById('searchQC')?.value || '').trim().toLowerCase();
+
+            let list = [...(db_po || [])];
+
+            if (fVendor) {
+                list = list.filter(p => (p.makloon || '').trim().toUpperCase() === fVendor);
+            }
+
+            let summaries = list.map(p => getPOQCSummary(p.id)).filter(Boolean);
+
+            if (fStatus === 'UNRECEIVED') {
+                summaries = summaries.filter(s => s.status === 'UNRECEIVED');
+            } else if (fStatus === 'PARTIAL') {
+                summaries = summaries.filter(s => s.status === 'PARTIAL');
+            } else if (fStatus === 'COMPLETED') {
+                summaries = summaries.filter(s => s.status === 'COMPLETED');
+            }
+
+            if (fSearch) {
+                summaries = summaries.filter(s =>
+                    s.poId.toLowerCase().includes(fSearch) ||
+                    s.makloon.toLowerCase().includes(fSearch) ||
+                    s.artikel.toLowerCase().includes(fSearch)
+                );
+            }
+
+            if (summaries.length === 0) {
+                updateQCKPICards({ totalDatang: 0, totalGradeA: 0, totalRework: 0, totalReject: 0, countInfo: '0 PO Terfilter' });
+                tbody.innerHTML = `<tr><td colspan="12" class="p-8 text-center text-gray-400">Tidak ada data PO yang sesuai kriteria filter.</td></tr>`;
+                return;
+            }
+
+            let sumDatang = 0, sumGradeA = 0, sumRework = 0, sumReject = 0;
+            summaries.forEach(s => {
+                sumDatang += s.totalTiba;
+                sumGradeA += s.totalGradeA;
+                sumRework += s.totalRework;
+                sumReject += s.totalReject;
+            });
+
+            updateQCKPICards({
+                totalDatang: sumDatang,
+                totalGradeA: sumGradeA,
+                totalRework: sumRework,
+                totalReject: sumReject,
+                countInfo: `${summaries.length} PO Terfilter`
+            });
+
+            tbody.innerHTML = summaries.map((s, idx) => {
+                let statusBadge = '';
+                if (s.status === 'COMPLETED') {
+                    statusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-200">
+                        <i class="fa-solid fa-circle-check text-emerald-600"></i> LENGKAP (100%)
+                    </span>`;
+                } else if (s.status === 'PARTIAL') {
+                    const pct = s.totalTargetPO > 0 ? Math.round((s.totalTiba / s.totalTargetPO) * 100) : 0;
+                    statusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-200">
+                        <i class="fa-solid fa-hourglass-half text-amber-600"></i> PARSIAL (${pct}%)
+                    </span>`;
+                } else {
+                    statusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-gray-100 text-gray-600">
+                        <i class="fa-solid fa-circle-pause text-gray-400"></i> BELUM TERIMA
+                    </span>`;
+                }
+
+                const sisaClass = s.sisaKurang > 0 ? 'text-rose-700 font-extrabold' : 'text-gray-400';
+
+                return `
+                    <tr class="hover:bg-blue-50/30 transition">
+                        <td class="p-3 text-center text-gray-400 font-medium">${idx + 1}</td>
+                        <td class="p-3">
+                            <div class="font-black text-blue-900 text-xs">${s.poId}</div>
+                            <div class="text-[10px] text-gray-500">${s.po.tanggal || '-'}</div>
+                        </td>
+                        <td class="p-3 font-extrabold text-gray-800 text-xs">${s.makloon}</td>
+                        <td class="p-3">
+                            <div class="font-bold text-gray-800 text-xs">${s.artikel}</div>
+                        </td>
+                        <td class="p-3 text-right font-black text-gray-800">${s.totalTargetPO.toLocaleString('id-ID')}</td>
+                        <td class="p-3 text-right font-black text-blue-900 bg-blue-50/40">${s.totalTiba.toLocaleString('id-ID')}</td>
+                        <td class="p-3 text-right ${sisaClass}">${s.sisaKurang.toLocaleString('id-ID')}</td>
+                        <td class="p-3 text-right font-bold text-emerald-700">${s.totalGradeA.toLocaleString('id-ID')}</td>
+                        <td class="p-3 text-right font-bold text-amber-700">${s.totalRework.toLocaleString('id-ID')}</td>
+                        <td class="p-3 text-right font-bold text-rose-700">${s.totalReject.toLocaleString('id-ID')}</td>
+                        <td class="p-3 text-center">${statusBadge}</td>
+                        <td class="p-3 text-center">
+                            <div class="flex items-center justify-center gap-1.5">
+                                <button onclick="openModalMakloonQC('', '${s.poId}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[11px] font-bold transition shadow-xs flex items-center gap-1" title="Input Penerimaan Sepatu Jadi">
+                                    <i class="fa-solid fa-plus"></i> Terima
+                                </button>
+                                <button onclick="filterQCHistoryByPO('${s.poId}')" class="p-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-bold transition" title="Lihat Riwayat QC PO ini">
+                                    <i class="fa-solid fa-clock-rotate-left"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Quick jump to history tab filtered by PO
+        function filterQCHistoryByPO(poId) {
+            const searchInput = document.getElementById('searchQC');
+            if (searchInput) searchInput.value = poId;
+            switchQCSubtab('history');
+        }
+
+        // Render Sub-Tab 2: Riwayat Surat Jalan QC
+        function renderQCHistoryTable() {
+            const tbody = document.getElementById('bodyQCHistoryTable');
+            if (!tbody) return;
+
+            const fVendor = (document.getElementById('filterQCMakloon')?.value || '').trim().toUpperCase();
+            const fSearch = (document.getElementById('searchQC')?.value || '').trim().toLowerCase();
+
+            let list = [...(db_makloon_qc || [])].reverse();
+
+            if (fVendor) {
+                list = list.filter(q => (q.makloon || '').trim().toUpperCase() === fVendor);
+            }
+
+            if (fSearch) {
+                list = list.filter(q =>
+                    (q.id || '').toLowerCase().includes(fSearch) ||
+                    (q.poId || '').toLowerCase().includes(fSearch) ||
+                    (q.noSJPabrik || '').toLowerCase().includes(fSearch) ||
+                    (q.makloon || '').toLowerCase().includes(fSearch) ||
+                    (q.artikel || '').toLowerCase().includes(fSearch) ||
+                    (q.pemeriksa || '').toLowerCase().includes(fSearch)
+                );
+            }
+
+            if (list.length === 0) {
+                updateQCKPICards({ totalDatang: 0, totalGradeA: 0, totalRework: 0, totalReject: 0, countInfo: '0 Surat Jalan QC' });
+                tbody.innerHTML = `<tr><td colspan="12" class="p-8 text-center text-gray-400">Belum ada riwayat penerimaan sepatu makloon yang sesuai kriteria.</td></tr>`;
+                return;
+            }
+
+            let sumDatang = 0, sumGradeA = 0, sumRework = 0, sumReject = 0;
+            list.forEach(q => {
+                sumDatang += (q.totalDatang || 0);
+                sumGradeA += (q.totalGradeA || 0);
+                sumRework += (q.totalRework || 0);
+                sumReject += (q.totalRejectBS || 0);
+            });
+
+            updateQCKPICards({
+                totalDatang: sumDatang,
+                totalGradeA: sumGradeA,
+                totalRework: sumRework,
+                totalReject: sumReject,
+                countInfo: `${list.length} Surat Jalan QC`
+            });
+
+            tbody.innerHTML = list.map((q, idx) => {
+                return `
+                    <tr class="hover:bg-gray-50/80 transition">
+                        <td class="p-3 text-center text-gray-400 font-medium">${idx + 1}</td>
+                        <td class="p-3">
+                            <div class="font-black text-blue-900 text-xs">${q.id}</div>
+                            <div class="text-[10px] text-gray-500">${q.tanggal || '-'}</div>
+                        </td>
+                        <td class="p-3 font-semibold text-gray-700 text-xs">${q.noSJPabrik || '-'}</td>
+                        <td class="p-3 font-bold text-gray-900 text-xs">${q.poId || '-'}</td>
+                        <td class="p-3 font-extrabold text-gray-800 text-xs">${q.makloon || '-'}</td>
+                        <td class="p-3 font-bold text-gray-700 text-xs">${q.artikel || '-'}</td>
+                        <td class="p-3 text-right font-black text-blue-950 bg-blue-50/40">${(q.totalDatang || 0).toLocaleString('id-ID')}</td>
+                        <td class="p-3 text-right font-black text-emerald-700">${(q.totalGradeA || 0).toLocaleString('id-ID')}</td>
+                        <td class="p-3 text-right font-bold text-amber-700">${(q.totalRework || 0).toLocaleString('id-ID')}</td>
+                        <td class="p-3 text-right font-bold text-rose-700">${(q.totalRejectBS || 0).toLocaleString('id-ID')}</td>
+                        <td class="p-3 text-gray-600 text-xs">${q.pemeriksa || '-'}</td>
+                        <td class="p-3 text-center">
+                            <div class="flex items-center justify-center gap-1">
+                                <button onclick="openModalMakloonQCDetail('${q.id}')" class="p-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-bold transition" title="Lihat Slip QC">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                                <button onclick="openModalMakloonQC('${q.id}')" class="p-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg text-xs font-bold transition" title="Edit Penerimaan">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </button>
+                                <button onclick="deleteMakloonQC('${q.id}')" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg text-xs font-bold transition" title="Hapus Dokumen">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                                <button onclick="printSlipQCMakloon('${q.id}')" class="p-1.5 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition" title="Cetak Slip QC">
+                                    <i class="fa-solid fa-print"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // =================================================================
+        // FORM & MODAL INPUT / EDIT QC MAKLOON
+        // =================================================================
+        let currentQCActiveSizes = [];
+
+        function generateNextQCId() {
+            const today = new Date();
+            const yy = String(today.getFullYear()).slice(-2);
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const prefix = `QC-${yy}${mm}-`;
+
+            let maxNum = 0;
+            (db_makloon_qc || []).forEach(q => {
+                if (q.id && q.id.startsWith(prefix)) {
+                    const numPart = parseInt(q.id.replace(prefix, '')) || 0;
+                    if (numPart > maxNum) maxNum = numPart;
+                }
+            });
+
+            return `${prefix}${String(maxNum + 1).padStart(3, '0')}`;
+        }
+
+        function openModalMakloonQC(editId = '', defaultPOId = '') {
+            const modal = document.getElementById('modal-makloon-qc');
+            if (!modal) return;
+
+            const inpEditId = document.getElementById('qcEditId');
+            const inpNo = document.getElementById('qcNo');
+            const inpTanggal = document.getElementById('qcTanggal');
+            const inpSJPabrik = document.getElementById('qcNoSJPabrik');
+            const inpPemeriksa = document.getElementById('qcPemeriksa');
+            const inpCatatan = document.getElementById('qcCatatan');
+            const selectPO = document.getElementById('qcPOSelect');
+            const modalTitle = document.getElementById('qcModalTitle');
+
+            // Populate PO selector
+            if (selectPO) {
+                const poOptions = (db_po || []).map(p => {
+                    const art = getPOArtikelDisplay(p);
+                    let pairs = 0;
+                    (p.items || []).forEach(it => {
+                        const szArr = Array.isArray(it.sizes) && it.sizes.length > 0 ? it.sizes : [
+                            parseInt(it.s1) || 0, parseInt(it.s2) || 0, parseInt(it.s3) || 0, parseInt(it.s4) || 0,
+                            parseInt(it.s5) || 0, parseInt(it.s6) || 0, parseInt(it.s7) || 0, parseInt(it.s8) || 0
+                        ];
+                        pairs += (parseInt(it.total) || szArr.reduce((a, b) => a + b, 0));
+                    });
+                    return `<option value="${p.id}">${p.id} - ${p.makloon || 'Vendor'} - ${art || 'Sepatu'} (${pairs.toLocaleString('id-ID')} Psg)</option>`;
+                }).join('');
+
+                selectPO.innerHTML = '<option value="">-- Pilih Nomor PO Produksi --</option>' + poOptions;
+            }
+
+            if (editId) {
+                const rec = (db_makloon_qc || []).find(q => q.id === editId);
+                if (!rec) return;
+
+                if (modalTitle) modalTitle.innerText = `Edit Penerimaan & QC: ${rec.id}`;
+                if (inpEditId) inpEditId.value = rec.id;
+                if (inpNo) inpNo.value = rec.id;
+                if (inpTanggal) inpTanggal.value = rec.tanggal || '';
+                if (inpSJPabrik) inpSJPabrik.value = rec.noSJPabrik || '';
+                if (inpPemeriksa) inpPemeriksa.value = rec.pemeriksa || 'Admin QC';
+                if (inpCatatan) inpCatatan.value = rec.catatan || '';
+                if (selectPO) selectPO.value = rec.poId || '';
+
+                onQCPOSelectChange(rec);
+            } else {
+                if (modalTitle) modalTitle.innerText = "Catat Penerimaan Sepatu Jadi & Sortir QC";
+                if (inpEditId) inpEditId.value = '';
+                if (inpNo) inpNo.value = generateNextQCId();
+                if (inpTanggal) inpTanggal.value = new Date().toISOString().split('T')[0];
+                if (inpSJPabrik) inpSJPabrik.value = '';
+                if (inpPemeriksa) inpPemeriksa.value = 'Admin QC';
+                if (inpCatatan) inpCatatan.value = '';
+
+                if (defaultPOId && selectPO) {
+                    selectPO.value = defaultPOId;
+                    onQCPOSelectChange();
+                } else {
+                    if (selectPO) selectPO.value = '';
+                    onQCPOSelectChange();
+                }
+            }
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                const card = modal.querySelector('.transform');
+                if (card) card.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeModalMakloonQC() {
+            const modal = document.getElementById('modal-makloon-qc');
+            if (!modal) return;
+
+            modal.classList.add('opacity-0');
+            const card = modal.querySelector('.transform');
+            if (card) card.classList.add('scale-95');
+
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function onQCPOSelectChange(existingRecord = null) {
+            const poId = document.getElementById('qcPOSelect')?.value;
+            const badge = document.getElementById('qcPOContextBadge');
+            const infoVendor = document.getElementById('qcInfoVendor');
+            const infoArtikel = document.getElementById('qcInfoArtikel');
+            const infoPOPairs = document.getElementById('qcInfoPOPairs');
+            const tbody = document.getElementById('qcSizeTableBody');
+
+            if (!poId) {
+                if (badge) badge.classList.add('hidden');
+                if (tbody) tbody.innerHTML = `<tr><td colspan="10" class="p-6 text-center text-gray-400 italic">Silakan pilih Nomor PO terlebih dahulu di atas.</td></tr>`;
+                calcQCTotals();
+                return;
+            }
+
+            const editId = document.getElementById('qcEditId')?.value || (existingRecord ? existingRecord.id : null);
+            const poSummary = getPOQCSummary(poId, editId);
+
+            if (!poSummary) {
+                if (badge) badge.classList.add('hidden');
+                if (tbody) tbody.innerHTML = `<tr><td colspan="10" class="p-6 text-center text-rose-500 font-bold">Data PO tidak ditemukan!</td></tr>`;
+                calcQCTotals();
+                return;
+            }
+
+            if (badge) badge.classList.remove('hidden');
+            if (infoVendor) infoVendor.innerText = poSummary.makloon || '-';
+            if (infoArtikel) infoArtikel.innerText = poSummary.artikel || '-';
+            if (infoPOPairs) infoPOPairs.innerText = `${poSummary.totalTargetPO.toLocaleString('id-ID')} Psg (Sisa: ${poSummary.sisaKurang.toLocaleString('id-ID')})`;
+
+            // Saring ukuran yang aktif saja (targetPO > 0 atau ada labelnya)
+            const activeSizes = poSummary.sizeDetails.filter(s => s.targetPO > 0 || (s.sizeLabel && !s.sizeLabel.startsWith('S')));
+            currentQCActiveSizes = activeSizes;
+
+            if (activeSizes.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="10" class="p-6 text-center text-gray-400 italic">PO ini tidak memiliki rincian size pasang.</td></tr>`;
+                calcQCTotals();
+                return;
+            }
+
+            tbody.innerHTML = activeSizes.map(sz => {
+                let initDatang = 0, initGradeA = 0, initRework = 0, initReject = 0;
+                if (existingRecord && Array.isArray(existingRecord.sizes)) {
+                    const foundSz = existingRecord.sizes.find(s => s.sizeIndex === sz.sizeIndex);
+                    if (foundSz) {
+                        initDatang = foundSz.datang || 0;
+                        initGradeA = foundSz.gradeA || 0;
+                        initRework = foundSz.rework || 0;
+                        initReject = foundSz.rejectBS || 0;
+                    }
+                }
+
+                return `
+                    <tr class="hover:bg-gray-50/70 transition" data-sz-idx="${sz.sizeIndex}">
+                        <td class="p-2.5 text-center text-gray-400 font-bold text-xs">${sz.sizeIndex}</td>
+                        <td class="p-2.5 text-center font-black text-gray-800 text-xs bg-gray-50">${sz.sizeLabel}</td>
+                        <td class="p-2.5 text-right font-black text-gray-800">${sz.targetPO.toLocaleString('id-ID')}</td>
+                        <td class="p-2.5 text-right font-semibold text-gray-500">${sz.tibaLalu.toLocaleString('id-ID')}</td>
+                        <td class="p-2.5 text-right font-black text-blue-700 bg-blue-50/30">${sz.sisaKurang.toLocaleString('id-ID')}</td>
+                        <td class="p-1.5 text-center bg-blue-50/40">
+                            <input type="number" min="0" value="${initDatang}" id="qc_datang_${sz.sizeIndex}" oninput="onQCSizeDatangInput(${sz.sizeIndex})" class="w-20 text-center px-2 py-1.5 border border-blue-300 rounded-lg text-xs font-black text-blue-900 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </td>
+                        <td class="p-1.5 text-center bg-emerald-50/40">
+                            <input type="number" min="0" value="${initGradeA}" id="qc_gradeA_${sz.sizeIndex}" oninput="onQCSizeSubInput(${sz.sizeIndex})" class="w-20 text-center px-2 py-1.5 border border-emerald-300 rounded-lg text-xs font-black text-emerald-800 bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                        </td>
+                        <td class="p-1.5 text-center bg-amber-50/40">
+                            <input type="number" min="0" value="${initRework}" id="qc_rework_${sz.sizeIndex}" oninput="onQCSizeSubInput(${sz.sizeIndex})" class="w-20 text-center px-2 py-1.5 border border-amber-300 rounded-lg text-xs font-black text-amber-800 bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                        </td>
+                        <td class="p-1.5 text-center bg-rose-50/40">
+                            <input type="number" min="0" value="${initReject}" id="qc_reject_${sz.sizeIndex}" oninput="onQCSizeSubInput(${sz.sizeIndex})" class="w-20 text-center px-2 py-1.5 border border-rose-300 rounded-lg text-xs font-black text-rose-800 bg-white focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                        </td>
+                        <td class="p-2.5 text-center" id="qc_status_${sz.sizeIndex}">
+                            <span class="text-[10px] font-bold text-gray-400">-</span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            activeSizes.forEach(sz => validateRowBalance(sz.sizeIndex));
+            calcQCTotals();
+        }
+
+        // Ketika input "Datang Sekarang" diubah
+        function onQCSizeDatangInput(szIdx) {
+            const inpDatang = document.getElementById(`qc_datang_${szIdx}`);
+            const inpGradeA = document.getElementById(`qc_gradeA_${szIdx}`);
+            const inpRework = document.getElementById(`qc_rework_${szIdx}`);
+            const inpReject = document.getElementById(`qc_reject_${szIdx}`);
+
+            const datang = parseInt(inpDatang?.value) || 0;
+            const rework = parseInt(inpRework?.value) || 0;
+            const reject = parseInt(inpReject?.value) || 0;
+
+            // Jika Grade A masih 0 atau sebelumnya otomatis mengikuti datang, set Grade A = datang - (rework + reject)
+            if (inpGradeA) {
+                const autoGradeA = Math.max(0, datang - rework - reject);
+                inpGradeA.value = autoGradeA;
+            }
+
+            validateRowBalance(szIdx);
+            calcQCTotals();
+        }
+
+        // Ketika input Grade A, Rework, atau Reject diubah manual
+        function onQCSizeSubInput(szIdx) {
+            validateRowBalance(szIdx);
+            calcQCTotals();
+        }
+
+        // Cek keseimbangan satu baris: Datang === Grade A + Rework + Reject
+        function validateRowBalance(szIdx) {
+            const inpDatang = document.getElementById(`qc_datang_${szIdx}`);
+            const inpGradeA = document.getElementById(`qc_gradeA_${szIdx}`);
+            const inpRework = document.getElementById(`qc_rework_${szIdx}`);
+            const inpReject = document.getElementById(`qc_reject_${szIdx}`);
+            const statusEl = document.getElementById(`qc_status_${szIdx}`);
+
+            if (!statusEl) return;
+
+            const datang = parseInt(inpDatang?.value) || 0;
+            const gradeA = parseInt(inpGradeA?.value) || 0;
+            const rework = parseInt(inpRework?.value) || 0;
+            const reject = parseInt(inpReject?.value) || 0;
+
+            const totalSortir = gradeA + rework + reject;
+
+            if (datang === 0 && totalSortir === 0) {
+                statusEl.innerHTML = `<span class="text-[10px] font-bold text-gray-400">-</span>`;
+            } else if (datang === totalSortir) {
+                statusEl.innerHTML = `<span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-200">✓ Pas</span>`;
+            } else {
+                const selisih = datang - totalSortir;
+                const txt = selisih > 0 ? `Kurang ${selisih}` : `Lebih ${Math.abs(selisih)}`;
+                statusEl.innerHTML = `<span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-200">❌ ${txt}</span>`;
+            }
+        }
+
+        // Hitung Total Seluruh Ukuran di Footer Modal
+        function calcQCTotals() {
+            let sumTarget = 0, sumTibaLalu = 0, sumSisaKurang = 0;
+            let sumDatang = 0, sumGradeA = 0, sumRework = 0, sumReject = 0;
+            let isAllBalanced = true;
+
+            currentQCActiveSizes.forEach(sz => {
+                sumTarget += sz.targetPO;
+                sumTibaLalu += sz.tibaLalu;
+                sumSisaKurang += sz.sisaKurang;
+
+                const datang = parseInt(document.getElementById(`qc_datang_${sz.sizeIndex}`)?.value) || 0;
+                const gradeA = parseInt(document.getElementById(`qc_gradeA_${sz.sizeIndex}`)?.value) || 0;
+                const rework = parseInt(document.getElementById(`qc_rework_${sz.sizeIndex}`)?.value) || 0;
+                const reject = parseInt(document.getElementById(`qc_reject_${sz.sizeIndex}`)?.value) || 0;
+
+                sumDatang += datang;
+                sumGradeA += gradeA;
+                sumRework += rework;
+                sumReject += reject;
+
+                if (datang !== (gradeA + rework + reject)) {
+                    isAllBalanced = false;
+                }
+            });
+
+            const elFootTarget = document.getElementById('qcFootTargetPO');
+            const elFootTibaLalu = document.getElementById('qcFootTibaLalu');
+            const elFootSisaKurang = document.getElementById('qcFootSisaKurang');
+            const elFootDatang = document.getElementById('qcFootDatang');
+            const elFootGradeA = document.getElementById('qcFootGradeA');
+            const elFootRework = document.getElementById('qcFootRework');
+            const elFootReject = document.getElementById('qcFootReject');
+            const elFootBalance = document.getElementById('qcFootBalance');
+
+            if (elFootTarget) elFootTarget.innerText = sumTarget.toLocaleString('id-ID');
+            if (elFootTibaLalu) elFootTibaLalu.innerText = sumTibaLalu.toLocaleString('id-ID');
+            if (elFootSisaKurang) elFootSisaKurang.innerText = sumSisaKurang.toLocaleString('id-ID');
+            if (elFootDatang) elFootDatang.innerText = sumDatang.toLocaleString('id-ID');
+            if (elFootGradeA) elFootGradeA.innerText = sumGradeA.toLocaleString('id-ID');
+            if (elFootRework) elFootRework.innerText = sumRework.toLocaleString('id-ID');
+            if (elFootReject) elFootReject.innerText = sumReject.toLocaleString('id-ID');
+
+            if (elFootBalance) {
+                if (sumDatang === 0) {
+                    elFootBalance.innerHTML = `<span class="text-gray-400 font-bold">0 Psg</span>`;
+                } else if (isAllBalanced) {
+                    elFootBalance.innerHTML = `<span class="text-emerald-700 font-black">✓ PAS</span>`;
+                } else {
+                    const diff = sumDatang - (sumGradeA + sumRework + sumReject);
+                    elFootBalance.innerHTML = `<span class="text-rose-700 font-black">❌ SELISIH ${Math.abs(diff)}</span>`;
+                }
+            }
+        }
+
+        // Auto-fill sisa kekurangan ke Datang & Grade A
+        function autoFillQCSisaAll() {
+            if (!currentQCActiveSizes || currentQCActiveSizes.length === 0) {
+                if (typeof showToast === 'function') showToast("Pilih PO terlebih dahulu!", "warning");
+                return;
+            }
+
+            currentQCActiveSizes.forEach(sz => {
+                const sisa = sz.sisaKurang || 0;
+                const inpDatang = document.getElementById(`qc_datang_${sz.sizeIndex}`);
+                const inpGradeA = document.getElementById(`qc_gradeA_${sz.sizeIndex}`);
+                const inpRework = document.getElementById(`qc_rework_${sz.sizeIndex}`);
+                const inpReject = document.getElementById(`qc_reject_${sz.sizeIndex}`);
+
+                if (inpDatang) inpDatang.value = sisa;
+                if (inpGradeA) inpGradeA.value = sisa;
+                if (inpRework) inpRework.value = 0;
+                if (inpReject) inpReject.value = 0;
+
+                validateRowBalance(sz.sizeIndex);
+            });
+
+            calcQCTotals();
+            if (typeof showToast === 'function') showToast("Semua sisa ukuran otomatis diisi ke Grade A!", "success");
+        }
+
+        // Reset semua input ukuran ke 0
+        function resetQCSizeInputs() {
+            currentQCActiveSizes.forEach(sz => {
+                const inpDatang = document.getElementById(`qc_datang_${sz.sizeIndex}`);
+                const inpGradeA = document.getElementById(`qc_gradeA_${sz.sizeIndex}`);
+                const inpRework = document.getElementById(`qc_rework_${sz.sizeIndex}`);
+                const inpReject = document.getElementById(`qc_reject_${sz.sizeIndex}`);
+
+                if (inpDatang) inpDatang.value = 0;
+                if (inpGradeA) inpGradeA.value = 0;
+                if (inpRework) inpRework.value = 0;
+                if (inpReject) inpReject.value = 0;
+
+                validateRowBalance(sz.sizeIndex);
+            });
+
+            calcQCTotals();
+        }
+
+        // Simpan Penerimaan & Sortir QC
+        function saveMakloonQC() {
+            const editId = (document.getElementById('qcEditId')?.value || '').trim();
+            const noVal = (document.getElementById('qcNo')?.value || '').trim();
+            const tanggalVal = (document.getElementById('qcTanggal')?.value || '').trim();
+            const noSJPabrikVal = (document.getElementById('qcNoSJPabrik')?.value || '').trim().toUpperCase();
+            const pemeriksaVal = (document.getElementById('qcPemeriksa')?.value || '').trim();
+            const catatanVal = (document.getElementById('qcCatatan')?.value || '').trim();
+            const poIdVal = (document.getElementById('qcPOSelect')?.value || '').trim();
+
+            if (!poIdVal) {
+                if (typeof showToast === 'function') showToast("Silakan pilih Nomor PO Produksi!", "error");
+                return;
+            }
+            if (!tanggalVal) {
+                if (typeof showToast === 'function') showToast("Tanggal tiba wajib diisi!", "error");
+                return;
+            }
+            if (!noVal) {
+                if (typeof showToast === 'function') showToast("Nomor QC tidak valid!", "error");
+                return;
+            }
+
+            const po = (db_po || []).find(p => p.id === poIdVal);
+            const vendorName = po ? (po.makloon || '').trim().toUpperCase() : 'VENDOR';
+            const artikelName = po ? getPOArtikelDisplay(po) : '-';
+
+            // Kumpulkan size breakdown
+            let totalDatang = 0, totalGradeA = 0, totalRework = 0, totalReject = 0;
+            const sizesData = [];
+            let hasUnbalancedRow = false;
+
+            currentQCActiveSizes.forEach(sz => {
+                const datang = parseInt(document.getElementById(`qc_datang_${sz.sizeIndex}`)?.value) || 0;
+                const gradeA = parseInt(document.getElementById(`qc_gradeA_${sz.sizeIndex}`)?.value) || 0;
+                const rework = parseInt(document.getElementById(`qc_rework_${sz.sizeIndex}`)?.value) || 0;
+                const reject = parseInt(document.getElementById(`qc_reject_${sz.sizeIndex}`)?.value) || 0;
+
+                if (datang !== (gradeA + rework + reject)) {
+                    hasUnbalancedRow = true;
+                }
+
+                totalDatang += datang;
+                totalGradeA += gradeA;
+                totalRework += rework;
+                totalReject += reject;
+
+                sizesData.push({
+                    sizeIndex: sz.sizeIndex,
+                    sizeLabel: sz.sizeLabel,
+                    targetPO: sz.targetPO,
+                    datang,
+                    gradeA,
+                    rework,
+                    rejectBS: reject
+                });
+            });
+
+            if (totalDatang <= 0) {
+                if (typeof showToast === 'function') showToast("Total sepatu datang harus lebih dari 0 pasang!", "error");
+                return;
+            }
+
+            if (hasUnbalancedRow) {
+                if (typeof showToast === 'function') showToast("Sortir belum pas! Pastikan untuk setiap ukuran: Datang = Grade A + Rework + Reject.", "error");
+                return;
+            }
+
+            const newQC = {
+                id: noVal,
+                tanggal: tanggalVal,
+                noSJPabrik: noSJPabrikVal,
+                poId: poIdVal,
+                makloon: vendorName,
+                artikel: artikelName,
+                pemeriksa: pemeriksaVal || 'Admin QC',
+                catatan: catatanVal,
+                sizes: sizesData,
+                totalDatang,
+                totalGradeA,
+                totalRework,
+                totalRejectBS: totalReject,
+                updatedAt: new Date().toISOString()
+            };
+
+            if (editId) {
+                const idx = (db_makloon_qc || []).findIndex(q => q.id === editId);
+                if (idx !== -1) {
+                    newQC.createdAt = db_makloon_qc[idx].createdAt || new Date().toISOString();
+                    db_makloon_qc[idx] = newQC;
+                } else {
+                    newQC.createdAt = new Date().toISOString();
+                    db_makloon_qc.push(newQC);
+                }
+            } else {
+                newQC.createdAt = new Date().toISOString();
+                if (!Array.isArray(db_makloon_qc)) db_makloon_qc = [];
+                db_makloon_qc.push(newQC);
+            }
+
+            localStorage.setItem('davclar_makloon_qc', JSON.stringify(db_makloon_qc));
+            if (window.firebaseWrite) {
+                window.firebaseWrite('davclar_makloon_qc', db_makloon_qc);
+            }
+
+            closeModalMakloonQC();
+            renderMakloonQCModule();
+            if (typeof showToast === 'function') showToast(`Penerimaan ${noVal} (${totalDatang.toLocaleString('id-ID')} pasang) berhasil disimpan!`, "success");
+        }
+
+        // Hapus Dokumen QC
+        async function deleteMakloonQC(id) {
+            const uName = (localStorage.getItem('davclar_user') || '').toUpperCase();
+            if (uName !== 'IMAM') {
+                if (typeof showToast === 'function') showToast("Akses ditolak! Hanya Owner / Admin Utama (IMAM) yang dapat menghapus bukti QC.", "error");
+                return;
+            }
+
+            if (confirm(`Apakah Anda yakin ingin menghapus dokumen Penerimaan & QC ${id}? Stok dan progres PO akan dihitung ulang.`)) {
+                db_makloon_qc = (db_makloon_qc || []).filter(q => q.id !== id);
+                localStorage.setItem('davclar_makloon_qc', JSON.stringify(db_makloon_qc));
+                if (window.firebaseWrite) {
+                    window.firebaseWrite('davclar_makloon_qc', db_makloon_qc);
+                }
+                renderMakloonQCModule();
+                if (typeof showToast === 'function') showToast(`Dokumen QC ${id} berhasil dihapus!`, "success");
+            }
+        }
+
+        // =================================================================
+        // DETAIL SLIP & CETAK (PRINT) QC MAKLOON
+        // =================================================================
+        function openModalMakloonQCDetail(id) {
+            const modal = document.getElementById('modal-makloon-qc-detail');
+            if (!modal) return;
+
+            const rec = (db_makloon_qc || []).find(q => q.id === id);
+            if (!rec) return;
+
+            const title = document.getElementById('qcDetailTitle');
+            const subTitle = document.getElementById('qcDetailSubtitle');
+            const content = document.getElementById('qcDetailContent');
+            const btnPrint = document.getElementById('btnQCDetailPrint');
+
+            if (title) title.innerText = `Slip Penerimaan & QC: ${rec.id}`;
+            if (subTitle) subTitle.innerText = `Pabrik Makloon: ${rec.makloon} | PO: ${rec.poId}`;
+            if (btnPrint) btnPrint.onclick = () => printSlipQCMakloon(rec.id);
+
+            const pctGradeA = rec.totalDatang > 0 ? ((rec.totalGradeA / rec.totalDatang) * 100).toFixed(1) : 0;
+            const pctRework = rec.totalDatang > 0 ? ((rec.totalRework / rec.totalDatang) * 100).toFixed(1) : 0;
+            const pctReject = rec.totalDatang > 0 ? ((rec.totalRejectBS / rec.totalDatang) * 100).toFixed(1) : 0;
+
+            const sizeRows = (rec.sizes || []).map(sz => `
+                <tr class="border-b border-gray-100">
+                    <td class="p-2.5 text-center font-bold text-gray-800 bg-gray-50">${sz.sizeLabel}</td>
+                    <td class="p-2.5 text-right font-semibold text-gray-600">${(sz.targetPO || 0).toLocaleString('id-ID')}</td>
+                    <td class="p-2.5 text-right font-black text-blue-900 bg-blue-50/40">${(sz.datang || 0).toLocaleString('id-ID')}</td>
+                    <td class="p-2.5 text-right font-black text-emerald-700 bg-emerald-50/40">${(sz.gradeA || 0).toLocaleString('id-ID')}</td>
+                    <td class="p-2.5 text-right font-bold text-amber-700 bg-amber-50/40">${(sz.rework || 0).toLocaleString('id-ID')}</td>
+                    <td class="p-2.5 text-right font-bold text-rose-700 bg-rose-50/40">${(sz.rejectBS || 0).toLocaleString('id-ID')}</td>
+                </tr>
+            `).join('');
+
+            if (content) {
+                content.innerHTML = `
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-gray-50 p-3.5 rounded-xl border border-gray-100 text-xs">
+                        <div>
+                            <span class="text-gray-400 text-[10px] font-bold uppercase block">No. Bukti QC</span>
+                            <span class="font-black text-blue-900 font-mono">${rec.id}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-400 text-[10px] font-bold uppercase block">Tanggal Tiba</span>
+                            <span class="font-extrabold text-gray-800">${rec.tanggal || '-'}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-400 text-[10px] font-bold uppercase block">No. SJ Pabrik</span>
+                            <span class="font-extrabold text-gray-800">${rec.noSJPabrik || '-'}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-400 text-[10px] font-bold uppercase block">Pemeriksa QC</span>
+                            <span class="font-extrabold text-gray-800">${rec.pemeriksa || '-'}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-400 text-[10px] font-bold uppercase block">Nomor PO</span>
+                            <span class="font-black text-blue-900">${rec.poId}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-400 text-[10px] font-bold uppercase block">Vendor Makloon</span>
+                            <span class="font-extrabold text-gray-800">${rec.makloon}</span>
+                        </div>
+                        <div class="col-span-2">
+                            <span class="text-gray-400 text-[10px] font-bold uppercase block">Artikel & Warna</span>
+                            <span class="font-extrabold text-gray-800">${rec.artikel}</span>
+                        </div>
+                    </div>
+
+                    <!-- 3 Metric Badges -->
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-center">
+                            <div class="text-[10px] font-bold text-emerald-800 uppercase">Grade A (Lolos)</div>
+                            <div class="text-lg font-black text-emerald-900">${(rec.totalGradeA || 0).toLocaleString('id-ID')} Psg</div>
+                            <div class="text-[10px] text-emerald-700 font-bold">${pctGradeA}% Siap Stok Gudang</div>
+                        </div>
+                        <div class="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-center">
+                            <div class="text-[10px] font-bold text-amber-800 uppercase">Rework (Perbaikan)</div>
+                            <div class="text-lg font-black text-amber-900">${(rec.totalRework || 0).toLocaleString('id-ID')} Psg</div>
+                            <div class="text-[10px] text-amber-700 font-bold">${pctRework}% Kirim Balik Pabrik</div>
+                        </div>
+                        <div class="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-center">
+                            <div class="text-[10px] font-bold text-rose-800 uppercase">Reject (BS Pabrik)</div>
+                            <div class="text-lg font-black text-rose-900">${(rec.totalRejectBS || 0).toLocaleString('id-ID')} Psg</div>
+                            <div class="text-[10px] text-rose-700 font-bold">${pctReject}% Potong Tagihan</div>
+                        </div>
+                    </div>
+
+                    <!-- Size Breakdown Table -->
+                    <div class="border border-gray-200 rounded-xl overflow-hidden">
+                        <table class="w-full text-xs text-left">
+                            <thead class="bg-gray-50 border-b border-gray-200 text-[11px] font-black text-gray-700 uppercase">
+                                <tr>
+                                    <th class="p-2.5 text-center">Ukuran (Size)</th>
+                                    <th class="p-2.5 text-right">Target PO</th>
+                                    <th class="p-2.5 text-right bg-blue-50/70 text-blue-900">Datang Tiba</th>
+                                    <th class="p-2.5 text-right bg-emerald-50/70 text-emerald-900">Grade A (Lolos)</th>
+                                    <th class="p-2.5 text-right bg-amber-50/70 text-amber-900">Rework</th>
+                                    <th class="p-2.5 text-right bg-rose-50/70 text-rose-900">Reject BS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${sizeRows}
+                            </tbody>
+                            <tfoot class="bg-gray-100 font-black text-xs border-t border-gray-200">
+                                <tr>
+                                    <td class="p-2.5 text-center">TOTAL</td>
+                                    <td class="p-2.5 text-right">-</td>
+                                    <td class="p-2.5 text-right text-blue-900 bg-blue-100/50">${(rec.totalDatang || 0).toLocaleString('id-ID')}</td>
+                                    <td class="p-2.5 text-right text-emerald-900 bg-emerald-100/50">${(rec.totalGradeA || 0).toLocaleString('id-ID')}</td>
+                                    <td class="p-2.5 text-right text-amber-900 bg-amber-100/50">${(rec.totalRework || 0).toLocaleString('id-ID')}</td>
+                                    <td class="p-2.5 text-right text-rose-900 bg-rose-100/50">${(rec.totalRejectBS || 0).toLocaleString('id-ID')}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    ${rec.catatan ? `
+                    <div class="bg-blue-50/40 p-3 rounded-xl border border-blue-100 text-xs">
+                        <span class="font-bold text-blue-900 uppercase block text-[10px] mb-0.5">Catatan QC:</span>
+                        <p class="text-gray-700 italic">${rec.catatan}</p>
+                    </div>
+                    ` : ''}
+                `;
+            }
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                const card = modal.querySelector('.transform');
+                if (card) card.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeModalMakloonQCDetail() {
+            const modal = document.getElementById('modal-makloon-qc-detail');
+            if (!modal) return;
+
+            modal.classList.add('opacity-0');
+            const card = modal.querySelector('.transform');
+            if (card) card.classList.add('scale-95');
+
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // Cetak Slip Penerimaan & Sortir QC Makloon (A4)
+        function printSlipQCMakloon(id) {
+            const q = (db_makloon_qc || []).find(x => x.id === id);
+            if (!q) return;
+
+            const sizeCols = (q.sizes || []).map(sz => `
+                <tr>
+                    <td style="text-align:center; font-weight:bold;">${sz.sizeLabel}</td>
+                    <td style="text-align:right;">${(sz.targetPO || 0).toLocaleString('id-ID')}</td>
+                    <td style="text-align:right; font-weight:bold; background:#eff6ff;">${(sz.datang || 0).toLocaleString('id-ID')}</td>
+                    <td style="text-align:right; font-weight:bold; background:#ecfdf5; color:#065f46;">${(sz.gradeA || 0).toLocaleString('id-ID')}</td>
+                    <td style="text-align:right; font-weight:bold; background:#fffbeb; color:#92400e;">${(sz.rework || 0).toLocaleString('id-ID')}</td>
+                    <td style="text-align:right; font-weight:bold; background:#fff1f2; color:#9f1239;">${(sz.rejectBS || 0).toLocaleString('id-ID')}</td>
+                </tr>
+            `).join('');
+
+            const pctA = q.totalDatang > 0 ? ((q.totalGradeA / q.totalDatang) * 100).toFixed(1) : 0;
+            const pctRework = q.totalDatang > 0 ? ((q.totalRework / q.totalDatang) * 100).toFixed(1) : 0;
+            const pctReject = q.totalDatang > 0 ? ((q.totalRejectBS / q.totalDatang) * 100).toFixed(1) : 0;
+
+            const printHtml = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <title>SLIP BUKTI PENERIMAAN & QC - ${q.id}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; font-size: 12px; margin: 30px; color: #222; }
+                    .header { border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-end; }
+                    .header h2 { margin: 0; font-size: 17px; }
+                    .header p { margin: 2px 0 0; font-size: 11px; color: #555; }
+                    .info-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 11px; }
+                    .info-table td { padding: 4px 6px; }
+                    .grid-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 11px; }
+                    .grid-table th, .grid-table td { border: 1px solid #aaa; padding: 6px 8px; }
+                    .grid-table th { background: #f3f4f6; text-transform: uppercase; font-size: 10px; }
+                    .summary-box { border: 1px dashed #555; padding: 10px; margin-bottom: 14px; font-size: 11px; display: flex; justify-content: space-around; background: #fafafa; }
+                    .ttd { width: 100%; text-align: center; margin-top: 25px; }
+                    .ttd td { width: 25%; padding-bottom: 60px; font-size: 11px; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <div>
+                        <h2>PORTI SHOES FACTORY</h2>
+                        <p>SURAT BUKTI PENERIMAAN SEPATU JADI & SORTIR QUALITY CONTROL (QC)</p>
+                    </div>
+                    <div style="text-align:right;">
+                        <b style="font-size:14px; font-family:monospace;">${q.id}</b><br>
+                        <span style="font-size:10px; color:#555;">Tgl: ${q.tanggal || '-'}</span>
+                    </div>
+                </div>
+
+                <table class="info-table">
+                    <tr>
+                        <td style="width:16%;"><b>Nomor PO</b></td>
+                        <td style="width:34%;">: <b>${q.poId}</b></td>
+                        <td style="width:18%;"><b>Pabrik Makloon</b></td>
+                        <td style="width:32%;">: <b>${q.makloon}</b></td>
+                    </tr>
+                    <tr>
+                        <td><b>No. SJ Pabrik</b></td>
+                        <td>: ${q.noSJPabrik || '-'}</td>
+                        <td><b>Artikel & Warna</b></td>
+                        <td>: <b>${q.artikel}</b></td>
+                    </tr>
+                    <tr>
+                        <td><b>Pemeriksa QC</b></td>
+                        <td>: ${q.pemeriksa || '-'}</td>
+                        <td><b>Catatan Fisik</b></td>
+                        <td>: ${q.catatan || '-'}</td>
+                    </tr>
+                </table>
+
+                <table class="grid-table">
+                    <thead>
+                        <tr>
+                            <th style="width:20%; text-align:center;">Ukuran (Size)</th>
+                            <th style="width:16%; text-align:right;">Target PO</th>
+                            <th style="width:16%; text-align:right;">Tiba Sekarang</th>
+                            <th style="width:16%; text-align:right;">Grade A (Lolos)</th>
+                            <th style="width:16%; text-align:right;">Rework (Perbaikan)</th>
+                            <th style="width:16%; text-align:right;">Reject (BS)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${sizeCols}
+                    </tbody>
+                    <tfoot>
+                        <tr style="font-weight:bold; background:#f9fafb;">
+                            <td style="text-align:center;">TOTAL (PASANG)</td>
+                            <td style="text-align:right;">-</td>
+                            <td style="text-align:right; font-weight:bold;">${(q.totalDatang || 0).toLocaleString('id-ID')}</td>
+                            <td style="text-align:right; font-weight:bold; color:#065f46;">${(q.totalGradeA || 0).toLocaleString('id-ID')}</td>
+                            <td style="text-align:right; font-weight:bold; color:#92400e;">${(q.totalRework || 0).toLocaleString('id-ID')}</td>
+                            <td style="text-align:right; font-weight:bold; color:#9f1239;">${(q.totalRejectBS || 0).toLocaleString('id-ID')}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+
+                <div class="summary-box">
+                    <div><b>TOTAL TIBA:</b> ${(q.totalDatang || 0).toLocaleString('id-ID')} Psg</div>
+                    <div><b>GRADE A (MASUK GUDANG):</b> ${(q.totalGradeA || 0).toLocaleString('id-ID')} Psg (${pctA}%)</div>
+                    <div><b>REWORK (PABRIK):</b> ${(q.totalRework || 0).toLocaleString('id-ID')} Psg (${pctRework}%)</div>
+                    <div><b>REJECT BS (POTONGAN):</b> ${(q.totalRejectBS || 0).toLocaleString('id-ID')} Psg (${pctReject}%)</div>
+                </div>
+
+                <table class="ttd">
+                    <tr>
+                        <td>Petugas QC,<br><br><br><br><b>( ${q.pemeriksa || 'Admin QC'} )</b></td>
+                        <td>Pengirim (Makloon / Supir),<br><br><br><br><b>( ..................................... )</b></td>
+                        <td>Penerima Gudang Jadi,<br><br><br><br><b>( ..................................... )</b></td>
+                        <td>Mengetahui / Pimpinan,<br><br><br><br><b>( ..................................... )</b></td>
+                    </tr>
+                </table>
+            </body>
+            </html>
+            `;
+            const win = window.open('', '_blank');
+            win.document.write(printHtml);
+            win.document.close();
+            win.focus();
+            setTimeout(() => { win.print(); }, 250);
+        }
+
+        // Cetak Rekap Penerimaan & QC Makloon
+        function printRekapQCMakloon() {
+            const fVendor = (document.getElementById('filterQCMakloon')?.value || '').trim().toUpperCase();
+            const fStatus = document.getElementById('filterQCStatus')?.value || 'ALL';
+
+            let list = [...(db_makloon_qc || [])].reverse();
+            if (fVendor) list = list.filter(q => (q.makloon || '').trim().toUpperCase() === fVendor);
+
+            let sumDatang = 0, sumGradeA = 0, sumRework = 0, sumReject = 0;
+            const rows = list.map((q, idx) => {
+                sumDatang += (q.totalDatang || 0);
+                sumGradeA += (q.totalGradeA || 0);
+                sumRework += (q.totalRework || 0);
+                sumReject += (q.totalRejectBS || 0);
+
+                return `
+                    <tr>
+                        <td style="text-align:center;">${idx + 1}</td>
+                        <td style="font-family:monospace; font-weight:bold;">${q.id}</td>
+                        <td>${q.tanggal || '-'}</td>
+                        <td>${q.noSJPabrik || '-'}</td>
+                        <td><b>${q.poId}</b></td>
+                        <td>${q.makloon}</td>
+                        <td>${q.artikel}</td>
+                        <td style="text-align:right; font-weight:bold;">${(q.totalDatang || 0).toLocaleString('id-ID')}</td>
+                        <td style="text-align:right; font-weight:bold; color:#065f46;">${(q.totalGradeA || 0).toLocaleString('id-ID')}</td>
+                        <td style="text-align:right; font-weight:bold; color:#92400e;">${(q.totalRework || 0).toLocaleString('id-ID')}</td>
+                        <td style="text-align:right; font-weight:bold; color:#9f1239;">${(q.totalRejectBS || 0).toLocaleString('id-ID')}</td>
+                        <td>${q.pemeriksa || '-'}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            const printHtml = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <title>REKAP PENERIMAAN & SORTIR QC MAKLOON</title>
+                <style>
+                    body { font-family: Arial, sans-serif; font-size: 11px; margin: 25px; color: #222; }
+                    .header { border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 12px; }
+                    .header h2 { margin: 0; font-size: 16px; }
+                    .header p { margin: 2px 0 0; font-size: 11px; color: #555; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                    th, td { border: 1px solid #aaa; padding: 5px 6px; }
+                    th { background: #f3f4f6; text-transform: uppercase; font-size: 10px; }
+                    tfoot { font-weight: bold; background: #e5e7eb; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h2>PORTI SHOES FACTORY</h2>
+                    <p>REKAPITULASI PENERIMAAN SEPATU JADI & HASIL SORTIR QUALITY CONTROL (QC)</p>
+                    <p style="font-size:10px;">Filter: Vendor = <b>${fVendor || 'SEMUA'}</b> | Tanggal Cetak: ${new Date().toLocaleDateString('id-ID')}</p>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:4%;">No</th>
+                            <th style="width:11%;">No. QC</th>
+                            <th style="width:9%;">Tanggal</th>
+                            <th style="width:9%;">No. SJ Pabrik</th>
+                            <th style="width:11%;">No. PO</th>
+                            <th style="width:11%;">Vendor</th>
+                            <th style="width:13%;">Artikel</th>
+                            <th style="width:8%; text-align:right;">Tiba (Psg)</th>
+                            <th style="width:8%; text-align:right;">Grade A</th>
+                            <th style="width:8%; text-align:right;">Rework</th>
+                            <th style="width:8%; text-align:right;">Reject</th>
+                            <th style="width:8%;">Pemeriksa</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows || '<tr><td colspan="12" style="text-align:center; padding:15px; color:#888;">Tidak ada data penerimaan QC.</td></tr>'}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="7" style="text-align:center;">TOTAL</td>
+                            <td style="text-align:right;">${sumDatang.toLocaleString('id-ID')}</td>
+                            <td style="text-align:right; color:#065f46;">${sumGradeA.toLocaleString('id-ID')}</td>
+                            <td style="text-align:right; color:#92400e;">${sumRework.toLocaleString('id-ID')}</td>
+                            <td style="text-align:right; color:#9f1239;">${sumReject.toLocaleString('id-ID')}</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </body>
+            </html>
+            `;
+            const win = window.open('', '_blank');
+            win.document.write(printHtml);
+            win.document.close();
+            win.focus();
+            setTimeout(() => { win.print(); }, 250);
+        }
+
         // ==========================================
         // FITUR AUTO SYNC & OFFLINE DETECTOR
         // ==========================================
@@ -20666,6 +22233,7 @@
         renderMakloonCostTable();
         renderMakloonBahanModule();
         renderHutangMakloonModule();
+        renderMakloonQCModule();
         updateNetworkStatus();
 
     </script>
