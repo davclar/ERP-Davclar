@@ -16588,12 +16588,37 @@
                     if (foundIdx !== -1) colIdx = foundIdx;
                 }
 
-                (bom.rows || []).forEach(r => {
-                    if (typeof isOngkosOrJasaOrOverhead === 'function' && isOngkosOrJasaOrOverhead(r.bagian, r.bahan)) return;
-                    const rBahan = (r.bahan || '').trim().toUpperCase();
-                    if (!rBahan) return;
-                    if (rBahan !== cleanBahan && !cleanBahan.includes(rBahan) && !rBahan.includes(cleanBahan)) return;
+                // Filter baris BOM yang bukan ongkos/jasa/overhead
+                const validRows = (bom.rows || []).filter(r => {
+                    if (typeof isOngkosOrJasaOrOverhead === 'function' && isOngkosOrJasaOrOverhead(r.bagian, r.bahan)) return false;
+                    return Boolean((r.bahan || '').trim());
+                });
 
+                // Prioritas 1: Exact match nama bahan + warna cocok
+                let candidateRows = validRows.filter(r => {
+                    const rBahan = (r.bahan || '').trim().toUpperCase();
+                    if (rBahan !== cleanBahan) return false;
+                    const resolvedColor = resolveBOMMaterialColor(poColor, r.warna);
+                    if (cleanWarna !== '-' && resolvedColor !== '-') {
+                        return cleanWarna === resolvedColor || cleanWarna.includes(resolvedColor) || resolvedColor.includes(cleanWarna);
+                    }
+                    return true;
+                });
+
+                // Prioritas 2: Exact match nama bahan saja
+                if (candidateRows.length === 0) {
+                    candidateRows = validRows.filter(r => (r.bahan || '').trim().toUpperCase() === cleanBahan);
+                }
+
+                // Prioritas 3: Hanya jika TIDAK ADA baris dengan nama bahan yang sama persis, gunakan substring/includes
+                if (candidateRows.length === 0) {
+                    candidateRows = validRows.filter(r => {
+                        const rBahan = (r.bahan || '').trim().toUpperCase();
+                        return cleanBahan.includes(rBahan) || rBahan.includes(cleanBahan);
+                    });
+                }
+
+                candidateRows.forEach(r => {
                     // COLOR MATCH: pastikan warna bahan sama dengan warna Surat Jalan
                     const resolvedColor = resolveBOMMaterialColor(poColor, r.warna);
                     if (cleanWarna !== '-' && resolvedColor !== '-') {
@@ -17163,9 +17188,14 @@
                     return (bArt === art || art.includes(bArt) || bArt.includes(art)) && (!bMak || bMak === mak);
                 });
                 for (let b of boms) {
+                    // Prioritas 1: Exact match nama bahan
+                    let exactRow = (b.rows || []).find(r => (r.bahan || '').trim().toUpperCase() === cleanBahan && (parseFloat(r.harga) || 0) > 0);
+                    if (exactRow) return parseFloat(exactRow.harga) || 0;
+
+                    // Prioritas 2: Substring match jika tidak ada yang exact
                     for (let r of (b.rows || [])) {
                         const rBahan = (r.bahan || '').trim().toUpperCase();
-                        if (rBahan && (rBahan === cleanBahan || cleanBahan.includes(rBahan) || rBahan.includes(cleanBahan))) {
+                        if (rBahan && (cleanBahan.includes(rBahan) || rBahan.includes(cleanBahan))) {
                             const price = parseFloat(r.harga) || 0;
                             if (price > 0) return price;
                         }
