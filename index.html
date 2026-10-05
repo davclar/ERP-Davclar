@@ -1279,6 +1279,57 @@
                                     </div>
                                 </div>
                             </label>
+
+                            <!-- Opsi 3: Mode Custom Seri Ukuran -->
+                            <label class="block cursor-pointer p-3.5 border-2 rounded-xl transition bg-white border-gray-200 relative" id="cardModeCustom">
+                                <div class="flex items-start gap-3">
+                                    <input type="radio" name="spkSplitMode" id="modeSplitCustom" value="CUSTOM" onchange="onSelectSPKSplitMode('CUSTOM')" class="mt-1 text-purple-600 focus:ring-purple-500">
+                                    <div class="flex-1">
+                                        <div class="flex items-center justify-between">
+                                            <span class="font-bold text-sm text-gray-900">3. Mode Custom Seri Ukuran</span>
+                                            <span class="text-[10px] bg-purple-100 text-purple-800 font-bold px-2 py-0.5 rounded-full">Custom Seri</span>
+                                        </div>
+                                        <p class="text-xs text-gray-600 mt-1 leading-relaxed">
+                                            Tentukan rasio/isi pasang tiap nomor ukuran dalam 1 SPK standar (misal: 2; 4; 6; 6; 4; 2 = 24 psg). Kupon sisa akan otomatis diratakan secara proporsional hingga mencapai target pasang per SPK.
+                                        </p>
+
+                                        <!-- Sub Settings Opsi 3 (Custom Grid) -->
+                                        <div class="mt-3 pt-3 border-t border-purple-100 hidden space-y-3" id="subSettingsCustom">
+                                            <div>
+                                                <div class="flex items-center justify-between mb-1.5">
+                                                    <label class="block text-[11px] font-bold text-gray-700">Rasio per Ukuran (1 SPK Standar):</label>
+                                                    <span class="text-[10px] text-purple-700 font-extrabold bg-purple-100/70 px-2 py-0.5 rounded-full border border-purple-200">
+                                                        Total Seri: <b id="spkCustomTotalPsg">0</b> Psg / SPK
+                                                    </span>
+                                                </div>
+                                                <!-- Container input dinamis per size -->
+                                                <div id="spkCustomSizeInputsContainer" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                                                    <!-- Di-generate otomatis oleh JS berdasarkan activeSizes -->
+                                                </div>
+                                            </div>
+
+                                            <div class="bg-purple-50/50 p-2.5 rounded-xl border border-purple-100 space-y-2">
+                                                <div class="flex items-center justify-between gap-3">
+                                                    <div class="flex-1">
+                                                        <label class="block text-[11px] font-bold text-gray-700 mb-0.5">Target Kupon Sisa</label>
+                                                        <span class="text-[10px] text-gray-500 block leading-tight">Target pasang untuk kupon sisa campuran jika ukuran tidak genap 1 seri penuh</span>
+                                                    </div>
+                                                    <div class="flex items-center gap-1.5 w-24 shrink-0">
+                                                        <input type="number" id="spkCfgCustomTargetSisa" min="1" max="50" value="24" oninput="updateSPKCustomCalculation(false)" class="w-full px-2 py-1.5 border border-purple-300 rounded-lg text-xs font-black text-center bg-white text-purple-950 focus:ring-1 focus:ring-purple-600">
+                                                        <span class="text-xs text-gray-500 font-medium">Psg</span>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Live Calculation Preview -->
+                                                <div class="text-[10px] sm:text-[11px] font-bold text-purple-900 bg-white px-2.5 py-1.5 rounded-lg border border-purple-200 flex items-center gap-1.5 shadow-2xs" id="spkCustomPreviewText">
+                                                    <i class="fa-solid fa-calculator text-purple-600"></i>
+                                                    <span>Est: Menghitung pembagian SPK...</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </label>
                         </div>
 
                         <!-- Footer -->
@@ -7970,11 +8021,21 @@
             const inputTargetKupon = document.getElementById('spkCfgTargetKupon');
             const inputSingleQty = document.getElementById('spkCfgSingleSizeQty');
 
+            // Generate Input Dinamis Berdasarkan activeSizes PO
+            buildSPKCustomSizeInputs(po, activeSizes);
+
             if (currentSPKConfig && currentSPKConfig.poId === poId) {
                 if (inputSeriQty) inputSeriQty.value = currentSPKConfig.seriQty || (activeCount > 6 ? 2 : 4);
                 if (inputTargetKupon) inputTargetKupon.value = currentSPKConfig.targetCapacity || (activeCount > 6 ? 16 : (activeCount * 4));
                 if (inputSingleQty) inputSingleQty.value = currentSPKConfig.singleSizeQty || 20;
+                
+                const customTargetInput = document.getElementById('spkCfgCustomTargetSisa');
+                if (customTargetInput && currentSPKConfig.customTargetSisa) {
+                    customTargetInput.value = currentSPKConfig.customTargetSisa;
+                }
+
                 onSelectSPKSplitMode(currentSPKConfig.mode || 'SERI');
+                updateSPKCustomCalculation(false);
             } else {
                 const defaultSeriQty = activeCount > 6 ? 2 : 4;
                 const defaultTargetCap = activeCount > 6 ? 16 : (activeCount * 4);
@@ -7982,6 +8043,7 @@
                 if (inputTargetKupon) inputTargetKupon.value = defaultTargetCap;
                 if (inputSingleQty) inputSingleQty.value = 20;
                 onSelectSPKSplitMode('SERI');
+                updateSPKCustomCalculation(true);
             }
 
             updateSPKSeriNote();
@@ -7990,6 +8052,123 @@
             if (modal) {
                 modal.classList.remove('hidden');
                 setTimeout(() => modal.classList.remove('opacity-0'), 10);
+            }
+        }
+
+        // Render input dinamis per nomor ukuran untuk Mode Custom
+        function buildSPKCustomSizeInputs(po, activeSizes) {
+            const container = document.getElementById('spkCustomSizeInputsContainer');
+            if (!container) return;
+
+            let sizeTotals = {};
+            activeSizes.forEach(s => {
+                sizeTotals[s.index] = (po.items || []).reduce((sum, it) => sum + (parseInt(it[`s${s.index}`]) || 0), 0);
+            });
+
+            // Default rasio:
+            // Jika 6 size: contoh 2, 4, 6, 6, 4, 2 (Total 24)
+            // Jika 8 size: contoh 2, 2, 4, 4, 4, 4, 2, 2 (Total 24)
+            // Lainnya: 2 per size
+            const default6 = [2, 4, 6, 6, 4, 2];
+            const default8 = [2, 2, 4, 4, 4, 4, 2, 2];
+
+            let html = '';
+            activeSizes.forEach((s, idx) => {
+                let defaultVal = 2;
+                if (activeSizes.length === 6 && default6[idx] !== undefined) {
+                    defaultVal = default6[idx];
+                } else if (activeSizes.length === 8 && default8[idx] !== undefined) {
+                    defaultVal = default8[idx];
+                }
+
+                // Cek jika ada config tersimpan untuk PO ini
+                if (currentSPKConfig && currentSPKConfig.poId === po.id && currentSPKConfig.customSizes && currentSPKConfig.customSizes[s.index] !== undefined) {
+                    defaultVal = currentSPKConfig.customSizes[s.index];
+                }
+
+                html += `
+                    <div class="bg-white p-2 rounded-xl border border-purple-200 text-center shadow-xs transition hover:border-purple-400">
+                        <div class="text-[11px] font-black text-purple-900 uppercase tracking-tight">Sz ${s.label}</div>
+                        <div class="text-[9px] text-gray-500 font-semibold mb-1">PO: ${sizeTotals[s.index] || 0}</div>
+                        <input type="number" id="spkCustomInput_s${s.index}" min="0" max="99" value="${defaultVal}"
+                               oninput="updateSPKCustomCalculation(false)"
+                               class="w-full px-1.5 py-1 border border-purple-300 rounded-lg text-xs font-black text-center text-purple-950 focus:ring-1 focus:ring-purple-600 bg-purple-50/40">
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // Hitung Total Pasang & Estimasi Kupon Mode Custom secara Real-time
+        function updateSPKCustomCalculation(syncTargetSisa = false) {
+            const po = db_po.find(p => p.id === currentConfigPOId);
+            if (!po) return;
+
+            let rawLabels = po.sizeLabels || [];
+            let activeSizes = [];
+            for (let i = 0; i < 8; i++) {
+                let lbl = rawLabels[i] ? String(rawLabels[i]).trim() : '';
+                let hasQty = (po.items || []).some(it => (parseInt(it[`s${i+1}`]) || 0) > 0);
+                if (lbl !== '' || hasQty) {
+                    activeSizes.push({ index: i + 1, label: lbl || `S${i+1}` });
+                }
+            }
+            if (activeSizes.length === 0) {
+                activeSizes = [{ index: 1, label: '31' }, { index: 2, label: '32' }, { index: 3, label: '33' }, { index: 4, label: '34' }, { index: 5, label: '35' }];
+            }
+
+            let totalSeri = 0;
+            let customTemplate = {};
+            let sizeTotals = {};
+
+            activeSizes.forEach(s => {
+                const inp = document.getElementById(`spkCustomInput_s${s.index}`);
+                const val = inp ? (parseInt(inp.value) || 0) : 0;
+                customTemplate[s.index] = val;
+                totalSeri += val;
+                sizeTotals[s.index] = (po.items || []).reduce((sum, it) => sum + (parseInt(it[`s${s.index}`]) || 0), 0);
+            });
+
+            const totalPsgEl = document.getElementById('spkCustomTotalPsg');
+            if (totalPsgEl) totalPsgEl.innerText = totalSeri;
+
+            const targetSisaInput = document.getElementById('spkCfgCustomTargetSisa');
+            if (syncTargetSisa && targetSisaInput && totalSeri > 0) {
+                targetSisaInput.value = totalSeri;
+            }
+
+            const targetSisa = targetSisaInput ? (parseInt(targetSisaInput.value) || (totalSeri > 0 ? totalSeri : 24)) : 24;
+
+            // Kalkulasi Preview: Berapa full SPK dan berapa kupon sisa
+            let fullSPKCount = 0;
+            let sizesWithVal = activeSizes.filter(s => customTemplate[s.index] > 0);
+
+            if (sizesWithVal.length > 0 && totalSeri > 0) {
+                fullSPKCount = Math.min(...sizesWithVal.map(s => {
+                    return Math.floor((sizeTotals[s.index] || 0) / customTemplate[s.index]);
+                }));
+            }
+
+            let totalPairs = (po.items || []).reduce((sum, it) => {
+                let sSum = activeSizes.reduce((s, sz) => s + (parseInt(it[`s${sz.index}`]) || 0), 0);
+                return sum + (sSum > 0 ? sSum : (parseInt(it.total) || 0));
+            }, 0);
+
+            let remainingPairs = Math.max(0, totalPairs - (fullSPKCount * totalSeri));
+            let estRemainderCoupons = remainingPairs > 0 ? Math.ceil(remainingPairs / targetSisa) : 0;
+            let totalEstCoupons = fullSPKCount + estRemainderCoupons;
+
+            const previewEl = document.getElementById('spkCustomPreviewText');
+            if (previewEl) {
+                if (totalSeri <= 0) {
+                    previewEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-amber-500 mr-1"></i> <span>Masukkan minimal 1 pasang pada nomor ukuran yang diinginkan.</span>`;
+                } else {
+                    previewEl.innerHTML = `
+                        <i class="fa-solid fa-calculator text-purple-600 mr-1"></i>
+                        <span>Est: <b>${fullSPKCount} SPK Standar</b> (${totalSeri} psg) + <b>${estRemainderCoupons} SPK Sisa</b> (~${targetSisa} psg) = <b>Total ${totalEstCoupons} SPK</b></span>
+                    `;
+                }
             }
         }
 
@@ -8004,35 +8183,39 @@
         function onSelectSPKSplitMode(mode) {
             const radioSeri = document.getElementById('modeSplitSeri');
             const radioSingle = document.getElementById('modeSplitSingle');
+            const radioCustom = document.getElementById('modeSplitCustom');
             const cardSeri = document.getElementById('cardModeSeri');
             const cardSingle = document.getElementById('cardModeSingle');
+            const cardCustom = document.getElementById('cardModeCustom');
             const subSeri = document.getElementById('subSettingsSeri');
             const subSingle = document.getElementById('subSettingsSingle');
+            const subCustom = document.getElementById('subSettingsCustom');
 
-            if (mode === 'SINGLE') {
-                if (radioSingle) radioSingle.checked = true;
-                if (cardSingle) {
-                    cardSingle.classList.add('bg-purple-50/30', 'border-purple-600', 'shadow-xs');
-                    cardSingle.classList.remove('border-gray-200');
+            const modes = [
+                { val: 'SERI', radio: radioSeri, card: cardSeri, sub: subSeri },
+                { val: 'SINGLE', radio: radioSingle, card: cardSingle, sub: subSingle },
+                { val: 'CUSTOM', radio: radioCustom, card: cardCustom, sub: subCustom }
+            ];
+
+            modes.forEach(m => {
+                if (m.val === mode) {
+                    if (m.radio) m.radio.checked = true;
+                    if (m.card) {
+                        m.card.classList.add('bg-purple-50/30', 'border-purple-600', 'shadow-xs');
+                        m.card.classList.remove('border-gray-200');
+                    }
+                    if (m.sub) m.sub.classList.remove('hidden');
+                } else {
+                    if (m.card) {
+                        m.card.classList.remove('bg-purple-50/30', 'border-purple-600', 'shadow-xs');
+                        m.card.classList.add('border-gray-200');
+                    }
+                    if (m.sub) m.sub.classList.add('hidden');
                 }
-                if (cardSeri) {
-                    cardSeri.classList.remove('bg-purple-50/30', 'border-purple-600', 'shadow-xs');
-                    cardSeri.classList.add('border-gray-200');
-                }
-                if (subSingle) subSingle.classList.remove('hidden');
-                if (subSeri) subSeri.classList.add('hidden');
-            } else {
-                if (radioSeri) radioSeri.checked = true;
-                if (cardSeri) {
-                    cardSeri.classList.add('bg-purple-50/30', 'border-purple-600', 'shadow-xs');
-                    cardSeri.classList.remove('border-gray-200');
-                }
-                if (cardSingle) {
-                    cardSingle.classList.remove('bg-purple-50/30', 'border-purple-600', 'shadow-xs');
-                    cardSingle.classList.add('border-gray-200');
-                }
-                if (subSeri) subSeri.classList.remove('hidden');
-                if (subSingle) subSingle.classList.add('hidden');
+            });
+
+            if (mode === 'CUSTOM') {
+                updateSPKCustomCalculation(false);
             }
         }
 
@@ -8068,12 +8251,27 @@
             const targetCapacity = parseInt(document.getElementById('spkCfgTargetKupon')?.value) || 16;
             const singleSizeQty = parseInt(document.getElementById('spkCfgSingleSizeQty')?.value) || 20;
 
+            let customSizes = {};
+            let customTargetSisa = 24;
+
+            if (mode === 'CUSTOM') {
+                for (let i = 1; i <= 8; i++) {
+                    const inp = document.getElementById(`spkCustomInput_s${i}`);
+                    if (inp) {
+                        customSizes[i] = parseInt(inp.value) || 0;
+                    }
+                }
+                customTargetSisa = parseInt(document.getElementById('spkCfgCustomTargetSisa')?.value) || 24;
+            }
+
             currentSPKConfig = {
                 poId: currentConfigPOId,
                 mode,
                 seriQty,
                 targetCapacity,
-                singleSizeQty
+                singleSizeQty,
+                customSizes,
+                customTargetSisa
             };
 
             closeSPKConfigModal();
@@ -8187,6 +8385,152 @@
                             });
                         }
                     });
+                } else if (mode === 'CUSTOM') {
+                    // MODE CUSTOM SERI UKURAN
+                    const customSizes = config.customSizes || {};
+                    const customTargetCapacity = parseInt(config.customTargetSisa) || 24;
+
+                    // Tahap 1: Ekstraksi Kupon SPK Standar Sesuai Template Custom
+                    let sizesWithCustom = activeSizes.filter(s => (parseInt(customSizes[s.index]) || 0) > 0);
+                    let customSeriTotal = activeSizes.reduce((sum, s) => sum + (parseInt(customSizes[s.index]) || 0), 0);
+                    let fullCustomCount = 0;
+
+                    if (sizesWithCustom.length > 0 && customSeriTotal > 0) {
+                        fullCustomCount = Math.min(...sizesWithCustom.map(s => {
+                            const cVal = parseInt(customSizes[s.index]) || 0;
+                            return Math.floor((remSizes[s.index] || 0) / cVal);
+                        }));
+
+                        for (let f = 0; f < fullCustomCount; f++) {
+                            let kSizes = {};
+                            let kTotal = 0;
+                            activeSizes.forEach(s => {
+                                const cVal = parseInt(customSizes[s.index]) || 0;
+                                kSizes[`s${s.index}`] = cVal;
+                                remSizes[s.index] = (remSizes[s.index] || 0) - cVal;
+                                kTotal += cVal;
+                            });
+
+                            spkList.push({
+                                no: globalNo++,
+                                merk: item.merk || po.makloon || '-',
+                                artikel: item.artikel || item.namaBarang || '-',
+                                warna: item.warna || '-',
+                                sole: item.sole || '',
+                                insole: item.insole || '',
+                                poId: po.id,
+                                sizes: kSizes,
+                                total: kTotal
+                            });
+                        }
+                    }
+
+                    // Tahap 2: Pembagian Kupon Sisa Campur (Proporsional mendekati customTargetCapacity)
+                    let loopSafety = 0;
+                    while (loopSafety++ < 2000) {
+                        let currentRemTotal = activeSizes.reduce((sum, s) => sum + (remSizes[s.index] || 0), 0);
+                        if (currentRemTotal <= 0) break;
+
+                        let kSizes = {};
+                        let kTotal = 0;
+
+                        if (currentRemTotal <= customTargetCapacity) {
+                            // Seluruh sisa muat dalam 1 kupon sisa terakhir
+                            activeSizes.forEach(s => {
+                                let take = remSizes[s.index] || 0;
+                                if (take > 0) {
+                                    kSizes[`s${s.index}`] = take;
+                                    remSizes[s.index] = 0;
+                                    kTotal += take;
+                                }
+                            });
+                        } else {
+                            // Target pasang untuk kupon sisa ini
+                            let targetPsg = customTargetCapacity;
+
+                            // Distribusikan targetPsg secara proporsional sesuai sisa stok masing-masing nomor (metode Hamilton / Largest Remainder)
+                            let quotaList = [];
+                            let allocatedSum = 0;
+
+                            activeSizes.forEach(s => {
+                                let stock = remSizes[s.index] || 0;
+                                if (stock > 0) {
+                                    let exactQuota = (targetPsg * stock) / currentRemTotal;
+                                    let floorQuota = Math.min(stock, Math.floor(exactQuota));
+                                    let remainder = exactQuota - floorQuota;
+                                    allocatedSum += floorQuota;
+                                    quotaList.push({
+                                        sizeIndex: s.index,
+                                        stock: stock,
+                                        quota: floorQuota,
+                                        remainder: remainder
+                                    });
+                                }
+                            });
+
+                            // Alokasikan sisa unit ke size dengan remainder terbesar
+                            let remainingUnits = targetPsg - allocatedSum;
+                            quotaList.sort((a, b) => b.remainder - a.remainder);
+
+                            for (let q of quotaList) {
+                                if (remainingUnits <= 0) break;
+                                if (q.quota < q.stock) {
+                                    q.quota += 1;
+                                    remainingUnits -= 1;
+                                }
+                            }
+
+                            // Jika masih ada sisa (karena stock cap), alokasikan ke size manapun yang masih punya stok
+                            if (remainingUnits > 0) {
+                                for (let q of quotaList) {
+                                    if (remainingUnits <= 0) break;
+                                    let canTake = q.stock - q.quota;
+                                    let take = Math.min(canTake, remainingUnits);
+                                    if (take > 0) {
+                                        q.quota += take;
+                                        remainingUnits -= take;
+                                    }
+                                }
+                            }
+
+                            // Terapkan kuota ke kupon dan kurangi dari remSizes
+                            quotaList.forEach(q => {
+                                if (q.quota > 0) {
+                                    kSizes[`s${q.sizeIndex}`] = q.quota;
+                                    remSizes[q.sizeIndex] -= q.quota;
+                                    kTotal += q.quota;
+                                }
+                            });
+
+                            // Fallback safety jika kTotal masih 0
+                            if (kTotal === 0) {
+                                for (let s of activeSizes) {
+                                    let stock = remSizes[s.index] || 0;
+                                    if (stock > 0) {
+                                        let take = Math.min(stock, targetPsg);
+                                        kSizes[`s${s.index}`] = take;
+                                        remSizes[s.index] -= take;
+                                        kTotal += take;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (kTotal <= 0) break;
+
+                        spkList.push({
+                            no: globalNo++,
+                            merk: item.merk || po.makloon || '-',
+                            artikel: item.artikel || item.namaBarang || '-',
+                            warna: item.warna || '-',
+                            sole: item.sole || '',
+                            insole: item.insole || '',
+                            poId: po.id,
+                            sizes: kSizes,
+                            total: kTotal
+                        });
+                    }
                 } else {
                     // MODE SERI CAMPUR (Proporsional Seri Rata + Kupon Sisa)
                     const seriQty = parseInt(config.seriQty) || (activeCount > 6 ? 2 : 4);
