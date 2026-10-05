@@ -8716,7 +8716,10 @@
                     <div class="spk-page-a4 bg-white mx-auto shadow-md mb-6 print:mb-0 print:shadow-none box-border flex flex-col justify-start" style="width: 210mm; min-height: 297mm; max-height: 297mm; padding: 6mm 10mm; box-sizing: border-box; overflow: hidden; font-family: 'Arial Narrow', 'Barlow Condensed', 'Roboto Condensed', sans-serif;">
                         <div class="text-center font-bold text-lg mb-1 tracking-wider text-black">SPK CONTROL</div>
                         <div class="flex justify-between items-center text-sm font-bold mb-2 text-black px-1">
-                            <span>${po.id}</span>
+                            <div>
+                                <span>${po.id}</span>
+                                <span style="margin-left: 20px;">Makloon : ${po.makloon || '-'}</span>
+                            </div>
                             <span>Merk : ${merkUtama}</span>
                         </div>
                         <table class="w-full border-collapse border border-black text-[10px] text-black leading-tight" style="table-layout: fixed; width: 100%; border: 1.5px solid #000;">
