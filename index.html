@@ -1803,6 +1803,20 @@
                                     <div>Disc 2: <span id="invDisc2" class="text-gray-800 font-bold"></span>%</div>
                                     <div class="flex-1 text-right truncate">Alamat: <span id="invAlamat" class="text-gray-800 font-normal"></span></div>
                                 </div>
+
+                                <div class="col-span-1 md:col-span-4 border-t border-emerald-200 pt-2 mt-1">
+                                    <label class="block text-xs font-bold text-emerald-800 uppercase mb-1">Label Nomor Ukuran (S1 - S8)</label>
+                                    <div class="grid grid-cols-8 gap-1">
+                                        <input type="text" id="invL1" placeholder="36" class="w-full px-1 py-1.5 border border-emerald-300 rounded text-center text-xs font-bold bg-white" oninput="updateTempLabelsInv()">
+                                        <input type="text" id="invL2" placeholder="37" class="w-full px-1 py-1.5 border border-emerald-300 rounded text-center text-xs font-bold bg-white" oninput="updateTempLabelsInv()">
+                                        <input type="text" id="invL3" placeholder="38" class="w-full px-1 py-1.5 border border-emerald-300 rounded text-center text-xs font-bold bg-white" oninput="updateTempLabelsInv()">
+                                        <input type="text" id="invL4" placeholder="39" class="w-full px-1 py-1.5 border border-emerald-300 rounded text-center text-xs font-bold bg-white" oninput="updateTempLabelsInv()">
+                                        <input type="text" id="invL5" placeholder="40" class="w-full px-1 py-1.5 border border-emerald-300 rounded text-center text-xs font-bold bg-white" oninput="updateTempLabelsInv()">
+                                        <input type="text" id="invL6" placeholder="41" class="w-full px-1 py-1.5 border border-emerald-300 rounded text-center text-xs font-bold bg-white" oninput="updateTempLabelsInv()">
+                                        <input type="text" id="invL7" placeholder="Opt" class="w-full px-1 py-1.5 border border-emerald-300 rounded text-center text-xs font-bold bg-white" oninput="updateTempLabelsInv()">
+                                        <input type="text" id="invL8" placeholder="Opt" class="w-full px-1 py-1.5 border border-emerald-300 rounded text-center text-xs font-bold bg-white" oninput="updateTempLabelsInv()">
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Area Input Tambah Barang Manual -->
@@ -1825,14 +1839,14 @@
                                     <input type="number" id="invInpHarga" placeholder="0" class="w-full px-2 py-2 border border-gray-300 rounded-md text-xs font-bold text-blue-700 text-right">
                                 </div>
                                 <div class="flex gap-1.5 w-full lg:w-auto justify-between lg:justify-start flex-wrap sm:flex-nowrap">
-                                    <div class="w-11 sm:w-12"><label class="block text-[10px] font-bold text-gray-600 mb-1 text-center">S1</label><input type="number" id="invInpS1" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-md text-xs text-center"></div>
-                                    <div class="w-11 sm:w-12"><label class="block text-[10px] font-bold text-gray-600 mb-1 text-center">S2</label><input type="number" id="invInpS2" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-md text-xs text-center"></div>
-                                    <div class="w-11 sm:w-12"><label class="block text-[10px] font-bold text-gray-600 mb-1 text-center">S3</label><input type="number" id="invInpS3" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-md text-xs text-center"></div>
-                                    <div class="w-11 sm:w-12"><label class="block text-[10px] font-bold text-gray-600 mb-1 text-center">S4</label><input type="number" id="invInpS4" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-md text-xs text-center"></div>
-                                    <div class="w-11 sm:w-12"><label class="block text-[10px] font-bold text-gray-600 mb-1 text-center">S5</label><input type="number" id="invInpS5" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-md text-xs text-center"></div>
-                                    <div class="w-11 sm:w-12"><label class="block text-[10px] font-bold text-gray-600 mb-1 text-center">S6</label><input type="number" id="invInpS6" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-md text-xs text-center"></div>
-                                    <div class="w-11 sm:w-12"><label class="block text-[10px] font-bold text-gray-600 mb-1 text-center">S7</label><input type="number" id="invInpS7" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-md text-xs text-center"></div>
-                                    <div class="w-11 sm:w-12"><label class="block text-[10px] font-bold text-gray-600 mb-1 text-center">S8</label><input type="number" id="invInpS8" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-md text-xs text-center"></div>
+                                    <div class="w-11 sm:w-12"><label id="invLblS1" class="block text-[10px] font-bold text-gray-600 mb-1 text-center">36</label><input type="number" id="invInpS1" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-md text-xs text-center"></div>
+                                    <div class="w-11 sm:w-12"><label id="invLblS2" class="block text-[10px] font-bold text-gray-600 mb-1 text-center">37</label><input type="number" id="invInpS2" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-md text-xs text-center"></div>
+                                    <div class="w-11 sm:w-12"><label id="invLblS3" class="block text-[10px] font-bold text-gray-600 mb-1 text-center">38</label><input type="number" id="invInpS3" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-md text-xs text-center"></div>
+                                    <div class="w-11 sm:w-12"><label id="invLblS4" class="block text-[10px] font-bold text-gray-600 mb-1 text-center">39</label><input type="number" id="invInpS4" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-md text-xs text-center"></div>
+                                    <div class="w-11 sm:w-12"><label id="invLblS5" class="block text-[10px] font-bold text-gray-600 mb-1 text-center">40</label><input type="number" id="invInpS5" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-md text-xs text-center"></div>
+                                    <div class="w-11 sm:w-12"><label id="invLblS6" class="block text-[10px] font-bold text-gray-600 mb-1 text-center">41</label><input type="number" id="invInpS6" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-md text-xs text-center"></div>
+                                    <div class="w-11 sm:w-12"><label id="invLblS7" class="block text-[10px] font-bold text-gray-600 mb-1 text-center">-</label><input type="number" id="invInpS7" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-md text-xs text-center"></div>
+                                    <div class="w-11 sm:w-12"><label id="invLblS8" class="block text-[10px] font-bold text-gray-600 mb-1 text-center">-</label><input type="number" id="invInpS8" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-md text-xs text-center"></div>
                                 </div>
                                 <div class="w-full sm:w-12">
                                     <button type="button" onclick="addInvItem()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 rounded-md text-sm transition"><i class="fa-solid fa-plus"></i></button>
@@ -1845,9 +1859,14 @@
                                     <thead class="bg-gray-100 sticky top-0 z-10 shadow-sm">
                                         <tr class="text-gray-600 uppercase text-[10px] border-b border-gray-300">
                                             <th class="py-2 px-2 w-16">Merk</th><th class="py-2 px-2">Artikel</th><th class="py-2 px-2 text-right">Harga</th>
-                                            <th class="py-2 px-1 text-center w-10">S1</th><th class="py-2 px-1 text-center w-10">S2</th><th class="py-2 px-1 text-center w-10">S3</th>
-                                            <th class="py-2 px-1 text-center w-10">S4</th><th class="py-2 px-1 text-center w-10">S5</th><th class="py-2 px-1 text-center w-10">S6</th>
-                                            <th class="py-2 px-1 text-center w-10">S7</th><th class="py-2 px-1 text-center w-10">S8</th>
+                                            <th id="invThS1" class="py-2 px-1 text-center w-10">36</th>
+                                            <th id="invThS2" class="py-2 px-1 text-center w-10">37</th>
+                                            <th id="invThS3" class="py-2 px-1 text-center w-10">38</th>
+                                            <th id="invThS4" class="py-2 px-1 text-center w-10">39</th>
+                                            <th id="invThS5" class="py-2 px-1 text-center w-10">40</th>
+                                            <th id="invThS6" class="py-2 px-1 text-center w-10">41</th>
+                                            <th id="invThS7" class="py-2 px-1 text-center w-10">-</th>
+                                            <th id="invThS8" class="py-2 px-1 text-center w-10">-</th>
                                             <th class="py-2 px-2 text-center font-bold">Qty Real</th><th class="py-2 px-2 text-right">Subtotal</th><th class="py-2 px-1 text-center">Aksi</th>
                                         </tr>
                                     </thead>
@@ -9585,11 +9604,26 @@
 
         function updateInvVal(index, field, value) { tempInvItems[index][field] = parseInt(value) || 0; renderInvTempItems(); }
 
+        function updateTempLabelsInv() {
+            for (let i = 1; i <= 8; i++) {
+                let el = document.getElementById(`invL${i}`);
+                let val = (el && el.value.trim() !== '') ? el.value.trim() : '-';
+                if (document.getElementById(`invLblS${i}`)) document.getElementById(`invLblS${i}`).innerText = val;
+                if (document.getElementById(`invThS${i}`)) document.getElementById(`invThS${i}`).innerText = val;
+            }
+        }
+
         function saveInvoice() {
             if(tempInvItems.length === 0) return showToast('Tidak ada barang dikirim!');
             
             const invId = document.getElementById('invFormNo').value;
             const soId = document.getElementById('invRefSO').value; // Bisa berisi: "SO-1, SO-2"
+
+            let szLabels = [];
+            for (let i = 1; i <= 8; i++) {
+                let el = document.getElementById(`invL${i}`);
+                szLabels.push(el ? el.value.trim() : "");
+            }
             
             // 1. Bulatkan Subtotal
             let subT = Math.round(tempInvItems.reduce((s, i) => s + (Number(i.subtotal) || 0), 0));
@@ -9619,6 +9653,7 @@
                 penyesuaian: penyesuaian, 
                 totalAkhir: totalAkhir, 
                 subtotal: subT,
+                sizeLabels: szLabels,
                 items: [...tempInvItems]
             };
 
@@ -10211,6 +10246,17 @@
                 if (document.getElementById('invAlamat')) document.getElementById('invAlamat').innerText = '-';
                 if (document.getElementById('invInpPenyesuaian')) document.getElementById('invInpPenyesuaian').value = 0;
 
+                let defaultLabels = ["36", "37", "38", "39", "40", "41", "", ""];
+                let initLabels = defaultLabels;
+                if (isFromSO && soData && soData.sizeLabels && Array.isArray(soData.sizeLabels) && soData.sizeLabels.some(l => l && String(l).trim() !== '')) {
+                    initLabels = soData.sizeLabels;
+                }
+                for (let i = 1; i <= 8; i++) {
+                    let el = document.getElementById(`invL${i}`);
+                    if (el) el.value = (initLabels[i - 1]) ? initLabels[i - 1] : "";
+                }
+                updateTempLabelsInv();
+
                 let custInput = document.getElementById('invCustomer');
                 let refInput = document.getElementById('invRefSO');
 
@@ -10604,6 +10650,13 @@
             if(document.getElementById('invInpPenyesuaian')) {
                 document.getElementById('invInpPenyesuaian').value = inv.penyesuaian || 0;
             }
+
+            let invLabels = (inv.sizeLabels && Array.isArray(inv.sizeLabels)) ? inv.sizeLabels : ["36", "37", "38", "39", "40", "41", "", ""];
+            for (let i = 1; i <= 8; i++) {
+                let el = document.getElementById(`invL${i}`);
+                if (el) el.value = (invLabels[i - 1]) ? invLabels[i - 1] : "";
+            }
+            updateTempLabelsInv();
             
             tempInvItems = JSON.parse(JSON.stringify(inv.items));
             renderInvTempItems();
@@ -12713,7 +12766,7 @@
                 "Customer": ["id", "nama", "kota", "region", "alamat", "tlp", "bank", "sales", "type", "disc1", "disc2", "rate", "ket"],
                 "PO_Produksi": ["id", "tanggal", "makloon", "harga", "catatan", "spkPrintedAt", "statusBarcode", "sizeLabels", "item_prodId", "item_merk", "item_artikel", "item_warna", "item_s1", "item_s2", "item_s3", "item_s4", "item_s5", "item_s6", "item_s7", "item_s8", "item_total", "item_ket"],
                 "Sales_Order": ["id", "tanggal", "toko", "alamat", "type", "disc", "disc2", "status", "item_prodId", "item_merk", "item_artikel", "item_warna", "item_harga", "item_s1", "item_s2", "item_s3", "item_s4", "item_s5", "item_s6", "item_total", "item_subtotal"],
-                "Invoice": ["id", "tanggal", "soId", "toko", "type", "disc1", "disc2", "subtotal", "penyesuaian", "totalAkhir", "item_prodId", "item_merk", "item_artikel", "item_warna", "item_harga", "item_s1", "item_s2", "item_s3", "item_s4", "item_s5", "item_s6", "item_s7", "item_s8", "item_total", "item_subtotal"],
+                "Invoice": ["id", "tanggal", "soId", "toko", "type", "disc1", "disc2", "subtotal", "penyesuaian", "totalAkhir", "sizeLabels", "item_prodId", "item_merk", "item_artikel", "item_warna", "item_harga", "item_s1", "item_s2", "item_s3", "item_s4", "item_s5", "item_s6", "item_s7", "item_s8", "item_total", "item_subtotal"],
                 "Buku_Kas": ["id", "tanggal", "toko", "invId", "merk", "metode", "nominal", "retur", "fee", "qtyKonsi", "ket", "komisi", "noCP"],
                 // [FIX UTAMA] Struktur Kontra Bon disesuaikan persis dengan snapshot database
                 "Kontra_Bon": ["id", "tanggal", "toko", "total", "invId", "inv_tanggal", "nilai", "bayar", "potong", "sisa"],
@@ -13253,6 +13306,7 @@
                 let iSub = headers.findIndex(h => h === 'SUBTOTAL');
                 let iPenyesuaian = headers.findIndex(h => h === 'PENYESUAIAN');
                 let iTotalAkhir = headers.findIndex(h => h === 'TOTALAKHIR' || h === 'TOTAL AKHIR');
+                let iSizeLabels = headers.findIndex(h => h === 'SIZELABELS' || h === 'SIZE LABELS');
                 
                 let iPId = headers.findIndex(h => h === 'ITEM_PRODID');
                 let iMerk = headers.findIndex(h => h === 'ITEM_MERK');
@@ -13281,6 +13335,9 @@
                     if (!invId) continue; 
 
                     if (!invMap[invId]) {
+                        let rawLabels = (iSizeLabels >= 0 && cols[iSizeLabels]) ? cols[iSizeLabels].trim() : "";
+                        let arrLabels = rawLabels ? rawLabels.split(',').map(s => s.trim()) : ["","","","","","","",""];
+
                         invMap[invId] = {
                             id: invId,
                             tanggal: cols[iTgl] ? cols[iTgl].trim() : "",
@@ -13294,6 +13351,7 @@
                             
                             subtotal: 0, 
                             totalAkhir: 0,
+                            sizeLabels: arrLabels,
                             
                             // SEDOT ANGKA TOTAL ASLI DARI EXCEL (Sultan Numbers!)
                             csvSubtotal: parseUang(cols[iSub]),
@@ -13753,6 +13811,14 @@
             document.getElementById('invType').innerText = so.type || '-';
             document.getElementById('invDisc1').innerText = so.disc !== undefined ? so.disc : (so.disc1 || 0); 
             document.getElementById('invDisc2').innerText = so.disc2 || 0;
+
+            if (so.sizeLabels && Array.isArray(so.sizeLabels) && so.sizeLabels.some(l => l && String(l).trim() !== '')) {
+                for (let i = 1; i <= 8; i++) {
+                    let el = document.getElementById(`invL${i}`);
+                    if (el) el.value = so.sizeLabels[i - 1] || "";
+                }
+                if (typeof updateTempLabelsInv === 'function') updateTempLabelsInv();
+            }
 
             // 2. MESIN POKA-YOKE SISA BARANG
             let sentData = {}; 
