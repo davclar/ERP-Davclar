@@ -1824,13 +1824,15 @@
                                     <label class="block text-[10px] font-semibold text-gray-600 uppercase mb-1">Harga</label>
                                     <input type="number" id="invInpHarga" placeholder="0" class="w-full px-2 py-2 border border-gray-300 rounded-md text-xs font-bold text-blue-700 text-right">
                                 </div>
-                                <div class="flex gap-1.5 w-full lg:w-auto justify-between lg:justify-start">
-                                    <div class="w-12"><label class="block text-[10px] font-bold text-gray-600 mb-1 text-center">S1</label><input type="number" id="invInpS1" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-md text-xs text-center"></div>
-                                    <div class="w-12"><label class="block text-[10px] font-bold text-gray-600 mb-1 text-center">S2</label><input type="number" id="invInpS2" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-md text-xs text-center"></div>
-                                    <div class="w-12"><label class="block text-[10px] font-bold text-gray-600 mb-1 text-center">S3</label><input type="number" id="invInpS3" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-md text-xs text-center"></div>
-                                    <div class="w-12"><label class="block text-[10px] font-bold text-gray-600 mb-1 text-center">S4</label><input type="number" id="invInpS4" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-md text-xs text-center"></div>
-                                    <div class="w-12"><label class="block text-[10px] font-bold text-gray-600 mb-1 text-center">S5</label><input type="number" id="invInpS5" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-md text-xs text-center"></div>
-                                    <div class="w-12"><label class="block text-[10px] font-bold text-gray-600 mb-1 text-center">S6</label><input type="number" id="invInpS6" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-md text-xs text-center"></div>
+                                <div class="flex gap-1.5 w-full lg:w-auto justify-between lg:justify-start flex-wrap sm:flex-nowrap">
+                                    <div class="w-11 sm:w-12"><label class="block text-[10px] font-bold text-gray-600 mb-1 text-center">S1</label><input type="number" id="invInpS1" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-md text-xs text-center"></div>
+                                    <div class="w-11 sm:w-12"><label class="block text-[10px] font-bold text-gray-600 mb-1 text-center">S2</label><input type="number" id="invInpS2" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-md text-xs text-center"></div>
+                                    <div class="w-11 sm:w-12"><label class="block text-[10px] font-bold text-gray-600 mb-1 text-center">S3</label><input type="number" id="invInpS3" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-md text-xs text-center"></div>
+                                    <div class="w-11 sm:w-12"><label class="block text-[10px] font-bold text-gray-600 mb-1 text-center">S4</label><input type="number" id="invInpS4" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-md text-xs text-center"></div>
+                                    <div class="w-11 sm:w-12"><label class="block text-[10px] font-bold text-gray-600 mb-1 text-center">S5</label><input type="number" id="invInpS5" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-md text-xs text-center"></div>
+                                    <div class="w-11 sm:w-12"><label class="block text-[10px] font-bold text-gray-600 mb-1 text-center">S6</label><input type="number" id="invInpS6" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-md text-xs text-center"></div>
+                                    <div class="w-11 sm:w-12"><label class="block text-[10px] font-bold text-gray-600 mb-1 text-center">S7</label><input type="number" id="invInpS7" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-md text-xs text-center"></div>
+                                    <div class="w-11 sm:w-12"><label class="block text-[10px] font-bold text-gray-600 mb-1 text-center">S8</label><input type="number" id="invInpS8" placeholder="0" class="w-full px-1 py-2 border border-gray-300 rounded-md text-xs text-center"></div>
                                 </div>
                                 <div class="w-full sm:w-12">
                                     <button type="button" onclick="addInvItem()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 rounded-md text-sm transition"><i class="fa-solid fa-plus"></i></button>
@@ -1845,6 +1847,7 @@
                                             <th class="py-2 px-2 w-16">Merk</th><th class="py-2 px-2">Artikel</th><th class="py-2 px-2 text-right">Harga</th>
                                             <th class="py-2 px-1 text-center w-10">S1</th><th class="py-2 px-1 text-center w-10">S2</th><th class="py-2 px-1 text-center w-10">S3</th>
                                             <th class="py-2 px-1 text-center w-10">S4</th><th class="py-2 px-1 text-center w-10">S5</th><th class="py-2 px-1 text-center w-10">S6</th>
+                                            <th class="py-2 px-1 text-center w-10">S7</th><th class="py-2 px-1 text-center w-10">S8</th>
                                             <th class="py-2 px-2 text-center font-bold">Qty Real</th><th class="py-2 px-2 text-right">Subtotal</th><th class="py-2 px-1 text-center">Aksi</th>
                                         </tr>
                                     </thead>
@@ -1919,7 +1922,7 @@
                                         <tr>
                                             <th class="border border-black p-1 w-20" rowspan="2">Merk</th>
                                             <th class="border border-black p-1" rowspan="2">Artikel - Warna</th>
-                                            <th class="border border-black p-1" colspan="6">Size</th>
+                                            <th class="border border-black p-1" colspan="8">Size</th>
                                             <th class="border border-black p-1 w-16" rowspan="2">Jumlah<br>(Psg)</th>
                                             <th class="border border-black p-1 w-20" rowspan="2">Harga<br>Perpasang</th>
                                             <th class="border border-black p-1 w-24" rowspan="2">Total</th>
@@ -1927,13 +1930,14 @@
                                         <tr>
                                             <th class="border border-black p-1 w-6"></th><th class="border border-black p-1 w-6"></th><th class="border border-black p-1 w-6"></th>
                                             <th class="border border-black p-1 w-6"></th><th class="border border-black p-1 w-6"></th><th class="border border-black p-1 w-6"></th>
+                                            <th class="border border-black p-1 w-6"></th><th class="border border-black p-1 w-6"></th>
                                         </tr>
                                     </thead>
                                     <tbody id="printInvTableBody"></tbody>
                                     <tfoot>
-                                        <tr><td colspan="10" class="border border-black p-2 text-right font-bold">Subtotal</td><td id="printInvSubtotal" class="border border-black p-2 text-right font-bold"></td></tr>
-                                        <tr><td colspan="4" class="border border-black p-2 text-center text-[10px]">BCA a/n DAVIT BAMBANG IRAWAN - NO REK : 3791201240</td><td colspan="6" class="border border-black p-2 text-right font-bold text-red-600">Discount</td><td id="printInvDiscValue" class="border border-black p-2 text-right font-bold text-red-600"></td></tr>
-                                        <tr><td colspan="4" class="border border-black p-2"></td><td colspan="6" class="border border-black p-2 text-right font-bold text-lg">TOTAL</td><td id="printInvGrandTotal" class="border border-black p-2 text-right font-bold text-lg"></td></tr>
+                                        <tr><td colspan="12" class="border border-black p-2 text-right font-bold">Subtotal</td><td id="printInvSubtotal" class="border border-black p-2 text-right font-bold"></td></tr>
+                                        <tr><td colspan="4" class="border border-black p-2 text-center text-[10px]">BCA a/n DAVIT BAMBANG IRAWAN - NO REK : 3791201240</td><td colspan="8" class="border border-black p-2 text-right font-bold text-red-600">Discount</td><td id="printInvDiscValue" class="border border-black p-2 text-right font-bold text-red-600"></td></tr>
+                                        <tr><td colspan="4" class="border border-black p-2"></td><td colspan="8" class="border border-black p-2 text-right font-bold text-lg">TOTAL</td><td id="printInvGrandTotal" class="border border-black p-2 text-right font-bold text-lg"></td></tr>
                                     </tfoot>
                                 </table>
 
@@ -9514,7 +9518,7 @@
             let grandQty = 0; 
             
             tempInvItems.forEach((item, index) => {
-                let totalQty = (parseInt(item.s1)||0) + (parseInt(item.s2)||0) + (parseInt(item.s3)||0) + (parseInt(item.s4)||0) + (parseInt(item.s5)||0) + (parseInt(item.s6)||0);
+                let totalQty = (parseInt(item.s1)||0) + (parseInt(item.s2)||0) + (parseInt(item.s3)||0) + (parseInt(item.s4)||0) + (parseInt(item.s5)||0) + (parseInt(item.s6)||0) + (parseInt(item.s7)||0) + (parseInt(item.s8)||0);
                 item.total = totalQty; 
                 item.subtotal = totalQty * item.harga; 
                 
@@ -9540,6 +9544,8 @@
                         <td class="py-2 px-1 text-center"><input type="number" onchange="updateInvVal(${index}, 's4', this.value)" value="${item.s4||''}" class="w-10 mx-auto px-1 py-1 border border-blue-300 rounded text-center text-xs"></td>
                         <td class="py-2 px-1 text-center"><input type="number" onchange="updateInvVal(${index}, 's5', this.value)" value="${item.s5||''}" class="w-10 mx-auto px-1 py-1 border border-blue-300 rounded text-center text-xs"></td>
                         <td class="py-2 px-1 text-center"><input type="number" onchange="updateInvVal(${index}, 's6', this.value)" value="${item.s6||''}" class="w-10 mx-auto px-1 py-1 border border-blue-300 rounded text-center text-xs"></td>
+                        <td class="py-2 px-1 text-center"><input type="number" onchange="updateInvVal(${index}, 's7', this.value)" value="${item.s7||''}" class="w-10 mx-auto px-1 py-1 border border-blue-300 rounded text-center text-xs"></td>
+                        <td class="py-2 px-1 text-center"><input type="number" onchange="updateInvVal(${index}, 's8', this.value)" value="${item.s8||''}" class="w-10 mx-auto px-1 py-1 border border-blue-300 rounded text-center text-xs"></td>
                         <td class="py-2 px-2 text-center font-bold text-emerald-600 text-sm">${item.total}</td>
                         <td class="py-2 px-2 text-right font-bold text-gray-700 text-[11px] whitespace-nowrap">Rp ${item.subtotal.toLocaleString('id-ID')}</td>
                         <td class="py-2 px-1 text-center space-x-1 whitespace-nowrap">
@@ -10134,8 +10140,8 @@
                     relatedInvoices.forEach(inv => {
                         inv.items.forEach(item => {
                             let key = `${item.namaBarang || ''}${item.artikel || ''}${item.merk || ''}`.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-                            if (!sentData[key]) sentData[key] = {s1:0, s2:0, s3:0, s4:0, s5:0, s6:0};
-                            for (let i = 1; i <= 6; i++) {
+                            if (!sentData[key]) sentData[key] = {s1:0, s2:0, s3:0, s4:0, s5:0, s6:0, s7:0, s8:0};
+                            for (let i = 1; i <= 8; i++) {
                                 sentData[key][`s${i}`] += (parseInt(item[`s${i}`]) || 0); 
                             }
                         });
@@ -10144,7 +10150,7 @@
                     tempInvItems = [];
                     soData.items.forEach(soItem => {
                         let key = `${soItem.namaBarang || ''}${soItem.artikel || ''}${soItem.merk || ''}`.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-                        let sent = sentData[key] || {s1:0, s2:0, s3:0, s4:0, s5:0, s6:0};
+                        let sent = sentData[key] || {s1:0, s2:0, s3:0, s4:0, s5:0, s6:0, s7:0, s8:0};
                         
                         let remS1 = Math.max(0, (parseInt(soItem.s1) || 0) - sent.s1);
                         let remS2 = Math.max(0, (parseInt(soItem.s2) || 0) - sent.s2);
@@ -10152,12 +10158,14 @@
                         let remS4 = Math.max(0, (parseInt(soItem.s4) || 0) - sent.s4);
                         let remS5 = Math.max(0, (parseInt(soItem.s5) || 0) - sent.s5);
                         let remS6 = Math.max(0, (parseInt(soItem.s6) || 0) - sent.s6);
-                        let totalRem = remS1 + remS2 + remS3 + remS4 + remS5 + remS6;
+                        let remS7 = Math.max(0, (parseInt(soItem.s7) || 0) - (sent.s7 || 0));
+                        let remS8 = Math.max(0, (parseInt(soItem.s8) || 0) - (sent.s8 || 0));
+                        let totalRem = remS1 + remS2 + remS3 + remS4 + remS5 + remS6 + remS7 + remS8;
 
                         if (totalRem > 0) {
                             tempInvItems.push({
                                 ...soItem,
-                                s1: remS1, s2: remS2, s3: remS3, s4: remS4, s5: remS5, s6: remS6,
+                                s1: remS1, s2: remS2, s3: remS3, s4: remS4, s5: remS5, s6: remS6, s7: remS7, s8: remS8,
                                 total: totalRem,
                                 subtotal: totalRem * soItem.harga
                             });
@@ -10375,6 +10383,12 @@
             // RENDER HTML PER HALAMAN (UKURAN A5 LANSKAP)
             // ==========================================
             let allPagesHTML = '';
+            let invLabels = (inv.sizeLabels && Array.isArray(inv.sizeLabels)) ? inv.sizeLabels : [];
+            let szThHTML = '';
+            for (let sIdx = 1; sIdx <= 8; sIdx++) {
+                let lbl = (invLabels[sIdx - 1]) ? invLabels[sIdx - 1] : `S${sIdx}`;
+                szThHTML += `<th class="border border-black w-[3%] py-0.5 font-bold">${lbl}</th>`;
+            }
             
             pages.forEach((pageObj, index) => {
                 const pageItems = pageObj.items;
@@ -10428,6 +10442,8 @@
                             <td class="border border-black text-center">${item.s4 || ''}</td>
                             <td class="border border-black text-center">${item.s5 || ''}</td>
                             <td class="border border-black text-center">${item.s6 || ''}</td>
+                            <td class="border border-black text-center">${item.s7 || ''}</td>
+                            <td class="border border-black text-center">${item.s8 || ''}</td>
                             <td class="border border-black px-1 text-center font-bold">${item.total || 0}</td>
                             <td class="border border-black px-1 text-right whitespace-nowrap">${(item.harga || 0).toLocaleString('id-ID')}</td>
                             <td class="border border-black px-1 text-right font-semibold whitespace-nowrap">${(item.subtotal || 0).toLocaleString('id-ID')}</td>
@@ -10439,11 +10455,11 @@
                 if (isLastPage) {
                     footerHTML = `
                         <tr class="text-black text-[10px] h-4">
-                            <td colspan="11" class="border border-black px-2 text-right">Subtotal</td>
+                            <td colspan="13" class="border border-black px-2 text-right">Subtotal</td>
                             <td class="border border-black px-1 text-right font-bold whitespace-nowrap">Rp ${inv.subtotal.toLocaleString('id-ID')}</td>
                         </tr>
                         <tr class="text-black text-[10px]">
-                            <td colspan="10" rowspan="3" class="align-top p-1" style="border: none; border-top: 1px solid black;">
+                            <td colspan="12" rowspan="3" class="align-top p-1" style="border: none; border-top: 1px solid black;">
                                 <div class="border border-black w-[70%] mx-auto text-center px-2 py-0.5 text-[10px] font-bold mb-1 mt-1">
                                     ${infoRekening}
                                 </div>
@@ -10466,7 +10482,7 @@
                 } else {
                     footerHTML = `
                         <tr class="text-black text-[10px] h-4">
-                            <td colspan="12" class="border border-black px-2 text-right italic text-black font-semibold">Bersambung ke Halaman ${pageNumber + 1}...</td>
+                            <td colspan="14" class="border border-black px-2 text-right italic text-black font-semibold">Bersambung ke Halaman ${pageNumber + 1}...</td>
                         </tr>
                     `;
                 }
@@ -10477,21 +10493,16 @@
                         <table class="w-full border-collapse text-[10px] text-black" style="table-layout: fixed;">
                             <thead>
                                 <tr class="bg-white">
-                                    <th class="border border-black p-0.5 w-[11%]" rowspan="2">Merk</th>
-                                    <th class="border border-black p-0.5 w-[20%]" rowspan="2">Artikel</th>
+                                    <th class="border border-black p-0.5 w-[10%]" rowspan="2">Merk</th>
+                                    <th class="border border-black p-0.5 w-[18%]" rowspan="2">Artikel</th>
                                     <th class="border border-black p-0.5 w-[10%]" rowspan="2">Warna</th>
-                                    <th class="border border-black p-0.5 w-[23%]" colspan="6">Size</th>
-                                    <th class="border border-black p-0.5 w-[9%] leading-tight" rowspan="2">Jumlah<br>(Psg)</th>
-                                    <th class="border border-black p-0.5 w-[13%] leading-tight" rowspan="2">Harga<br>Perpasang</th>
-                                    <th class="border border-black p-0.5 w-[14%]" rowspan="2">Total</th>
+                                    <th class="border border-black p-0.5 w-[24%]" colspan="8">Size</th>
+                                    <th class="border border-black p-0.5 w-[8%] leading-tight" rowspan="2">Jumlah<br>(Psg)</th>
+                                    <th class="border border-black p-0.5 w-[14%] leading-tight" rowspan="2">Harga<br>Perpasang</th>
+                                    <th class="border border-black p-0.5 w-[16%]" rowspan="2">Total</th>
                                 </tr>
                                 <tr class="bg-white text-[10px]">
-                                    <th class="border border-black w-[3.8%] py-0.5 font-bold">S1</th>
-                                    <th class="border border-black w-[3.8%] py-0.5 font-bold">S2</th>
-                                    <th class="border border-black w-[3.8%] py-0.5 font-bold">S3</th>
-                                    <th class="border border-black w-[3.8%] py-0.5 font-bold">S4</th>
-                                    <th class="border border-black w-[3.8%] py-0.5 font-bold">S5</th>
-                                    <th class="border border-black w-[3.8%] py-0.5 font-bold">S6</th>
+                                    ${szThHTML}
                                 </tr>
                             </thead>
                             <tbody>
@@ -11272,7 +11283,7 @@
             if(!artikel) return showToast('Pilih atau ketik artikel!');
 
             let s = [], total = 0;
-            for(let i=1; i<=6; i++) { let v = parseInt(document.getElementById(`invInpS${i}`).value)||0; s.push(v); total+=v; }
+            for(let i=1; i<=8; i++) { let v = parseInt(document.getElementById(`invInpS${i}`).value)||0; s.push(v); total+=v; }
             if(total===0) return showToast('Qty tidak boleh 0!');
 
             let namaFull = warna !== '-' ? artikel + " " + warna : artikel;
@@ -11283,10 +11294,13 @@
                 artikel: artikel,
                 warna: warna,
                 namaBarang: namaFull, 
-                harga: harga, s1:s[0], s2:s[1], s3:s[2], s4:s[3], s5:s[4], s6:s[5], total: total, subtotal: total*harga 
+                harga: harga, 
+                s1:s[0], s2:s[1], s3:s[2], s4:s[3], s5:s[4], s6:s[5], s7:s[6], s8:s[7], 
+                total: total, 
+                subtotal: total*harga 
             });
             
-            for(let i=1; i<=6; i++) document.getElementById(`invInpS${i}`).value = '';
+            for(let i=1; i<=8; i++) document.getElementById(`invInpS${i}`).value = '';
             document.getElementById('invInputBarang').value = ''; document.getElementById('invInpMerk').value = ''; document.getElementById('invInpHarga').value = '';
             document.getElementById('invInpWarna').value = ''; // Reset Warna
             renderInvTempItems();
@@ -11298,7 +11312,7 @@
             document.getElementById('invInpMerk').value = item.merk;
             document.getElementById('invInpWarna').value = item.warna && item.warna !== '-' ? item.warna : '';
             document.getElementById('invInpHarga').value = item.harga;
-            for(let i=1; i<=6; i++) document.getElementById(`invInpS${i}`).value = item[`s${i}`] || "";
+            for(let i=1; i<=8; i++) document.getElementById(`invInpS${i}`).value = item[`s${i}`] || "";
             selectedProdIdInv = item.prodId;
             tempInvItems.splice(index, 1);
             renderInvTempItems();
@@ -12699,7 +12713,7 @@
                 "Customer": ["id", "nama", "kota", "region", "alamat", "tlp", "bank", "sales", "type", "disc1", "disc2", "rate", "ket"],
                 "PO_Produksi": ["id", "tanggal", "makloon", "harga", "catatan", "spkPrintedAt", "statusBarcode", "sizeLabels", "item_prodId", "item_merk", "item_artikel", "item_warna", "item_s1", "item_s2", "item_s3", "item_s4", "item_s5", "item_s6", "item_s7", "item_s8", "item_total", "item_ket"],
                 "Sales_Order": ["id", "tanggal", "toko", "alamat", "type", "disc", "disc2", "status", "item_prodId", "item_merk", "item_artikel", "item_warna", "item_harga", "item_s1", "item_s2", "item_s3", "item_s4", "item_s5", "item_s6", "item_total", "item_subtotal"],
-                "Invoice": ["id", "tanggal", "soId", "toko", "type", "disc1", "disc2", "subtotal", "penyesuaian", "totalAkhir", "item_prodId", "item_merk", "item_artikel", "item_warna", "item_harga", "item_s1", "item_s2", "item_s3", "item_s4", "item_s5", "item_s6", "item_total", "item_subtotal"],
+                "Invoice": ["id", "tanggal", "soId", "toko", "type", "disc1", "disc2", "subtotal", "penyesuaian", "totalAkhir", "item_prodId", "item_merk", "item_artikel", "item_warna", "item_harga", "item_s1", "item_s2", "item_s3", "item_s4", "item_s5", "item_s6", "item_s7", "item_s8", "item_total", "item_subtotal"],
                 "Buku_Kas": ["id", "tanggal", "toko", "invId", "merk", "metode", "nominal", "retur", "fee", "qtyKonsi", "ket", "komisi", "noCP"],
                 // [FIX UTAMA] Struktur Kontra Bon disesuaikan persis dengan snapshot database
                 "Kontra_Bon": ["id", "tanggal", "toko", "total", "invId", "inv_tanggal", "nilai", "bayar", "potong", "sisa"],
@@ -13252,6 +13266,8 @@
                 let iS4 = headers.findIndex(h => h === 'ITEM_S4');
                 let iS5 = headers.findIndex(h => h === 'ITEM_S5');
                 let iS6 = headers.findIndex(h => h === 'ITEM_S6');
+                let iS7 = headers.findIndex(h => h === 'ITEM_S7');
+                let iS8 = headers.findIndex(h => h === 'ITEM_S8');
 
                 let invMap = {}; 
 
@@ -13300,9 +13316,11 @@
                     let s4 = iS4 >= 0 && cols[iS4] ? parseInt(cols[iS4].trim()) || 0 : 0;
                     let s5 = iS5 >= 0 && cols[iS5] ? parseInt(cols[iS5].trim()) || 0 : 0;
                     let s6 = iS6 >= 0 && cols[iS6] ? parseInt(cols[iS6].trim()) || 0 : 0;
+                    let s7 = iS7 >= 0 && cols[iS7] ? parseInt(cols[iS7].trim()) || 0 : 0;
+                    let s8 = iS8 >= 0 && cols[iS8] ? parseInt(cols[iS8].trim()) || 0 : 0;
                     
                     let hrg = parseUang(cols[iHrg]);
-                    let itemTotalQty = s1 + s2 + s3 + s4 + s5 + s6;
+                    let itemTotalQty = s1 + s2 + s3 + s4 + s5 + s6 + s7 + s8;
 
                     // Kalau ada rincian barang, masukkan ke array
                     if (prodId || art || itemTotalQty > 0 || hrg > 0) {
@@ -13314,7 +13332,7 @@
                             artikel: art,
                             warna: cols[iWrn] ? cols[iWrn].trim().toUpperCase() : "-",
                             harga: hrg,
-                            s1: s1, s2: s2, s3: s3, s4: s4, s5: s5, s6: s6,
+                            s1: s1, s2: s2, s3: s3, s4: s4, s5: s5, s6: s6, s7: s7, s8: s8,
                             total: itemTotalQty,
                             subtotal: subtotalBarang
                         });
@@ -13746,8 +13764,8 @@
             relatedInvoices.forEach(inv => {
                 inv.items.forEach(item => {
                     let key = `${item.namaBarang || ''}${item.artikel || ''}${item.merk || ''}`.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-                    if(!sentData[key]) sentData[key] = {s1:0,s2:0,s3:0,s4:0,s5:0,s6:0};
-                    for(let i=1; i<=6; i++) sentData[key][`s${i}`] += (parseInt(item[`s${i}`]) || 0); 
+                    if(!sentData[key]) sentData[key] = {s1:0,s2:0,s3:0,s4:0,s5:0,s6:0,s7:0,s8:0};
+                    for(let i=1; i<=8; i++) sentData[key][`s${i}`] += (parseInt(item[`s${i}`]) || 0); 
                 });
             });
 
@@ -13755,7 +13773,7 @@
             let ditambahkan = 0;
             so.items.forEach(soItem => {
                 let key = `${soItem.namaBarang || ''}${soItem.artikel || ''}${soItem.merk || ''}`.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-                let sent = sentData[key] || {s1:0,s2:0,s3:0,s4:0,s5:0,s6:0};
+                let sent = sentData[key] || {s1:0,s2:0,s3:0,s4:0,s5:0,s6:0,s7:0,s8:0};
                 
                 let remS1 = Math.max(0, (parseInt(soItem.s1)||0) - sent.s1);
                 let remS2 = Math.max(0, (parseInt(soItem.s2)||0) - sent.s2);
@@ -13763,12 +13781,14 @@
                 let remS4 = Math.max(0, (parseInt(soItem.s4)||0) - sent.s4);
                 let remS5 = Math.max(0, (parseInt(soItem.s5)||0) - sent.s5);
                 let remS6 = Math.max(0, (parseInt(soItem.s6)||0) - sent.s6);
-                let totalRem = remS1+remS2+remS3+remS4+remS5+remS6;
+                let remS7 = Math.max(0, (parseInt(soItem.s7)||0) - (sent.s7||0));
+                let remS8 = Math.max(0, (parseInt(soItem.s8)||0) - (sent.s8||0));
+                let totalRem = remS1+remS2+remS3+remS4+remS5+remS6+remS7+remS8;
 
                 if(totalRem > 0) {
                     tempInvItems.push({
                         ...soItem,
-                        s1: remS1, s2: remS2, s3: remS3, s4: remS4, s5: remS5, s6: remS6,
+                        s1: remS1, s2: remS2, s3: remS3, s4: remS4, s5: remS5, s6: remS6, s7: remS7, s8: remS8,
                         total: totalRem,
                         subtotal: totalRem * soItem.harga
                     });
