@@ -3845,9 +3845,9 @@
                                             <th class="p-3">No. PO & Tanggal</th>
                                             <th class="p-3">Vendor Makloon</th>
                                             <th class="p-3">Artikel Produk</th>
-                                            <th class="p-3 text-right">Pasang</th>
-                                            <th class="p-3 text-right">Tarif / Psg</th>
+                                            <th class="p-3 text-right">Pasang &amp; Tarif</th>
                                             <th class="p-3 text-right">Bruto PO (Rp)</th>
+                                            <th class="p-3 text-right text-teal-800">Jatah Kasbon</th>
                                             <th class="p-3 text-right">Bahan Kirim (-)</th>
                                             <th class="p-3 text-right">Kasbon (-)</th>
                                             <th class="p-3 text-right">Sudah Bayar (-)</th>
@@ -19171,11 +19171,14 @@
         const formatNumberTwoDec = formatNumberOneDec;
 
         // Modal Rincian Jatah Kasbon Makloon
-        function openModalKasbonBreakdown() {
+        function openModalKasbonBreakdown(targetPoId = null) {
             const modal = document.getElementById('modal-kasbon-breakdown');
             if (!modal) return;
 
-            const data = calculatePORequiredMaterials(currentMakloonBahanPOId);
+            const pId = targetPoId || currentMakloonBahanPOId;
+            if (!pId) return;
+
+            const data = calculatePORequiredMaterials(pId);
             if (!data) return;
 
             const title = document.getElementById('kasbonModalTitle');
@@ -20680,6 +20683,44 @@
             };
         }
 
+        // Helper hitung Jatah Kasbon PO dari BOM
+        function getPOJatahKasbon(poId) {
+            if (!poId) return 0;
+            const po = (db_po || []).find(p => p.id === poId);
+            if (!po) return 0;
+            let totalJatah = 0;
+            (po.items || []).forEach(item => {
+                const art = (item.artikel || '').trim().toUpperCase();
+                const itemTotal = parseInt(item.total) || 0;
+                if (itemTotal <= 0) return;
+                let bom = (db_makloon_cost || []).find(c => {
+                    if (Array.isArray(c.articles) && c.articles.some(a => a.trim().toUpperCase() === art)) return true;
+                    if ((c.model || '').trim().toUpperCase() === art) return true;
+                    if ((c.artikel || '').trim().toUpperCase() === art) return true;
+                    if (c.model && art.startsWith(c.model.trim().toUpperCase())) return true;
+                    return false;
+                });
+                if (bom && Array.isArray(bom.rows)) {
+                    let colIdx = 0;
+                    if (Array.isArray(bom.articles) && bom.articles.length > 0) {
+                        const foundIdx = bom.articles.findIndex(a => a.trim().toUpperCase() === art);
+                        if (foundIdx !== -1) colIdx = foundIdx;
+                    }
+                    bom.rows.forEach(r => {
+                        if (typeof isOngkosOrJasaOrOverhead === 'function' && isOngkosOrJasaOrOverhead(r.bagian, r.bahan)) {
+                            let rawU = (r.rawUsage && r.rawUsage[colIdx] !== undefined && r.rawUsage[colIdx] !== '') 
+                                ? r.rawUsage[colIdx] 
+                                : ((r.usage && r.usage[colIdx] !== undefined && r.usage[colIdx] !== '') ? r.usage[colIdx] : null);
+                            let u = rawU !== null ? (typeof parseFractionOrNumber === 'function' ? parseFractionOrNumber(rawU) : (parseFloat(rawU) || 1)) : 1;
+                            const h = parseFloat(r.harga) || 0;
+                            totalJatah += Math.round(Math.round(u * h) * itemTotal);
+                        }
+                    });
+                }
+            });
+            return totalJatah;
+        }
+
         // Summary Hutang per PO
         function getPOHutangSummary(poId) {
             const po = (db_po || []).find(p => p.id === poId);
@@ -20704,6 +20745,7 @@
             }
 
             const brutoPO = getPOMakloonBruto(po);
+            const jatahKasbon = getPOJatahKasbon(poId);
             const bahanKirim = getPOBahanKirimNilai(poId);
             const kasbon = getPOKasbonNilai(poId);
             const sudahBayar = getPOSudahBayarNilai(poId);
@@ -20719,6 +20761,7 @@
                 pasangDibayar,
                 tarif,
                 brutoPO,
+                jatahKasbon,
                 bahanKirim,
                 kasbon,
                 sudahBayar,
@@ -21069,12 +21112,19 @@
                         </td>
                         <td class="p-3 font-extrabold text-indigo-900">${s.makloon || '-'}</td>
                         <td class="p-3 font-bold text-gray-800 max-w-xs truncate" title="${artName}">${artName}</td>
-                        <td class="p-3 text-right">
-                            <div class="font-bold text-gray-700">${s.pasangDibayar.toLocaleString('id-ID')} psg</div>
+                        <td class="p-3 text-right whitespace-nowrap">
+                            <div class="font-bold text-gray-800">${s.pasangDibayar.toLocaleString('id-ID')} psg</div>
+                            <div class="text-[11px] text-gray-500 font-medium">@ Rp ${s.tarif.toLocaleString('id-ID')}</div>
                             ${s.totalReject > 0 ? `<div class="text-[10px] text-rose-600 font-semibold" title="Target PO: ${s.totalPasang.toLocaleString('id-ID')} psg, Reject BS QC: ${s.totalReject.toLocaleString('id-ID')} psg">(BS: -${s.totalReject.toLocaleString('id-ID')})</div>` : ''}
                         </td>
-                        <td class="p-3 text-right font-medium text-gray-500">Rp ${s.tarif.toLocaleString('id-ID')}</td>
                         <td class="p-3 text-right font-bold text-blue-900" title="${s.pasangDibayar.toLocaleString('id-ID')} psg &times; Rp ${s.tarif.toLocaleString('id-ID')}">Rp ${s.brutoPO.toLocaleString('id-ID')}</td>
+                        <td class="p-3 text-right whitespace-nowrap">
+                            ${(s.jatahKasbon || 0) > 0 ? `
+                                <div class="font-bold text-teal-800 cursor-pointer hover:underline" onclick="openModalKasbonBreakdown('${s.poId}')" title="Klik untuk rincian jatah kasbon PO ini">
+                                    Rp ${(s.jatahKasbon || 0).toLocaleString('id-ID')}
+                                </div>
+                            ` : `<span class="text-gray-400 font-medium">Rp 0</span>`}
+                        </td>
                         <td class="p-3 text-right font-bold text-purple-700">Rp ${s.bahanKirim.toLocaleString('id-ID')}</td>
                         <td class="p-3 text-right font-bold text-amber-700">Rp ${s.kasbon.toLocaleString('id-ID')}</td>
                         <td class="p-3 text-right font-bold text-emerald-700">Rp ${s.sudahBayar.toLocaleString('id-ID')}</td>
