@@ -18169,34 +18169,21 @@
                     return true;
                 });
 
-                // Prioritas 2: Exact match nama bahan saja
+                // Prioritas 2: Exact match nama bahan saja (tanpa syarat warna ketat)
                 if (candidateRows.length === 0) {
                     candidateRows = validRows.filter(r => (r.bahan || '').trim().toUpperCase() === cleanBahan);
                 }
 
-                // Prioritas 3: Hanya jika TIDAK ADA baris dengan nama bahan yang sama persis, gunakan substring/includes
+                // Prioritas 3: Substring / includes match (seperti TALI, STIKER, DUS, dsb)
                 if (candidateRows.length === 0) {
                     candidateRows = validRows.filter(r => {
                         const rBahan = (r.bahan || '').trim().toUpperCase();
+                        if (!rBahan) return false;
                         return cleanBahan.includes(rBahan) || rBahan.includes(cleanBahan);
                     });
                 }
 
                 candidateRows.forEach(r => {
-                    // COLOR MATCH: pastikan warna bahan sama dengan warna Surat Jalan
-                    const resolvedColor = resolveBOMMaterialColor(poColor, r.warna);
-                    if (cleanWarna !== '-' && resolvedColor !== '-') {
-                        if (cleanWarna !== resolvedColor && !cleanWarna.includes(resolvedColor) && !resolvedColor.includes(cleanWarna)) {
-                            return;
-                        }
-                    }
-
-                    // SATUAN CHECK (jika ada):
-                    if (cleanSatuan && r.satuan) {
-                        const rSatuan = (r.satuan || '').trim().toUpperCase();
-                        if (rSatuan && rSatuan !== cleanSatuan) return;
-                    }
-
                     let rawU = (r.rawUsage && r.rawUsage[colIdx] !== undefined && r.rawUsage[colIdx] !== '') 
                         ? r.rawUsage[colIdx] 
                         : ((r.usage && r.usage[colIdx] !== undefined && r.usage[colIdx] !== '') ? r.usage[colIdx] : null);
@@ -18507,27 +18494,39 @@
                             if (szIdx >= 0 && szIdx < maxSlot) {
                                 let allocSoleQty = itRawQty;
                                 if (isMultiPO && !coversAll) {
-                                    // Hitung kebutuhan size ini secara spesifik untuk target PO vs semua PO di SJ
-                                    let totalReqSzAllPos = 0;
+                                    // FIFO: kumpulkan kebutuhan per PO untuk size ini secara berurutan
+                                    let reqByPO = [];
+                                    let sumReqSz = 0;
                                     sjAllPos.forEach(pId => {
                                         const pObj = (db_po || []).find(x => x.id === pId);
+                                        let pSzReq = 0;
                                         if (pObj && pObj.items) {
                                             pObj.items.forEach(itPo => {
                                                 const sArr = extractPoItemSizes(itPo);
-                                                totalReqSzAllPos += (parseInt(sArr[szIdx]) || 0);
+                                                pSzReq += (parseInt(sArr[szIdx]) || 0);
                                             });
                                         }
+                                        reqByPO.push({ id: pId, req: pSzReq });
+                                        sumReqSz += pSzReq;
                                     });
-                                    const targetReqSz = soleMap[foundKey].sizes[szIdx] || 0;
-                                    if (totalReqSzAllPos > 0) {
-                                        if (itRawQty >= totalReqSzAllPos) {
-                                            // Terkirim penuh atau lebih: penuhi kebutuhan PO ini terlebih dahulu
-                                            const extra = itRawQty - totalReqSzAllPos;
-                                            const extraShare = extra > 0 ? Math.round(extra * (targetReqSz / totalReqSzAllPos)) : 0;
-                                            allocSoleQty = targetReqSz + extraShare;
-                                        } else {
-                                            allocSoleQty = Math.round(itRawQty * (targetReqSz / totalReqSzAllPos));
-                                        }
+
+                                    if (sumReqSz > 0) {
+                                        // Penuhi PO pertama dulu, sisanya ke PO berikutnya
+                                        let remShipment = itRawQty;
+                                        let targetAlloc = 0;
+                                        reqByPO.forEach((poReq, pIdx) => {
+                                            let take = 0;
+                                            if (pIdx === reqByPO.length - 1) {
+                                                take = Math.max(0, remShipment);
+                                            } else {
+                                                take = Math.min(poReq.req, Math.max(0, remShipment));
+                                            }
+                                            remShipment -= take;
+                                            if (targetPoIds.includes(poReq.id)) {
+                                                targetAlloc += take;
+                                            }
+                                        });
+                                        allocSoleQty = targetAlloc;
                                     } else {
                                         allocSoleQty = Math.round(itRawQty * defaultAllocRatio);
                                     }
@@ -18540,25 +18539,38 @@
                                 for (let i = 0; i < maxSlot; i++) {
                                     let sQty = parseInt(it.sizes[i]) || 0;
                                     if (isMultiPO && !coversAll) {
-                                        let totalReqSzAllPos = 0;
+                                        let reqByPO = [];
+                                        let sumReqSz = 0;
                                         sjAllPos.forEach(pId => {
                                             const pObj = (db_po || []).find(x => x.id === pId);
+                                            let pSzReq = 0;
                                             if (pObj && pObj.items) {
                                                 pObj.items.forEach(itPo => {
                                                     const sArr = extractPoItemSizes(itPo);
-                                                    totalReqSzAllPos += (parseInt(sArr[i]) || 0);
+                                                    pSzReq += (parseInt(sArr[i]) || 0);
                                                 });
                                             }
+                                            reqByPO.push({ id: pId, req: pSzReq });
+                                            sumReqSz += pSzReq;
                                         });
-                                        const targetReqSz = soleMap[foundKey].sizes[i] || 0;
-                                        if (totalReqSzAllPos > 0) {
-                                            if (sQty >= totalReqSzAllPos) {
-                                                const extra = sQty - totalReqSzAllPos;
-                                                const extraShare = extra > 0 ? Math.round(extra * (targetReqSz / totalReqSzAllPos)) : 0;
-                                                sQty = targetReqSz + extraShare;
-                                            } else {
-                                                sQty = Math.round(sQty * (targetReqSz / totalReqSzAllPos));
-                                            }
+
+                                        if (sumReqSz > 0) {
+                                            // Penuhi PO pertama dulu, sisanya ke PO berikutnya
+                                            let remShipment = sQty;
+                                            let targetAlloc = 0;
+                                            reqByPO.forEach((poReq, pIdx) => {
+                                                let take = 0;
+                                                if (pIdx === reqByPO.length - 1) {
+                                                    take = Math.max(0, remShipment);
+                                                } else {
+                                                    take = Math.min(poReq.req, Math.max(0, remShipment));
+                                                }
+                                                remShipment -= take;
+                                                if (targetPoIds.includes(poReq.id)) {
+                                                    targetAlloc += take;
+                                                }
+                                            });
+                                            sQty = targetAlloc;
                                         } else {
                                             sQty = Math.round(sQty * defaultAllocRatio);
                                         }
@@ -18569,7 +18581,44 @@
                                 }
                             } else {
                                 // Fallback: alokasikan ke size yang masih membutuhkan
-                                let allocSoleQty = (isMultiPO && !coversAll) ? Math.round(itRawQty * defaultAllocRatio) : Math.round(itRawQty);
+                                let allocSoleQty = itRawQty;
+                                if (isMultiPO && !coversAll) {
+                                    let reqByPO = [];
+                                    let sumReqPairs = 0;
+                                    sjAllPos.forEach(pId => {
+                                        const pObj = (db_po || []).find(x => x.id === pId);
+                                        let pPairs = 0;
+                                        if (pObj && pObj.items) {
+                                            pObj.items.forEach(itPo => {
+                                                const sArr = extractPoItemSizes(itPo);
+                                                pPairs += sArr.reduce((a, b) => a + b, 0);
+                                            });
+                                        }
+                                        reqByPO.push({ id: pId, req: pPairs });
+                                        sumReqPairs += pPairs;
+                                    });
+
+                                    if (sumReqPairs > 0) {
+                                        let remShipment = itRawQty;
+                                        let targetAlloc = 0;
+                                        reqByPO.forEach((poReq, pIdx) => {
+                                            let take = 0;
+                                            if (pIdx === reqByPO.length - 1) {
+                                                take = Math.max(0, remShipment);
+                                            } else {
+                                                take = Math.min(poReq.req, Math.max(0, remShipment));
+                                            }
+                                            remShipment -= take;
+                                            if (targetPoIds.includes(poReq.id)) {
+                                                targetAlloc += take;
+                                            }
+                                        });
+                                        allocSoleQty = targetAlloc;
+                                    } else {
+                                        allocSoleQty = Math.round(itRawQty * defaultAllocRatio);
+                                    }
+                                }
+                                allocSoleQty = Math.round(allocSoleQty);
                                 soleMap[foundKey].sudahKirim += allocSoleQty;
                                 let remNeeded = allocSoleQty;
                                 for (let i = 0; i < maxSlot; i++) {
