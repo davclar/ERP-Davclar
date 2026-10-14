@@ -18158,29 +18158,38 @@
                     return Boolean((r.bahan || '').trim());
                 });
 
-                // Prioritas 1: Exact match nama bahan + warna cocok
-                let candidateRows = validRows.filter(r => {
-                    const rBahan = (r.bahan || '').trim().toUpperCase();
-                    if (rBahan !== cleanBahan) return false;
-                    const resolvedColor = resolveBOMMaterialColor(poColor, r.warna);
-                    if (cleanWarna !== '-' && resolvedColor !== '-') {
-                        return cleanWarna === resolvedColor || cleanWarna.includes(resolvedColor) || resolvedColor.includes(cleanWarna);
-                    }
-                    return true;
-                });
+                // Cek kesesuaian warna bahan
+                const isColorMatch = (resolvedColor) => {
+                    if (cleanWarna === '-' || cleanWarna === 'SEMUA WARNA') return true;
+                    if (resolvedColor === '-' || resolvedColor === 'SEMUA WARNA') return true;
+                    return cleanWarna === resolvedColor || cleanWarna.includes(resolvedColor) || resolvedColor.includes(cleanWarna);
+                };
 
-                // Prioritas 2: Exact match nama bahan saja (tanpa syarat warna ketat)
-                if (candidateRows.length === 0) {
-                    candidateRows = validRows.filter(r => (r.bahan || '').trim().toUpperCase() === cleanBahan);
-                }
+                // Prioritas 1: Exact match nama bahan
+                let exactBahanRows = validRows.filter(r => (r.bahan || '').trim().toUpperCase() === cleanBahan);
+                let candidateRows = [];
 
-                // Prioritas 3: Substring / includes match (seperti TALI, STIKER, DUS, dsb)
-                if (candidateRows.length === 0) {
-                    candidateRows = validRows.filter(r => {
+                if (exactBahanRows.length > 0) {
+                    // Filter berdasarkan warna yang cocok
+                    candidateRows = exactBahanRows.filter(r => {
+                        const resolvedColor = resolveBOMMaterialColor(poColor, r.warna);
+                        return isColorMatch(resolvedColor);
+                    });
+                    // Catatan: Jika ada baris bahan exact tapi warnanya tidak cocok (misal CAMEL vs IVORY),
+                    // candidateRows tetap kosong karena varian PO warna ini tidak membutuhkan bahan warna tersebut.
+                } else {
+                    // Prioritas 2: Substring/partial match nama bahan (misal TALI, STIKER, DUS, KARTON)
+                    let partialBahanRows = validRows.filter(r => {
                         const rBahan = (r.bahan || '').trim().toUpperCase();
                         if (!rBahan) return false;
                         return cleanBahan.includes(rBahan) || rBahan.includes(cleanBahan);
                     });
+                    if (partialBahanRows.length > 0) {
+                        candidateRows = partialBahanRows.filter(r => {
+                            const resolvedColor = resolveBOMMaterialColor(poColor, r.warna);
+                            return isColorMatch(resolvedColor);
+                        });
+                    }
                 }
 
                 candidateRows.forEach(r => {
@@ -18416,6 +18425,10 @@
                 return parts.some(p => targetPoIds.includes(p));
             });
 
+            // Tracker akumulasi pengiriman per PO per material/sol untuk FIFO akurat multi-SJ
+            const poMaterialSentTracker = {};
+            const poSoleSentTracker = {};
+
             shipments.forEach(sj => {
                 // Hitung rasio alokasi jika SJ mencakup multi-PO tapi targetPoIds hanya sebagian
                 const sjAllPos = (Array.isArray(sj.poList) && sj.poList.length > 0) ? sj.poList : (sj.noPO || '').split(',').map(s => s.trim()).filter(Boolean);
@@ -18515,13 +18528,18 @@
                                         let remShipment = itRawQty;
                                         let targetAlloc = 0;
                                         reqByPO.forEach((poReq, pIdx) => {
+                                            const sKey = `${poReq.id}|${foundKey}|${szIdx}`;
+                                            const alreadySentSz = poSoleSentTracker[sKey] || 0;
+                                            const remReqSz = Math.max(0, poReq.req - alreadySentSz);
+
                                             let take = 0;
                                             if (pIdx === reqByPO.length - 1) {
                                                 take = Math.max(0, remShipment);
                                             } else {
-                                                take = Math.min(poReq.req, Math.max(0, remShipment));
+                                                take = Math.min(remReqSz, Math.max(0, remShipment));
                                             }
                                             remShipment -= take;
+                                            poSoleSentTracker[sKey] = alreadySentSz + take;
                                             if (targetPoIds.includes(poReq.id)) {
                                                 targetAlloc += take;
                                             }
@@ -18559,13 +18577,18 @@
                                             let remShipment = sQty;
                                             let targetAlloc = 0;
                                             reqByPO.forEach((poReq, pIdx) => {
+                                                const sKey = `${poReq.id}|${foundKey}|${i}`;
+                                                const alreadySentSz = poSoleSentTracker[sKey] || 0;
+                                                const remReqSz = Math.max(0, poReq.req - alreadySentSz);
+
                                                 let take = 0;
                                                 if (pIdx === reqByPO.length - 1) {
                                                     take = Math.max(0, remShipment);
                                                 } else {
-                                                    take = Math.min(poReq.req, Math.max(0, remShipment));
+                                                    take = Math.min(remReqSz, Math.max(0, remShipment));
                                                 }
                                                 remShipment -= take;
+                                                poSoleSentTracker[sKey] = alreadySentSz + take;
                                                 if (targetPoIds.includes(poReq.id)) {
                                                     targetAlloc += take;
                                                 }
@@ -18631,6 +18654,7 @@
                             }
                         }
                     } else if (itCat !== 'ONGKOS_JASA') {
+                        const cleanItBahan = (itBahanRaw || '').replace(/\s*[\-\(]\s*(?:Sz|Size)\s*[0-9A-Za-z]+[\)]?/i, '').trim().toUpperCase();
                         let allocQty = itRawQty;
                         if (isMultiPO && !coversAll) {
                             let reqByPO = [];
@@ -18643,24 +18667,31 @@
                             });
 
                             if (sumReq > 0) {
-                                // Alokasi berurutan: penuhi kebutuhan PO pertama, sisanya ke PO berikutnya
+                                // Alokasi berurutan (FIFO): penuhi kebutuhan PO pertama, sisanya ke PO berikutnya
                                 let remShipment = itRawQty;
                                 let targetAlloc = 0;
                                 reqByPO.forEach((poReq, pIdx) => {
+                                    const tKey = `${poReq.id}|${cleanItBahan}|${itWarna}|${itSatuan}`;
+                                    const alreadySent = poMaterialSentTracker[tKey] || 0;
+                                    const remReqForPO = Math.max(0, Math.round((poReq.req - alreadySent) * 10) / 10);
+
                                     let take = 0;
                                     if (pIdx === reqByPO.length - 1) {
                                         // PO terakhir mengambil seluruh sisa pengiriman
                                         take = Math.max(0, remShipment);
                                     } else {
-                                        // PO sebelumnya mengambil hingga batas kebutuhannya
-                                        take = Math.min(poReq.req, Math.max(0, remShipment));
+                                        // PO sebelumnya mengambil hingga batas sisa kebutuhannya
+                                        take = Math.min(remReqForPO, Math.max(0, remShipment));
                                     }
-                                    remShipment -= take;
+                                    take = Math.round(take * 10) / 10;
+                                    remShipment = Math.round((remShipment - take) * 10) / 10;
+                                    poMaterialSentTracker[tKey] = Math.round((alreadySent + take) * 10) / 10;
+
                                     if (targetPoIds.includes(poReq.id)) {
                                         targetAlloc += take;
                                     }
                                 });
-                                allocQty = targetAlloc;
+                                allocQty = Math.round(targetAlloc * 10) / 10;
                             } else {
                                 allocQty = itRawQty * defaultAllocRatio;
                             }
@@ -18668,7 +18699,6 @@
 
                         // Cari objek tujuan berdasarkan kesamaan bahan dan warna
                         let targetMap = (itCat === 'LEMBARAN') ? lembaranMap : ((itCat === 'METERAN') ? meteranMap : aksesorisMap);
-                        const cleanItBahan = itBahanRaw.toUpperCase();
                         let found = Object.values(targetMap).find(x => x.bahan === cleanItBahan && x.warna === itWarna);
                         if (!found) {
                             found = Object.values(targetMap).find(x => x.bahan === cleanItBahan && (x.warna === '-' || itWarna === '-'));
